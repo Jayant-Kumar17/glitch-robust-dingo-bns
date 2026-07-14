@@ -58,8 +58,13 @@ python tests/test_real_event_full_validation.py    # downloads real raw strain (
                                                     # classification
 python tests/test_large_scale_validation.py        # runs the router against every confident event
                                                     # published across GWTC-1/2.1/3 (~90 real
-                                                    # detections, fetched live in 3 requests) and
-                                                    # reports match/ambiguous/mismatch statistics
+                                                    # detections). For each, fetches LVK's own
+                                                    # real-time source classification (p_astro:
+                                                    # BNS/NSBH/BBH/MassGap/Terrestrial) from GraceDB
+                                                    # where public (O3 onward), falling back to a
+                                                    # labeled mass-threshold heuristic for older
+                                                    # (O1/O2) events with no public classifier.
+                                                    # Takes a few minutes (per-event network calls).
 ```
 
 Note on GWOSC downloads: the continuous archive (`test_noise.py`,
@@ -80,10 +85,12 @@ possible.
       published parameters and real raw strain from GWOSC) -- `src/adapt/gwosc_events.py`,
       `tests/test_known_answer_validation.py`, `tests/test_real_event_full_validation.py`
 - [x] Large-scale validation against all ~90 confident confirmed events across
-      GWTC-1/2.1/3: 98.8% exact match, 0 hard mismatches, 1 conservative
-      AMBIGUOUS flag (GW190425, a genuinely debated edge case), 5 NSBH events
-      correctly falling into the documented NSBH-routing gap --
-      `tests/test_large_scale_validation.py`
+      GWTC-1/2.1/3, checked against LVK's own real-time source classification
+      (p_astro, from GraceDB) where public, not a self-invented threshold:
+      98.8% exact match, 0 hard mismatches, 1 conservative AMBIGUOUS flag
+      (GW190425, officially BNS but structurally borderline), 9 events
+      officially NSBH/MassGap correctly falling into the documented
+      NSBH-routing gap -- `tests/test_large_scale_validation.py`
 - [ ] NSBH-specific routing refinement
 - [ ] Local noise adaptation layer
 - [ ] Dual-pathway global backbone
