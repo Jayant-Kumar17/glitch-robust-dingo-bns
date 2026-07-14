@@ -68,6 +68,51 @@ def fetch_published_parameters(
     }
 
 
+def fetch_confident_catalog_events(
+    catalogs=("GWTC-1-confident", "GWTC-2.1-confident", "GWTC-3-confident"),
+    host: str = "https://gwosc.org",
+    timeout: float = 30.0,
+) -> dict:
+    """Fetch published parameters for every confident event across several catalogs.
+
+    Unlike `fetch_published_parameters` (one event at a time), this hits
+    each catalog's list endpoint once and gets every event's parameters
+    back in that single response -- e.g. all 11 GWTC-1-confident events
+    come back from one request, not 11.
+
+    Later catalogs in `catalogs` take precedence for events that appear
+    in more than one (e.g. GWTC-2.1-confident reanalyzed most GWTC-1
+    black-hole events with updated parameters; GWTC-1's own BNS event,
+    GW170817, isn't reanalyzed there and so is only pulled from GWTC-1).
+
+    Returns
+    -------
+    dict mapping commonName (e.g. "GW150914") -> parameter dict with keys
+    name, gps, m1, m2, chirp_mass_published, chi_eff, distance_mpc, catalog.
+    """
+    by_name = {}
+    for catalog in catalogs:
+        url = f"{host}/eventapi/json/{catalog}/"
+        response = requests.get(url, timeout=timeout)
+        response.raise_for_status()
+        data = response.json()
+
+        for event in data["events"].values():
+            name = event["commonName"]
+            by_name[name] = {
+                "name": name,
+                "gps": event["GPS"],
+                "m1": event["mass_1_source"],
+                "m2": event["mass_2_source"],
+                "chirp_mass_published": event["chirp_mass_source"],
+                "chi_eff": event["chi_eff"],
+                "distance_mpc": event["luminosity_distance"],
+                "catalog": catalog,
+            }
+
+    return by_name
+
+
 def fetch_event_strain(
     event_name: str,
     catalog: str,
