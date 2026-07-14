@@ -1,14 +1,32 @@
-"""Fetch published parameter estimates for real confirmed events from GWOSC.
+"""Fetch published parameters and raw strain for real confirmed events from GWOSC.
 
 This provides an external, peer-reviewed ground truth to validate the
 router against, distinct from the self-consistency checks done with
 synthetic injections in `adapt.injection`. Nothing here is hardcoded --
-every value is queried live from GWOSC's event API.
+every value/file is queried live from GWOSC's event API.
+
+Confirmed events also have a small, pre-cut 32-second strain file
+available (in addition to the ~4096-second continuous archive files),
+which is what `fetch_event_strain` downloads -- a few MB instead of
+~500MB, so it's fast even on a throttled connection.
 """
+
+import sys
 
 import requests
 
 GWOSC_EVENT_API_TEMPLATE = "{host}/eventapi/json/{catalog}/{event_name}/{version_segment}"
+
+
+def _fetch_event_json(event_name: str, catalog: str, version: int = None, host: str = "https://gwosc.org", timeout: float = 30.0) -> dict:
+    version_segment = f"v{version}/" if version is not None else ""
+    url = GWOSC_EVENT_API_TEMPLATE.format(host=host, catalog=catalog, event_name=event_name, version_segment=version_segment)
+
+    response = requests.get(url, timeout=timeout)
+    response.raise_for_status()
+    data = response.json()
+
+    return next(iter(data["events"].values()))
 
 
 def fetch_published_parameters(
@@ -37,14 +55,7 @@ def fetch_published_parameters(
     dict with keys: name, gps, m1, m2, chirp_mass_published, chi_eff,
     distance_mpc -- all taken directly from the live API response.
     """
-    version_segment = f"v{version}/" if version is not None else ""
-    url = GWOSC_EVENT_API_TEMPLATE.format(host=host, catalog=catalog, event_name=event_name, version_segment=version_segment)
-
-    response = requests.get(url, timeout=timeout)
-    response.raise_for_status()
-    data = response.json()
-
-    event = next(iter(data["events"].values()))
+    event = _fetch_event_json(event_name, catalog, version=version, host=host, timeout=timeout)
 
     return {
         "name": event["commonName"],
@@ -55,3 +66,83 @@ def fetch_published_parameters(
         "chi_eff": event["chi_eff"],
         "distance_mpc": event["luminosity_distance"],
     }
+
+
+def fetch_event_strain(
+    event_name: str,
+    catalog: str,
+    detector: str,
+    version: int = None,
+    sample_rate: int = 4096,
+    duration: int = 32,
+    dest_path: str = None,
+    host: str = "https://gwosc.org",
+    timeout: float = 60.0,
+    show_progress: bool = True,
+):
+    """Download the small, pre-cut real strain segment for a confirmed event.
+
+    Unlike the continuous archive (which always serves ~4096-second,
+    ~500MB files regardless of the requested window), GWOSC's event API
+    also serves a short segment (typically 32s) around confirmed events,
+    which is what this downloads.
+
+    Parameters
+    ----------
+    event_name, catalog, version : see `fetch_published_parameters`.
+    detector : str
+        Detector name, e.g. "H1", "L1", "V1".
+    sample_rate : int
+        Sample rate (Hz) of the file to fetch; GWOSC typically offers
+        4096 and 16384.
+    duration : int
+        Duration (s) of the file to fetch; GWOSC typically offers the
+        short (e.g. 32s) event segment and the full 4096s archive chunk.
+    dest_path : str, optional
+        Where to save the downloaded file. Defaults to a temp path
+        derived from the event/detector/sample_rate.
+    show_progress : bool
+        If True, print byte-level download progress as it happens.
+
+    Returns
+    -------
+    dest_path : str
+        Path to the downloaded HDF5 file.
+    """
+    event = _fetch_event_json(event_name, catalog, version=version, host=host, timeout=timeout)
+
+    matches = [
+        s
+        for s in event["strain"]
+        if s["detector"] == detector and s["sampling_rate"] == sample_rate and s["duration"] == duration and s["format"] == "hdf5"
+    ]
+    if not matches:
+        available = [(s["detector"], s["sampling_rate"], s["duration"], s["format"]) for s in event["strain"]]
+        raise ValueError(f"No strain file found for detector={detector}, sample_rate={sample_rate}, duration={duration}. Available: {available}")
+
+    url = matches[0]["url"]
+    if dest_path is None:
+        dest_path = f"/tmp/{event_name}_{detector}_{duration}s_{sample_rate}Hz.hdf5"
+
+    if show_progress:
+        print(f"Downloading real strain for {event_name} ({detector}, {duration}s @ {sample_rate}Hz):", flush=True)
+        print(f"  {url}", flush=True)
+
+    response = requests.get(url, stream=True, timeout=timeout)
+    response.raise_for_status()
+    total = int(response.headers.get("Content-Length", 0))
+
+    downloaded = 0
+    with open(dest_path, "wb") as f:
+        for chunk in response.iter_content(chunk_size=65536):
+            f.write(chunk)
+            downloaded += len(chunk)
+            if show_progress and total:
+                pct = downloaded / total * 100
+                sys.stdout.write(f"\r  {downloaded}/{total} bytes ({pct:.1f}%)")
+                sys.stdout.flush()
+
+    if show_progress:
+        print(f"\n  Done -> {dest_path}", flush=True)
+
+    return dest_path
