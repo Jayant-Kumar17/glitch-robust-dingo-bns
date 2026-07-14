@@ -17,7 +17,7 @@ realistic detector data.
 import numpy as np
 from pycbc.waveform import get_td_waveform
 
-from adapt.physics import chirp_mass, mass_ratio, total_mass
+from adapt.physics import chirp_mass, effective_spin, mass_ratio, total_mass
 
 
 def generate_injection(
@@ -25,6 +25,8 @@ def generate_injection(
     m2: float,
     noise: np.ndarray,
     sample_rate: float,
+    spin1z: float = 0.0,
+    spin2z: float = 0.0,
     f_lower: float = 25.0,
     approximant: str = "IMRPhenomD",
     merger_offset: float = 2.0,
@@ -40,6 +42,10 @@ def generate_injection(
     sample_rate : float
         Sample rate (Hz) of `noise`; the waveform is generated at the
         same rate so it can be added directly.
+    spin1z, spin2z : float
+        Dimensionless aligned-spin components of each component, passed
+        directly into the waveform generator so the spins you set here
+        actually shape the generated signal.
     f_lower : float
         Starting frequency (Hz) for the waveform generation. Higher
         values shorten long BNS inspirals so they fit into shorter
@@ -55,13 +61,17 @@ def generate_injection(
         `noise` with the synthetic waveform added in, same length as `noise`.
     true_params : dict
         The known parameters used to generate the injection (m1, m2, mc,
-        mtot, q) -- i.e. what a real matched-filter trigger would have
-        recovered, used here to mock the trigger for the router.
+        mtot, q, chi_eff) -- i.e. what a real matched-filter trigger would
+        have recovered, used here to mock the trigger for the router. All
+        derived quantities are computed from m1/m2/spin1z/spin2z, so they
+        trace directly back to the parameters passed in.
     """
     hp, _ = get_td_waveform(
         approximant=approximant,
         mass1=m1,
         mass2=m2,
+        spin1z=spin1z,
+        spin2z=spin2z,
         delta_t=1.0 / sample_rate,
         f_lower=f_lower,
     )
@@ -91,8 +101,11 @@ def generate_injection(
     true_params = {
         "m1": m1,
         "m2": m2,
+        "spin1z": spin1z,
+        "spin2z": spin2z,
         "mc": chirp_mass(m1, m2),
         "mtot": total_mass(m1, m2),
         "q": mass_ratio(m1, m2),
+        "chi_eff": effective_spin(m1, m2, spin1z, spin2z),
     }
     return injected, true_params
