@@ -65,7 +65,54 @@ def fetch_published_parameters(
         "chirp_mass_published": event["chirp_mass_source"],
         "chi_eff": event["chi_eff"],
         "distance_mpc": event["luminosity_distance"],
+        "gracedb_id": event.get("gracedb_id"),
     }
+
+
+def fetch_source_classification(
+    gracedb_id: str,
+    host: str = "https://gracedb.ligo.org",
+    timeout: float = 30.0,
+) -> dict:
+    """Fetch LVK's own real-time source classification (p_astro) for an event.
+
+    This is the actual official answer to "is this a BNS/NSBH/BBH?" --
+    LIGO/Virgo/KAGRA's low-latency alert pipeline computes explicit
+    probabilities across BNS, NSBH, BBH, MassGap (component mass in the
+    ambiguous ~3-5 Msun range where it's unclear if it's an unusually
+    heavy neutron star or unusually light black hole), and Terrestrial
+    (probability the trigger is instrumental noise, not a real signal),
+    published as a p_astro.json file on the event's public GraceDB page.
+
+    This is only publicly available for superevents (gracedb_id starting
+    with "S"), which is the O3-onward convention -- GWTC-1 (O1/O2)
+    events predate the public real-time classifier and use a plain
+    event id ("G...") that requires GraceDB login to view, so this
+    returns None for those rather than guessing.
+
+    Returns
+    -------
+    dict with keys "BNS", "NSBH", "BBH", "MassGap", "Terrestrial"
+    (probabilities) and "label" (the highest-probability category), or
+    None if no public classification exists for this event.
+    """
+    if not gracedb_id or not gracedb_id.startswith("S"):
+        return None
+
+    url = f"{host}/api/superevents/{gracedb_id}/files/p_astro.json"
+    try:
+        response = requests.get(url, timeout=timeout)
+        if response.status_code != 200:
+            return None
+        probs = response.json()
+    except (requests.RequestException, ValueError):
+        return None
+
+    if not isinstance(probs, dict) or not probs:
+        return None
+
+    label = max(probs, key=probs.get)
+    return {**probs, "label": label}
 
 
 def fetch_confident_catalog_events(
