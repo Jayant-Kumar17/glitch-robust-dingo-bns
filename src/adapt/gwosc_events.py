@@ -116,28 +116,43 @@ def fetch_source_classification(
 
 
 def fetch_confident_catalog_events(
-    catalogs=("GWTC-1-confident", "GWTC-2.1-confident", "GWTC-3-confident"),
+    catalogs=("GWTC",),
     host: str = "https://gwosc.org",
     timeout: float = 30.0,
+    require_masses: bool = True,
 ) -> dict:
-    """Fetch published parameters for every confident event across several catalogs.
+    """Fetch published parameters for every event in one or more GWOSC catalogs.
 
     Unlike `fetch_published_parameters` (one event at a time), this hits
     each catalog's list endpoint once and gets every event's parameters
-    back in that single response -- e.g. all 11 GWTC-1-confident events
-    come back from one request, not 11.
+    back in that single response.
 
-    Later catalogs in `catalogs` take precedence for events that appear
-    in more than one (e.g. GWTC-2.1-confident reanalyzed most GWTC-1
-    black-hole events with updated parameters; GWTC-1's own BNS event,
-    GW170817, isn't reanalyzed there and so is only pulled from GWTC-1).
+    By default this uses the cumulative ``GWTC`` catalog, which GWOSC
+    maintains as the full up-to-date transient list (O1 through O4b,
+    including all GWTC-5.0 releases). As of GWTC-5.0 that is ~390 events
+    total, of which ~280 have published component masses suitable for
+    router validation. The legacy per-run catalogs (``GWTC-1-confident``,
+    ``GWTC-2.1-confident``, ``GWTC-3-confident``) only cover ~90 events.
+
+    Later catalogs in ``catalogs`` take precedence for duplicate names.
+
+    Parameters
+    ----------
+    require_masses : bool
+        If True (default), skip events whose list entry has no published
+        ``mass_1_source`` / ``mass_2_source`` yet (common for very recent
+        O4 triggers still awaiting PE).
 
     Returns
     -------
-    dict mapping commonName (e.g. "GW150914") -> parameter dict with keys
-    name, gps, m1, m2, chirp_mass_published, chi_eff, distance_mpc, catalog.
+    dict mapping commonName -> parameter dict with keys name, gps, m1, m2,
+    chirp_mass_published, chi_eff, distance_mpc, catalog (the list
+    catalog queried), source_catalog (the event's originating release, e.g.
+    ``GWTC-5.0``), jsonurl.
     """
     by_name = {}
+    skipped_no_mass = 0
+
     for catalog in catalogs:
         url = f"{host}/eventapi/json/{catalog}/"
         response = requests.get(url, timeout=timeout)
@@ -145,17 +160,32 @@ def fetch_confident_catalog_events(
         data = response.json()
 
         for event in data["events"].values():
+            if require_masses and (
+                event.get("mass_1_source") is None or event.get("mass_2_source") is None
+            ):
+                skipped_no_mass += 1
+                continue
+
             name = event["commonName"]
+            chi_eff = event.get("chi_eff")
             by_name[name] = {
                 "name": name,
                 "gps": event["GPS"],
                 "m1": event["mass_1_source"],
                 "m2": event["mass_2_source"],
-                "chirp_mass_published": event["chirp_mass_source"],
-                "chi_eff": event["chi_eff"],
-                "distance_mpc": event["luminosity_distance"],
+                "chirp_mass_published": event.get("chirp_mass_source"),
+                "chi_eff": chi_eff if chi_eff is not None else 0.0,
+                "distance_mpc": event.get("luminosity_distance"),
                 "catalog": catalog,
+                "source_catalog": event.get("catalog.shortName", catalog),
+                "jsonurl": event.get("jsonurl"),
             }
+
+    if require_masses and skipped_no_mass:
+        print(
+            f"  (skipped {skipped_no_mass} events with no published masses yet in catalog list)",
+            flush=True,
+        )
 
     return by_name
 

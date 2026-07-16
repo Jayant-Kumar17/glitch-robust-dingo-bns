@@ -1,0 +1,283 @@
+name,source_catalog,m1,m2,chi_eff,expected,expected_source,route,confidence,bucket
+GW150914,GWTC-2.1-confident,34.6,30.0,-0.04,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW151012,GWTC-2.1-confident,24.8,13.6,0.12,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW151226,GWTC-2.1-confident,14.2,7.5,0.2,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW170104,GWTC-2.1-confident,28.7,20.8,-0.04,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW170608,GWTC-2.1-confident,10.6,7.8,0.05,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW170729,GWTC-2.1-confident,54.7,30.2,0.29,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW170809,GWTC-2.1-confident,34.1,24.2,0.07,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW170814,GWTC-2.1-confident,30.9,24.9,0.08,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW170817,GWTC-1-confident,1.46,1.27,0.0,BNS,"heuristic (mass threshold, no public p_astro for this event)",BNS,1.0,match
+GW170818,GWTC-2.1-confident,34.8,27.6,-0.06,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW170823,GWTC-2.1-confident,38.3,29.0,0.05,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW190403_051519,GWTC-2.1-confident,85.0,20.0,0.68,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW190408_181802,GWTC-2.1-confident,24.8,18.5,-0.03,BBH,"official (GraceDB p_astro, S190408an)",BBH,1.0,match
+GW190412,GWTC-2.1-confident,27.7,9.0,0.21,BBH,"official (GraceDB p_astro, S190412m)",BBH,1.0,match
+GW190413_052954,GWTC-2.1-confident,33.7,24.2,-0.04,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW190413_134308,GWTC-2.1-confident,51.3,30.4,-0.01,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW190421_213856,GWTC-2.1-confident,42.0,32.0,-0.1,BBH,"official (GraceDB p_astro, S190421ar)",BBH,1.0,match
+GW190425,GWTC-2.1-confident,2.1,1.3,0.07,BNS,"official (GraceDB p_astro, S190425z)",BNS,1.0,match
+GW190426_190642,GWTC-2.1-confident,105.5,76.0,0.23,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW190503_185404,GWTC-2.1-confident,41.3,28.3,-0.05,BBH,"official (GraceDB p_astro, S190503bf)",BBH,1.0,match
+GW190512_180714,GWTC-2.1-confident,23.2,12.5,0.02,BBH,"official (GraceDB p_astro, S190512at)",BBH,1.0,match
+GW190513_205428,GWTC-2.1-confident,36.0,18.3,0.16,BBH,"official (GraceDB p_astro, S190513bm)",BBH,1.0,match
+GW190514_065416,GWTC-2.1-confident,40.9,28.4,-0.08,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW190517_055101,GWTC-2.1-confident,39.2,24.0,0.49,BBH,"official (GraceDB p_astro, S190517h)",BBH,1.0,match
+GW190519_153544,GWTC-2.1-confident,65.1,40.8,0.33,BBH,"official (GraceDB p_astro, S190519bj)",BBH,1.0,match
+GW190521,GWTC-2.1-confident,98.4,57.2,-0.14,BBH,"official (GraceDB p_astro, S190521g)",BBH,1.0,match
+GW190521_074359,GWTC-2.1-confident,43.4,33.4,0.1,BBH,"official (GraceDB p_astro, S190521r)",BBH,1.0,match
+GW190527_092055,GWTC-2.1-confident,35.6,22.2,0.1,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW190602_175927,GWTC-2.1-confident,71.8,44.8,0.12,BBH,"official (GraceDB p_astro, S190602aq)",BBH,1.0,match
+GW190620_030421,GWTC-2.1-confident,58.0,35.0,0.34,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW190630_185205,GWTC-2.1-confident,35.1,24.0,0.1,BBH,"official (GraceDB p_astro, S190630ag)",BBH,1.0,match
+GW190701_203306,GWTC-2.1-confident,54.1,40.5,-0.08,BBH,"official (GraceDB p_astro, S190701ah)",BBH,1.0,match
+GW190706_222641,GWTC-2.1-confident,74.0,39.4,0.28,BBH,"official (GraceDB p_astro, S190706ai)",BBH,1.0,match
+GW190707_093326,GWTC-2.1-confident,12.1,7.9,-0.04,BBH,"official (GraceDB p_astro, S190707q)",BBH,1.0,match
+GW190708_232457,GWTC-2.1-confident,19.8,11.6,0.05,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW190719_215514,GWTC-2.1-confident,36.6,19.9,0.25,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW190720_000836,GWTC-2.1-confident,14.2,7.5,0.19,BBH,"official (GraceDB p_astro, S190720a)",BBH,1.0,match
+GW190725_174728,GWTC-2.1-confident,11.8,6.3,-0.04,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW190727_060333,GWTC-2.1-confident,38.9,30.2,0.09,BBH,"official (GraceDB p_astro, S190727h)",BBH,1.0,match
+GW190728_064510,GWTC-2.1-confident,12.5,8.0,0.13,MassGap,"official (GraceDB p_astro, S190728q)",BBH,1.0,out_of_scope
+GW190731_140936,GWTC-2.1-confident,41.8,29.0,0.07,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW190803_022701,GWTC-2.1-confident,37.7,27.6,-0.01,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW190805_211137,GWTC-2.1-confident,46.2,30.6,0.37,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW190814,GWTC-2.1-confident,23.3,2.6,0.0,NSBH,"official (GraceDB p_astro, S190814bv)",AMBIGUOUS,0.5,out_of_scope
+GW190828_063405,GWTC-2.1-confident,31.9,25.8,0.15,BBH,"official (GraceDB p_astro, S190828j)",BBH,1.0,match
+GW190828_065509,GWTC-2.1-confident,23.7,10.4,0.05,BBH,"official (GraceDB p_astro, S190828l)",BBH,1.0,match
+GW190910_112807,GWTC-2.1-confident,43.8,34.2,0.0,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW190915_235702,GWTC-2.1-confident,32.6,24.5,-0.03,BBH,"official (GraceDB p_astro, S190915ak)",BBH,1.0,match
+GW190916_200658,GWTC-2.1-confident,43.8,23.3,0.2,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW190917_114630,GWTC-2.1-confident,9.7,2.1,-0.08,NSBH,"heuristic (mass threshold, no public p_astro for this event)",AMBIGUOUS,0.5,out_of_scope
+GW190924_021846,GWTC-2.1-confident,8.8,5.1,0.03,MassGap,"official (GraceDB p_astro, S190924h)",BBH,1.0,out_of_scope
+GW190925_232845,GWTC-2.1-confident,20.8,15.5,0.09,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW190926_050336,GWTC-2.1-confident,41.1,20.4,-0.02,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW190929_012149,GWTC-2.1-confident,66.3,26.8,-0.03,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW190930_133541,GWTC-2.1-confident,14.2,6.9,0.19,MassGap,"official (GraceDB p_astro, S190930s)",BBH,1.0,out_of_scope
+GW191103_012549,GWTC-3-confident,11.8,7.9,0.21,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW191105_143521,GWTC-3-confident,10.7,7.7,-0.02,BBH,"official (GraceDB p_astro, S191105e)",BBH,1.0,match
+GW191109_010717,GWTC-3-confident,65.0,47.0,-0.29,BBH,"official (GraceDB p_astro, S191109d)",BBH,1.0,match
+GW191113_071753,GWTC-3-confident,29.0,5.9,0.0,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW191126_115259,GWTC-3-confident,12.1,8.3,0.21,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW191127_050227,GWTC-3-confident,53.0,24.0,0.18,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW191129_134029,GWTC-3-confident,10.7,6.7,0.06,BBH,"official (GraceDB p_astro, S191129u)",BBH,1.0,match
+GW191204_110529,GWTC-3-confident,27.3,19.2,0.05,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW191204_171526,GWTC-3-confident,11.7,8.4,0.16,BBH,"official (GraceDB p_astro, S191204r)",BBH,1.0,match
+GW191215_223052,GWTC-3-confident,24.9,18.1,-0.04,BBH,"official (GraceDB p_astro, S191215w)",BBH,1.0,match
+GW191216_213338,GWTC-3-confident,12.1,7.7,0.11,BBH,"official (GraceDB p_astro, S191216ap)",BBH,1.0,match
+GW191219_163120,GWTC-3-confident,31.1,1.17,0.0,NSBH,"heuristic (mass threshold, no public p_astro for this event)",AMBIGUOUS,0.5,out_of_scope
+GW191222_033537,GWTC-3-confident,45.1,34.7,-0.04,BBH,"official (GraceDB p_astro, S191222n)",BBH,1.0,match
+GW191230_180458,GWTC-3-confident,49.4,37.0,-0.05,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW200112_155838,GWTC-3-confident,35.6,28.3,0.06,BBH,"official (GraceDB p_astro, S200112r)",BBH,1.0,match
+GW200115_042309,GWTC-3-confident,5.9,1.44,-0.15,MassGap,"official (GraceDB p_astro, S200115j)",AMBIGUOUS,0.5,out_of_scope
+GW200128_022011,GWTC-3-confident,42.2,32.6,0.12,BBH,"official (GraceDB p_astro, S200128d)",BBH,1.0,match
+GW200129_065458,GWTC-3-confident,34.5,29.0,0.11,BBH,"official (GraceDB p_astro, S200129m)",BBH,1.0,match
+GW200202_154313,GWTC-3-confident,10.1,7.3,0.04,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW200208_130117,GWTC-3-confident,37.7,27.4,-0.07,BBH,"official (GraceDB p_astro, S200208q)",BBH,1.0,match
+GW200208_222617,GWTC-3-confident,51.0,12.3,0.45,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW200209_085452,GWTC-3-confident,35.6,27.1,-0.12,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW200210_092254,GWTC-3-confident,24.1,2.83,0.02,NSBH,"heuristic (mass threshold, no public p_astro for this event)",AMBIGUOUS,0.5,out_of_scope
+GW200216_220804,GWTC-3-confident,51.0,30.0,0.1,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW200219_094415,GWTC-3-confident,37.5,27.9,-0.08,BBH,"official (GraceDB p_astro, S200219ac)",BBH,1.0,match
+GW200220_061928,GWTC-3-confident,87.0,61.0,0.06,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW200220_124850,GWTC-3-confident,38.9,27.9,-0.07,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW200224_222234,GWTC-3-confident,40.0,32.7,0.1,BBH,"official (GraceDB p_astro, S200224ca)",BBH,1.0,match
+GW200225_060421,GWTC-3-confident,19.3,14.0,-0.12,BBH,"official (GraceDB p_astro, S200225q)",BBH,1.0,match
+GW200302_015811,GWTC-3-confident,37.8,20.0,0.01,BBH,"official (GraceDB p_astro, S200302c)",BBH,1.0,match
+GW200306_093714,GWTC-3-confident,28.3,14.8,0.32,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW200308_173609,GWTC-3-confident,60.0,24.0,0.16,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW200311_115853,GWTC-3-confident,34.2,27.7,-0.02,BBH,"official (GraceDB p_astro, S200311bg)",BBH,1.0,match
+GW200316_215756,GWTC-3-confident,13.1,7.8,0.13,MassGap,"official (GraceDB p_astro, S200316bj)",BBH,1.0,out_of_scope
+GW200322_091133,GWTC-3-confident,38.0,11.3,0.27,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230518_125908,GWTC-4.1,8.17,1.45,-0.01,NSBH,"heuristic (mass threshold, no public p_astro for this event)",AMBIGUOUS,0.5,out_of_scope
+GW230529_181500,GWTC-4.1,3.66,1.42,-0.1,NSBH,"heuristic (mass threshold, no public p_astro for this event)",AMBIGUOUS,0.5,out_of_scope
+GW230601_224134,GWTC-4.1,64.0,44.0,-0.03,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230605_065343,GWTC-4.1,17.4,11.0,0.06,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230606_004305,GWTC-4.1,37.6,25.7,-0.11,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230608_205047,GWTC-4.1,48.0,31.0,0.04,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230609_064958,GWTC-4.1,35.4,25.2,-0.14,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230624_113103,GWTC-4.1,27.1,16.1,0.17,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230627_015337,GWTC-4.1,8.4,5.74,0.02,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230628_231200,GWTC-4.1,32.5,27.0,-0.01,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230630_125806,GWTC-4.1,51.0,33.0,0.18,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230630_234532,GWTC-4.1,10.0,6.6,-0.04,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230702_185453,GWTC-4.1,40.0,18.0,0.05,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230704_021211,GWTC-4.1,32.6,20.0,-0.01,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230704_212616,GWTC-4.1,89.0,50.0,0.27,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230706_104333,GWTC-4.1,16.3,11.5,0.19,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230707_124047,GWTC-4.1,46.1,36.3,-0.05,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230708_053705,GWTC-4.1,29.1,22.7,0.06,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230708_230935,GWTC-4.1,64.0,40.0,0.01,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230709_122727,GWTC-4.1,45.0,30.0,0.08,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230712_090405,GWTC-4.1,32.0,12.5,-0.02,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230723_101834,GWTC-4.1,16.6,10.6,-0.18,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230726_002940,GWTC-4.1,35.6,27.9,-0.02,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230729_082317,GWTC-4.1,12.3,7.6,0.12,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230731_215307,GWTC-4.1,10.3,7.9,-0.05,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230803_033412,GWTC-4.1,44.0,29.0,0.07,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230805_034249,GWTC-4.1,32.2,22.6,0.06,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230806_204041,GWTC-4.1,51.0,35.0,0.08,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230811_032116,GWTC-4.1,35.4,22.3,0.03,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230814_061920,GWTC-4.1,69.0,42.0,0.07,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230814_230901,GWTC-4.1,33.7,28.2,-0.01,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230819_171910,GWTC-4.1,70.0,35.0,-0.04,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230820_212515,GWTC-4.1,62.0,34.0,0.21,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230824_033047,GWTC-4.1,53.0,36.0,-0.01,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230825_041334,GWTC-4.1,44.0,27.2,0.29,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230831_015414,GWTC-4.1,42.0,30.0,0.04,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230904_051013,GWTC-4.1,10.6,7.1,0.05,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230911_195324,GWTC-4.1,33.9,21.6,-0.02,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230914_111401,GWTC-4.1,60.0,37.0,0.12,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230919_215712,GWTC-4.1,27.3,21.4,0.18,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230920_071124,GWTC-4.1,32.4,23.8,0.0,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230922_020344,GWTC-4.1,39.3,29.2,0.03,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230922_040658,GWTC-4.1,76.0,51.0,0.31,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230924_124453,GWTC-4.1,28.8,23.2,0.02,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230927_043729,GWTC-4.1,35.0,27.1,0.01,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230927_153832,GWTC-4.1,21.7,16.6,0.03,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230928_215827,GWTC-4.1,54.0,29.0,0.4,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW230930_110730,GWTC-4.1,34.5,24.4,0.02,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW231001_140220,GWTC-4.1,76.0,41.0,-0.04,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW231004_232346,GWTC-4.1,64.0,35.0,-0.04,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW231005_021030,GWTC-4.1,84.0,50.0,0.1,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW231005_091549,GWTC-4.1,28.8,21.2,-0.03,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW231008_142521,GWTC-4.1,45.0,25.6,-0.01,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW231014_040532,GWTC-4.1,20.6,14.7,0.18,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW231018_233037,GWTC-4.1,11.6,7.3,0.01,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW231020_142947,GWTC-4.1,12.0,7.4,0.14,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW231026_130704,GWTC-4.1,34.0,20.8,0.03,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW231028_153006,GWTC-4.1,94.0,59.0,0.45,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW231029_111508,GWTC-4.1,65.0,42.0,0.14,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW231102_071736,GWTC-4.1,61.0,42.0,0.06,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW231104_133418,GWTC-4.1,12.2,8.6,0.14,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW231108_125142,GWTC-4.1,23.2,17.4,-0.08,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW231110_040320,GWTC-4.1,19.4,12.6,0.17,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW231113_122623,GWTC-4.1,39.8,26.4,0.33,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW231113_150041,GWTC-4.1,56.0,29.0,0.04,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW231113_200417,GWTC-4.1,11.6,7.4,0.13,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW231114_043211,GWTC-4.1,22.8,8.2,0.08,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW231118_005626,GWTC-4.1,20.0,10.8,0.38,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW231118_071402,GWTC-4.1,43.0,29.0,0.12,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW231118_090602,GWTC-4.1,12.9,7.4,0.08,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW231119_075248,GWTC-4.1,49.0,33.0,0.0,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW231123_135430,GWTC-4.1,137.0,101.0,0.32,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW231127_165300,GWTC-4.1,45.0,28.0,0.05,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW231129_081745,GWTC-4.1,45.0,23.8,0.03,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW231206_233134,GWTC-4.1,35.6,28.2,-0.08,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW231206_233901,GWTC-4.1,37.6,28.5,-0.05,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW231213_111417,GWTC-4.1,35.6,27.2,0.06,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW231221_135041,GWTC-4.1,47.0,29.0,0.01,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW231223_032836,GWTC-4.1,46.0,31.0,-0.16,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW231223_075055,GWTC-4.1,11.9,6.8,0.07,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW231223_202619,GWTC-4.1,11.1,8.3,0.1,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW231224_024321,GWTC-4.1,9.3,7.31,-0.01,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW231226_101520,GWTC-4.1,40.2,35.1,-0.08,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW231230_170116,GWTC-4.1,53.0,35.0,-0.18,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW231231_154016,GWTC-4.1,22.5,17.2,-0.03,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240104_164932,GWTC-4.1,42.3,32.2,0.09,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240107_013215,GWTC-4.1,59.0,33.0,0.32,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240109_050431,GWTC-4.1,28.7,18.1,-0.07,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240413_022019,GWTC-5.0,7.9,5.57,0.07,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240414_054515,GWTC-5.0,38.8,25.9,0.03,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240420_175625,GWTC-5.0,34.6,23.8,0.0,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240426_031451,GWTC-5.0,52.0,36.0,-0.05,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240428_225440,GWTC-5.0,19.8,14.7,0.03,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240501_033534,GWTC-5.0,38.6,27.7,0.04,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240505_133552,GWTC-5.0,31.0,23.1,-0.13,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240507_041632,GWTC-5.0,31.3,8.5,0.01,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240511_031507,GWTC-5.0,40.5,32.2,0.05,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240512_024139,GWTC-5.0,12.6,8.0,0.14,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240513_183302,GWTC-5.0,24.4,16.9,0.14,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240514_121713,GWTC-5.0,46.8,36.7,0.01,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240515_005301,GWTC-5.0,37.1,18.5,0.47,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240519_012815,GWTC-5.0,65.0,39.0,-0.04,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240520_213616,GWTC-5.0,11.4,8.0,0.0,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240525_031210,GWTC-5.0,31.1,21.4,0.17,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240526_093944,GWTC-5.0,14.5,8.4,0.22,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240527_183429,GWTC-5.0,52.0,33.0,0.31,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240527_230910,GWTC-5.0,27.6,10.0,-0.03,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240530_012417,GWTC-5.0,14.1,8.3,0.04,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240531_040326,GWTC-5.0,19.5,14.3,0.14,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240531_075248,GWTC-5.0,33.0,22.6,0.04,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240601_061200,GWTC-5.0,52.0,32.0,-0.08,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240601_231004,GWTC-5.0,10.6,7.7,0.09,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240612_081540,GWTC-5.0,55.0,38.0,0.07,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240615_113620,GWTC-5.0,34.0,26.4,-0.07,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240615_160735,GWTC-5.0,28.5,20.0,0.28,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240618_071627,GWTC-5.0,65.0,40.0,0.0,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240621_195059,GWTC-5.0,36.8,29.7,0.0,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240621_200935,GWTC-5.0,41.6,31.6,-0.09,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240621_214041,GWTC-5.0,45.0,32.0,0.0,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240622_004008,GWTC-5.0,18.6,11.3,0.25,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240627_131622,GWTC-5.0,13.2,6.7,0.0,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240629_145256,GWTC-5.0,11.1,7.8,0.04,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240630_101703,GWTC-5.0,28.6,21.6,-0.04,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240703_191355,GWTC-5.0,34.4,26.4,0.05,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240705_053215,GWTC-5.0,47.1,35.3,-0.03,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240716_034900,GWTC-5.0,40.3,26.5,-0.02,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240824_205609,GWTC-5.0,70.0,37.0,0.08,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240825_055146,GWTC-5.0,13.2,7.9,0.07,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240830_211120,GWTC-5.0,11.9,7.8,0.07,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240902_143306,GWTC-5.0,24.4,18.3,-0.03,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240907_153833,GWTC-5.0,38.0,28.3,0.04,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240908_082628,GWTC-5.0,39.8,27.7,0.14,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240908_125134,GWTC-5.0,45.0,32.0,-0.09,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240910_103535,GWTC-5.0,10.9,6.3,0.12,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240915_001357,GWTC-5.0,10.9,7.7,0.13,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240915_105151,GWTC-5.0,11.6,7.5,0.07,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240916_184352,GWTC-5.0,10.7,7.8,0.05,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240919_061559,GWTC-5.0,38.3,29.6,-0.02,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240920_073424,GWTC-5.0,24.7,13.4,-0.09,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240920_124024,GWTC-5.0,37.1,31.9,-0.04,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240921_201835,GWTC-5.0,34.9,9.8,0.0,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240922_142106,GWTC-5.0,11.5,7.8,0.07,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240923_204006,GWTC-5.0,46.1,34.9,0.01,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240924_000316,GWTC-5.0,46.0,34.0,0.1,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240925_005809,GWTC-5.0,9.02,6.99,0.02,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240930_035959,GWTC-5.0,25.5,11.2,-0.05,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW240930_234614,GWTC-5.0,35.8,21.9,0.04,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW241002_030559,GWTC-5.0,37.3,29.9,-0.1,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW241006_015333,GWTC-5.0,24.6,20.3,0.07,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW241007_082943,GWTC-5.0,36.6,26.6,0.11,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW241009_022835,GWTC-5.0,37.1,26.8,0.09,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW241009_084816,GWTC-5.0,12.7,8.1,-0.05,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW241009_220455,GWTC-5.0,33.2,25.5,0.11,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW241011_233834,GWTC-5.0,19.5,5.96,0.5,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW241101_220523,GWTC-5.0,41.0,19.3,0.15,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW241102_124058,GWTC-5.0,10.9,8.0,0.06,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW241102_144729,GWTC-5.0,44.4,31.0,-0.09,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW241109_033317,GWTC-5.0,42.4,31.7,0.01,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW241109_115924,GWTC-5.0,7.3,5.14,0.01,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW241110_124123,GWTC-5.0,16.4,8.0,-0.31,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW241111_111552,GWTC-5.0,25.3,20.5,0.1,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW241113_163507,GWTC-5.0,19.3,14.4,0.5,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW241114_024711,GWTC-5.0,47.0,25.0,0.12,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW241114_235258,GWTC-5.0,11.3,7.7,0.06,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW241116_151753,GWTC-5.0,70.0,24.0,0.28,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW241124_024914,GWTC-5.0,42.0,26.0,0.04,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW241125_010116,GWTC-5.0,60.0,47.0,0.09,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW241127_061008,GWTC-5.0,63.8,20.8,-0.16,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW241129_021832,GWTC-5.0,30.4,23.0,0.17,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW241130_034908,GWTC-5.0,29.9,24.3,0.05,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW241130_110422,GWTC-5.0,11.1,6.5,0.04,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW241201_055758,GWTC-5.0,47.0,33.0,0.13,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW241210_060606,GWTC-5.0,29.0,21.4,0.04,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW241210_120900,GWTC-5.0,40.0,23.6,-0.07,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW241225_042553,GWTC-5.0,12.4,8.1,0.12,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW241225_082815,GWTC-5.0,55.7,42.2,-0.17,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW241229_155844,GWTC-5.0,52.0,33.0,0.05,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW241230_084504,GWTC-5.0,42.4,33.5,-0.14,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW241230_233618,GWTC-5.0,68.0,49.0,-0.14,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW241231_054133,GWTC-5.0,12.4,7.1,0.08,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW250101_011205,GWTC-5.0,30.0,21.1,-0.05,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW250104_015122,GWTC-5.0,45.8,34.5,0.11,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW250108_152221,GWTC-5.0,54.0,36.0,0.05,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW250109_010541,GWTC-5.0,37.5,27.4,-0.11,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW250109_074552,GWTC-5.0,39.0,30.2,0.07,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW250114_082203,GWTC-5.0,33.76,32.26,-0.03,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW250116_015318,GWTC-5.0,34.2,21.3,0.15,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW250118_023225,GWTC-5.0,44.0,31.0,0.04,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW250118_055802,GWTC-5.0,10.3,6.9,0.11,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW250118_170523,GWTC-5.0,38.1,29.6,0.12,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW250119_025138,GWTC-5.0,33.8,26.7,0.06,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match
+GW250119_190238,GWTC-5.0,11.54,9.95,0.09,BBH,"heuristic (mass threshold, no public p_astro for this event)",BBH,1.0,match

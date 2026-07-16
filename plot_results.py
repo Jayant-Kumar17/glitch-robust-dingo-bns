@@ -9,8 +9,9 @@ tests/test_simulation_batch.py and renders a two-panel figure:
   - Right: match / ambiguous / mismatch bucket counts with an accuracy
            and safe-path-rate summary box.
 
-Output PNGs are timestamped so each run produces a new file rather than
-overwriting the previous figure.
+Output PDFs are timestamped so each run produces a new file rather than
+overwriting the previous figure. PDF is used for publication-quality
+vector graphics (scales cleanly in manuscripts).
 """
 
 import glob
@@ -131,10 +132,10 @@ def generate_academic_plot(csv_path: str = None) -> str:
 
     os.makedirs(RESULTS_DIR, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    save_img_path = os.path.join(RESULTS_DIR, f"router_performance_{timestamp}.png")
-    plt.savefig(save_img_path, dpi=300)
-    print(f"\nAcademic figure successfully created and saved to: {save_img_path}")
-    return save_img_path
+    save_pdf_path = os.path.join(RESULTS_DIR, f"router_performance_{timestamp}.pdf")
+    plt.savefig(save_pdf_path, format="pdf", bbox_inches="tight")
+    print(f"\nAcademic figure successfully created and saved to: {save_pdf_path}")
+    return save_pdf_path
 
 
 if __name__ == "__main__":

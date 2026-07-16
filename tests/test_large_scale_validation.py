@@ -1,19 +1,13 @@
-"""Large-scale validation: router vs. every confident event's OFFICIAL classification.
+"""Large-scale validation: router vs. every confirmed event's OFFICIAL classification.
 
-This pulls published parameters (live, nothing hardcoded) for every
-confident event across GWTC-1, GWTC-2.1, and GWTC-3 -- ~90+ real
-confirmed gravitational-wave detections -- runs each one through the
-router, and compares against LVK's own real-time source classification
-(the "p_astro" probabilities: BNS / NSBH / BBH / MassGap / Terrestrial)
-published on GraceDB, i.e. the actual answer LIGO/Virgo/KAGRA published,
-not a threshold we invented ourselves.
+Pulls published parameters live from GWOSC's cumulative ``GWTC`` catalog
+(the full up-to-date transient list through GWTC-5.0 / O4b, not the old
+GWTC-1/2.1/3 trio that only covered ~90 events). Events without published
+component masses yet (common for very recent O4 triggers) are skipped.
 
-That official classification is only public from O3 onward (superevents,
-gracedb_id starting with "S"); GWTC-1 (O1/O2) events predate the public
-real-time classifier and are stored under a plain event id that requires
-a GraceDB login to view. For those, we fall back to a clearly-labeled
-mass-threshold convention instead of silently guessing -- every row below
-says exactly which source its "expected" label came from.
+For each event with masses, the router is scored against LVK's own
+real-time source classification (p_astro from GraceDB) where public,
+otherwise a clearly-labeled mass-threshold heuristic.
 """
 
 import csv
@@ -24,13 +18,11 @@ from adapt.gwosc_events import fetch_confident_catalog_events, fetch_published_p
 from adapt.router import MatchedFilterRouter
 
 NS_MAX_MASS_MSUN = 3.0
-CATALOGS = ("GWTC-1-confident", "GWTC-2.1-confident", "GWTC-3-confident")
+# Cumulative GWTC list: latest parameters for all releases through GWTC-5.0.
+CATALOGS = ("GWTC",)
 
 RESULTS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "results")
 
-# Router's BNS/BBH/AMBIGUOUS scope doesn't distinguish NSBH or MassGap,
-# so official labels in these two categories are expected to fall outside
-# a clean BNS/BBH match -- reported separately, not counted as failures.
 OUT_OF_SCOPE_LABELS = {"NSBH", "MassGap"}
 
 
@@ -43,19 +35,21 @@ def heuristic_type(m1: float, m2: float) -> str:
 
 
 def run_large_scale_validation():
-    print(f"Fetching event list live from GWOSC for catalogs: {', '.join(CATALOGS)}", flush=True)
+    print(f"Fetching event list live from GWOSC catalog: {', '.join(CATALOGS)} (through GWTC-5.0)", flush=True)
     events = fetch_confident_catalog_events(CATALOGS)
     names = sorted(events, key=lambda n: events[n]["gps"])
-    print(f"Retrieved {len(names)} unique confident events.\n", flush=True)
+    print(f"Retrieved {len(names)} events with published component masses.\n", flush=True)
 
     router = MatchedFilterRouter()
     rows = []
 
     for i, name in enumerate(names, start=1):
         bulk = events[name]
-        print(f"[{i}/{len(names)}] {name}: fetching gracedb_id + official classification...", flush=True)
+        if i % 25 == 0 or i == len(names):
+            print(f"[{i}/{len(names)}] {name}: fetching GraceDB classification...", flush=True)
 
-        detail = fetch_published_parameters(name, bulk["catalog"])
+        # Use the event's originating release catalog (e.g. GWTC-5.0) for gracedb_id lookup.
+        detail = fetch_published_parameters(name, bulk["source_catalog"])
         gracedb_id = detail["gracedb_id"]
         official = fetch_source_classification(gracedb_id)
 
@@ -81,6 +75,7 @@ def run_large_scale_validation():
         rows.append(
             {
                 "name": name,
+                "source_catalog": bulk["source_catalog"],
                 "m1": bulk["m1"],
                 "m2": bulk["m2"],
                 "chi_eff": bulk["chi_eff"],
@@ -115,7 +110,18 @@ def run_large_scale_validation():
     with open(results_csv_path, "w", newline="") as f:
         writer = csv.DictWriter(
             f,
-            fieldnames=["name", "m1", "m2", "chi_eff", "expected", "expected_source", "route", "confidence", "bucket"],
+            fieldnames=[
+                "name",
+                "source_catalog",
+                "m1",
+                "m2",
+                "chi_eff",
+                "expected",
+                "expected_source",
+                "route",
+                "confidence",
+                "bucket",
+            ],
         )
         writer.writeheader()
         writer.writerows(rows)
@@ -130,9 +136,9 @@ def run_large_scale_validation():
     n_mismatch = sum(1 for r in rows if r["bucket"] == "mismatch")
 
     print(f"\n{'=' * 70}")
-    print(f"Total confident events tested: {n_total}")
+    print(f"Total events tested (with published masses): {n_total}")
     print(f"  Using LVK's official real-time classification (p_astro): {n_official}")
-    print(f"  Using mass-threshold heuristic (no public p_astro, pre-O3): {n_total - n_official}")
+    print(f"  Using mass-threshold heuristic (no public p_astro): {n_total - n_official}")
     print(f"\n  Out of router scope (official label NSBH/MassGap): {n_out_of_scope}")
     print(f"  Scored (BNS/BBH expected): {n_scored}")
     print(f"    Matched exactly:   {n_match}  ({100 * n_match / n_scored:.1f}%)")
