@@ -65,6 +65,10 @@ python tests/test_large_scale_validation.py        # runs the router against eve
                                                     # labeled mass-threshold heuristic for older
                                                     # (O1/O2) events with no public classifier.
                                                     # Takes a few minutes (per-event network calls).
+python tests/test_simulation_batch.py              # Section 4.3-style campaign: 1000 synthetic
+                                                    # BNS/BBH draws, mocked matched-filter noise,
+                                                    # waveform generation on a subset, router
+                                                    # performance report + results/simulation_batch.csv
 ```
 
 Note on GWOSC downloads: the continuous archive (`test_noise.py`,
@@ -91,6 +95,11 @@ possible.
       (GW190425, officially BNS but structurally borderline), 9 events
       officially NSBH/MassGap correctly falling into the documented
       NSBH-routing gap -- `tests/test_large_scale_validation.py`
+- [x] Distributed simulation campaign (Section 4.3): 1000 synthetic BNS/BBH
+      draws with mocked matched-filter measurement noise, waveform generation
+      on a subset, 0 hard mismatches / 93% exact match / 7% conservative
+      AMBIGUOUS -- `tests/test_simulation_batch.py`,
+      `results/simulation_batch.csv`
 - [ ] NSBH-specific routing refinement
 - [ ] Local noise adaptation layer
 - [ ] Dual-pathway global backbone
