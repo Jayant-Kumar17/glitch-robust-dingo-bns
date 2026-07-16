@@ -18,6 +18,7 @@ says exactly which source its "expected" label came from.
 
 import csv
 import os
+from datetime import datetime
 
 from adapt.gwosc_events import fetch_confident_catalog_events, fetch_published_parameters, fetch_source_classification
 from adapt.router import MatchedFilterRouter
@@ -26,7 +27,6 @@ NS_MAX_MASS_MSUN = 3.0
 CATALOGS = ("GWTC-1-confident", "GWTC-2.1-confident", "GWTC-3-confident")
 
 RESULTS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "results")
-RESULTS_CSV_PATH = os.path.join(RESULTS_DIR, "large_scale_validation.csv")
 
 # Router's BNS/BBH/AMBIGUOUS scope doesn't distinguish NSBH or MassGap,
 # so official labels in these two categories are expected to fall outside
@@ -110,14 +110,16 @@ def run_large_scale_validation():
         )
 
     os.makedirs(RESULTS_DIR, exist_ok=True)
-    with open(RESULTS_CSV_PATH, "w", newline="") as f:
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    results_csv_path = os.path.join(RESULTS_DIR, f"large_scale_validation_{timestamp}.csv")
+    with open(results_csv_path, "w", newline="") as f:
         writer = csv.DictWriter(
             f,
             fieldnames=["name", "m1", "m2", "chi_eff", "expected", "expected_source", "route", "confidence", "bucket"],
         )
         writer.writeheader()
         writer.writerows(rows)
-    print(f"\nFull results table saved to: {RESULTS_CSV_PATH}")
+    print(f"\nFull results table saved to: {results_csv_path}")
 
     n_total = len(rows)
     n_official = sum(1 for r in rows if "official" in r["expected_source"])

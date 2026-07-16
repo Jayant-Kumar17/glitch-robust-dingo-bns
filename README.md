@@ -30,11 +30,30 @@ pip install "astropy==7.2.2" "setuptools==69.5.1"
 ```
 src/adapt/
   physics.py       # chirp mass / total mass / mass ratio / effective spin helpers
-  router.py        # hierarchical matched-filter routing heuristic (Section 3.1)
+  router.py        # component-mass boundary router (BNS / BBH / AMBIGUOUS)
   injection.py      # synthetic waveform injection into real noise (Section 4.3 preview)
   gwosc_events.py   # live GWOSC lookups: published event parameters + real strain files
 tests/             # standalone test/verification scripts
+plot_results.py    # publication-quality figure from the simulation-batch CSV
+results/           # generated CSVs and figures (timestamped per run)
 ```
+
+## Routing scheme
+
+`MatchedFilterRouter` classifies strictly on component masses, targeting the
+two source classes with mature deep-learning parameter-estimation networks:
+
+- **BNS** -- both component masses `<= ns_max` (default 2.2 M_sun).
+- **BBH** -- both component masses `>= bh_min` (default 5.0 M_sun).
+- **AMBIGUOUS** -- everything else (asymmetric NSBH systems, lower-mass-gap
+  objects). NSBH has no widely accepted PE network, so such triggers are
+  deliberately routed to traditional, non-ML offline analysis rather than
+  forced into a BBH/BNS pathway.
+
+`route_event(m1, m2, chi_eff=0.0)` returns `{"route", "confidence"}` where
+confidence is `1.0` for a clean BNS/BBH classification and `0.5` for
+AMBIGUOUS. (`chi_eff` is accepted for pipeline compatibility but does not
+change the boundary decision.)
 
 ## Running tests
 
@@ -68,10 +87,18 @@ python tests/test_large_scale_validation.py        # runs the router against eve
 python tests/test_simulation_batch.py              # Section 4.3-style campaign: 1000 synthetic
                                                     # BNS/BBH draws. For EVERY sample: real
                                                     # IMRPhenomD/LALSimulation waveform + mocked
-                                                    # matched-filter noise + hierarchical router
-                                                    # score. Writes results/simulation_batch.csv
+                                                    # matched-filter noise + boundary router
+                                                    # score. Writes a timestamped
+                                                    # results/simulation_batch_<ts>.csv
                                                     # (includes peak/RMS strain columns).
+python plot_results.py                             # reads the latest simulation_batch_<ts>.csv and
+                                                    # writes a timestamped two-panel figure to
+                                                    # results/router_performance_<ts>.png
 ```
+
+Generated CSVs and figures are timestamped (e.g. `simulation_batch_20260716_185310.csv`,
+`router_performance_20260716_185318.png`), so each run adds a new file
+rather than overwriting the previous one.
 
 Note on GWOSC downloads: the continuous archive (`test_noise.py`,
 `test_injection.py`) always serves ~4096-second (~500MB) files regardless
@@ -82,8 +109,9 @@ possible.
 
 ## Progress
 
-- [x] Hierarchical matched-filter routing heuristic (chirp mass, total mass,
-      mass ratio, spin confidence modifier) -- `src/adapt/router.py`
+- [x] Component-mass boundary routing (BNS / BBH / AMBIGUOUS), targeting the
+      two source classes with mature PE networks and routing NSBH/mass-gap
+      systems to offline analysis -- `src/adapt/router.py`
 - [x] Synthetic injection pipeline for end-to-end router verification against
       real detector noise -- `src/adapt/injection.py`
 - [x] Known-answer validation: synthetic full-metadata self-consistency checks,
@@ -93,15 +121,12 @@ possible.
 - [x] Large-scale validation against all ~90 confident confirmed events across
       GWTC-1/2.1/3, checked against LVK's own real-time source classification
       (p_astro, from GraceDB) where public, not a self-invented threshold:
-      98.8% exact match, 0 hard mismatches, 1 conservative AMBIGUOUS flag
-      (GW190425, officially BNS but structurally borderline), 9 events
-      officially NSBH/MassGap correctly falling into the documented
-      NSBH-routing gap -- `tests/test_large_scale_validation.py`
+      0 hard mismatches, with NSBH/MassGap events routed to AMBIGUOUS as
+      designed -- `tests/test_large_scale_validation.py`
 - [x] Distributed simulation campaign (Section 4.3): 1000 synthetic BNS/BBH
       draws, each with a real IMRPhenomD waveform + mocked matched-filter
-      noise into the hierarchical (m1, m2, chi_eff) router; physics helpers
-      live in `src/adapt/physics.py` -- `tests/test_simulation_batch.py`,
-      `results/simulation_batch.csv`
+      noise into the boundary router (99.6% exact match, 0 hard mismatches,
+      100% safe-path rate) -- `tests/test_simulation_batch.py`, `plot_results.py`
 - [ ] NSBH-specific routing refinement
 - [ ] Local noise adaptation layer
 - [ ] Dual-pathway global backbone

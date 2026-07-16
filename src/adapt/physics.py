@@ -19,9 +19,13 @@ def total_mass(m1: float, m2: float) -> float:
 
 def mass_ratio(m1: float, m2: float) -> float:
     """Mass ratio q = min(m1, m2) / max(m1, m2), so q is always in (0, 1]."""
+    if m1 == 0 or m2 == 0:
+        return 0.0
     return min(m1, m2) / max(m1, m2)
 
 
 def effective_spin(m1: float, m2: float, spin1z: float, spin2z: float) -> float:
     """Effective aligned spin chi_eff = (m1 * spin1z + m2 * spin2z) / (m1 + m2)."""
+    if (m1 + m2) == 0:
+        return 0.0
     return (m1 * spin1z + m2 * spin2z) / (m1 + m2)

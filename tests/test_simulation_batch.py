@@ -30,6 +30,7 @@ Run from the repo root with `adapt_env` active after `pip install -e .`:
 import csv
 import os
 import time
+from datetime import datetime
 
 import numpy as np
 from pycbc.waveform import get_td_waveform
@@ -38,7 +39,6 @@ from adapt.physics import chirp_mass, effective_spin, mass_ratio, total_mass
 from adapt.router import MatchedFilterRouter
 
 RESULTS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "results")
-RESULTS_CSV_PATH = os.path.join(RESULTS_DIR, "simulation_batch.csv")
 
 MASS_NOISE_FRAC = 0.02
 SPIN_NOISE_ABS = 0.02
@@ -252,11 +252,13 @@ def run_simulation_campaign(num_samples: int = 1000, seed: int = 42):
         print("WARNING: hard mismatches present -- inspect results CSV near class boundary.")
 
     os.makedirs(RESULTS_DIR, exist_ok=True)
-    with open(RESULTS_CSV_PATH, "w", newline="") as f:
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    results_csv_path = os.path.join(RESULTS_DIR, f"simulation_batch_{timestamp}.csv")
+    with open(results_csv_path, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
         writer.writeheader()
         writer.writerows(rows)
-    print(f"\nFull physical dataset saved to: {RESULTS_CSV_PATH}")
+    print(f"\nFull physical dataset saved to: {results_csv_path}")
 
     assert n_waveforms_ok == num_samples, "Not every sample produced a real waveform."
     assert n_mismatch == 0, f"{n_mismatch} hard misclassifications in the simulation campaign."
@@ -268,6 +270,7 @@ def run_simulation_campaign(num_samples: int = 1000, seed: int = 42):
         "n_mismatch": n_mismatch,
         "safe_rate": safe_rate,
         "n_waveforms_ok": n_waveforms_ok,
+        "results_csv_path": results_csv_path,
     }
 
 

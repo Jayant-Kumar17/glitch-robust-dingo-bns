@@ -35,10 +35,10 @@ SYNTHETIC_CASES = [
         "expected_route": "BBH",
     },
     {
-        "label": "Ambiguous middle-band, equal masses, zero spin",
-        "m1": 2.0,
-        "m2": 2.0,
-        "spin1z": 0.0,
+        "label": "NSBH-like: heavy black hole + light neutron star (secondary in the mass gap)",
+        "m1": 8.0,
+        "m2": 1.6,
+        "spin1z": 0.1,
         "spin2z": 0.0,
         "expected_route": "AMBIGUOUS",
     },
@@ -63,25 +63,25 @@ REAL_EVENTS = [
         "name": "GW190425",
         "catalog": "GWTC-2.1-confident",
         "version": 3,
-        "expected_route": None,
+        "expected_route": "BNS",
         "note": (
-            "Real BNS detection, but unusually high mass and asymmetric "
-            "(q~0.62) for a BNS -- the router's mass-structure check is "
-            "expected to flag this as AMBIGUOUS rather than confidently BNS, "
-            "mirroring how this event puzzled astronomers in real life."
+            "Real BNS detection (m1~2.1, m2~1.3). Both components sit within "
+            "the neutron-star mass ceiling, so the boundary router cleanly "
+            "routes it to BNS -- matching its official classification, even "
+            "though it was an unusually high-mass, asymmetric BNS."
         ),
     },
     {
         "name": "GW190814",
         "catalog": "GWTC-2.1-confident",
         "version": 3,
-        "expected_route": None,
+        "expected_route": "AMBIGUOUS",
         "note": (
             "A 'mass-gap' event: a ~23 Msun black hole merging with a ~2.6 "
             "Msun object that could be an unusually heavy neutron star or "
-            "unusually light black hole. The router (no NSBH-specific "
-            "handling yet) is expected to route this to BBH given the "
-            "large total mass."
+            "unusually light black hole. The secondary falls in the "
+            "2.2-5.0 Msun gap, so the router safely routes it to AMBIGUOUS "
+            "for offline analysis rather than forcing a BBH/BNS label."
         ),
     },
 ]
