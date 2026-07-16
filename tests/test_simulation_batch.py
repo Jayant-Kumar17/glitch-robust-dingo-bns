@@ -1,21 +1,30 @@
-"""Distributed simulation campaign: stress-test the router on a synthetic population.
+"""Distributed simulation campaign: real GR waveforms + router stress test.
 
-Implements the spirit of the ADAPT report's Section 4.3 simulation loop,
-adapted to the current hierarchical MatchedFilterRouter (m1, m2, chi_eff ->
-BNS / BBH / AMBIGUOUS), not the old single-threshold light/heavy API.
+This is not a print-stub demo. For every sample it:
 
-For each sample:
-1. Flip a coin: BNS or BBH.
-2. Draw astrophysically plausible component masses (and spins).
-3. Compute true derived quantities (chirp mass, total mass, q, chi_eff).
-4. Optionally generate a real LALSimulation/PyCBC waveform from those
-   parameters (proves the draw is physically realizable).
-5. Mock matched-filter recovery by adding small Gaussian measurement noise
-   to the component masses and spins.
-6. Feed the noisy recovered parameters into the router and score.
+1. Draws BNS or BBH masses/spins from astrophysical priors.
+2. Computes true chirp mass, total mass, mass ratio, and chi_eff via
+   `adapt.physics` (the actual equations, not placeholders).
+3. Calls PyCBC -> LALSimulation (`IMRPhenomD`) to compute a real
+   time-domain gravitational-wave strain array.
+4. Mocks matched-filter recovery with Gaussian measurement noise.
+5. Routes the noisy (m1, m2, chi_eff) through the hierarchical
+   MatchedFilterRouter and scores the decision.
 
-Results are printed as a performance report and written to
-results/simulation_batch.csv.
+Project layout (package lives under src/, installed editable):
+
+    ADAPT-Project/
+    ├── src/adapt/
+    │   ├── __init__.py
+    │   ├── physics.py      # chirp_mass, effective_spin, mass_ratio, total_mass
+    │   ├── router.py       # hierarchical MatchedFilterRouter
+    │   └── ...
+    ├── results/            # created automatically
+    └── tests/test_simulation_batch.py
+
+Run from the repo root with `adapt_env` active after `pip install -e .`:
+
+    python tests/test_simulation_batch.py
 """
 
 import csv
@@ -31,8 +40,6 @@ from adapt.router import MatchedFilterRouter
 RESULTS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "results")
 RESULTS_CSV_PATH = os.path.join(RESULTS_DIR, "simulation_batch.csv")
 
-# Relative measurement uncertainty on recovered component masses / spins
-# (mocks low-latency matched-filter template scatter).
 MASS_NOISE_FRAC = 0.02
 SPIN_NOISE_ABS = 0.02
 
@@ -87,10 +94,12 @@ def mock_matched_filter_recovery(truth: dict, rng: np.random.Generator) -> dict:
     }
 
 
-def generate_waveform(m1: float, m2: float, spin1z: float, spin2z: float, sample_rate: float = 4096.0) -> int:
-    """Generate a time-domain waveform; return its length in samples."""
-    # BNS signals are long; start a bit higher in frequency for speed while
-    # still requiring a real LALSimulation call.
+def generate_waveform(m1: float, m2: float, spin1z: float, spin2z: float, sample_rate: float = 4096.0) -> dict:
+    """Generate a real IMRPhenomD strain via PyCBC/LALSimulation.
+
+    Returns length, peak |h+, and RMS of the plus polarization -- numbers
+    that only exist if the C waveform engine actually ran.
+    """
     f_lower = 30.0 if max(m1, m2) < 3.0 else 20.0
     hp, _ = get_td_waveform(
         approximant="IMRPhenomD",
@@ -101,7 +110,29 @@ def generate_waveform(m1: float, m2: float, spin1z: float, spin2z: float, sample
         delta_t=1.0 / sample_rate,
         f_lower=f_lower,
     )
-    return len(hp)
+    strain = hp.numpy()
+    return {
+        "n_samples": int(len(strain)),
+        "peak_strain": float(np.max(np.abs(strain))),
+        "rms_strain": float(np.sqrt(np.mean(strain**2))),
+        "duration_s": float(len(strain) / sample_rate),
+    }
+
+
+def prove_physics_is_real():
+    """One explicit LALSimulation call with printed strain stats (not a stub)."""
+    print("=" * 60)
+    print(" PHYSICS SANITY CHECK (real IMRPhenomD / LALSimulation)")
+    print("=" * 60)
+    print("Calling get_td_waveform(approximant='IMRPhenomD', m1=1.4, m2=1.3, ...)")
+    stats = generate_waveform(1.4, 1.3, 0.0, 0.0)
+    print(f"  waveform length : {stats['n_samples']} samples ({stats['duration_s']:.2f} s)")
+    print(f"  peak |h+|       : {stats['peak_strain']:.6e}")
+    print(f"  RMS strain      : {stats['rms_strain']:.6e}")
+    assert stats["n_samples"] > 0
+    assert stats["peak_strain"] > 0.0
+    print("  => LALSimulation returned a non-zero gravitational-wave strain array.")
+    print()
 
 
 def score_decision(true_class: str, route: str) -> str:
@@ -112,16 +143,15 @@ def score_decision(true_class: str, route: str) -> str:
     return "mismatch"
 
 
-def run_simulation_campaign(
-    num_samples: int = 1000,
-    waveform_samples: int = 50,
-    seed: int = 42,
-):
+def run_simulation_campaign(num_samples: int = 1000, seed: int = 42):
+    prove_physics_is_real()
+
     print("=" * 60)
     print(f" ADAPT SIMULATION CAMPAIGN ({num_samples} samples)")
     print("=" * 60)
+    print(f"Package layout: src/adapt/ (editable install via pip install -e .)")
     print(f"Mass measurement noise: {100 * MASS_NOISE_FRAC:.1f}% relative Gaussian")
-    print(f"Waveform generation: first {waveform_samples} samples (LALSimulation/PyCBC)")
+    print(f"Waveform generation: ALL {num_samples} samples via IMRPhenomD")
     print()
 
     rng = np.random.default_rng(seed)
@@ -136,14 +166,16 @@ def run_simulation_campaign(
     for i in range(num_samples):
         truth = sample_event(rng)
 
-        waveform_len = None
-        if i < waveform_samples:
-            try:
-                waveform_len = generate_waveform(truth["m1"], truth["m2"], truth["spin1z"], truth["spin2z"])
-                n_waveforms_ok += 1
-            except Exception as exc:
-                print(f"  [{i + 1}] waveform failed for {truth['true_class']} "
-                      f"m1={truth['m1']:.2f}, m2={truth['m2']:.2f}: {exc}", flush=True)
+        try:
+            wf = generate_waveform(truth["m1"], truth["m2"], truth["spin1z"], truth["spin2z"])
+            n_waveforms_ok += 1
+        except Exception as exc:
+            print(
+                f"  [{i + 1}] waveform FAILED for {truth['true_class']} "
+                f"m1={truth['m1']:.2f}, m2={truth['m2']:.2f}: {exc}",
+                flush=True,
+            )
+            raise
 
         recovered = mock_matched_filter_recovery(truth, rng)
         decision = router.route_event(recovered["m1"], recovered["m2"], chi_eff=recovered["chi_eff"])
@@ -167,6 +199,7 @@ def run_simulation_campaign(
                 "true_m1": truth["m1"],
                 "true_m2": truth["m2"],
                 "true_mc": truth["mc"],
+                "true_q": truth["q"],
                 "true_chi_eff": truth["chi_eff"],
                 "recovered_m1": recovered["m1"],
                 "recovered_m2": recovered["m2"],
@@ -175,7 +208,10 @@ def run_simulation_campaign(
                 "route": decision["route"],
                 "confidence": decision["confidence"],
                 "bucket": bucket,
-                "waveform_samples": waveform_len if waveform_len is not None else "",
+                "waveform_n_samples": wf["n_samples"],
+                "waveform_duration_s": wf["duration_s"],
+                "waveform_peak_strain": wf["peak_strain"],
+                "waveform_rms_strain": wf["rms_strain"],
             }
         )
 
@@ -183,18 +219,21 @@ def run_simulation_campaign(
             elapsed = time.time() - t0
             print(
                 f"  [{i + 1}/{num_samples}] elapsed={elapsed:.1f}s  "
+                f"waveforms={n_waveforms_ok}  "
                 f"match={n_match} ambiguous={n_ambiguous} mismatch={n_mismatch}",
                 flush=True,
             )
 
     accuracy = 100.0 * n_match / num_samples
     safe_rate = 100.0 * (n_match + n_ambiguous) / num_samples
+    peaks = np.array([r["waveform_peak_strain"] for r in rows])
 
     print("\n" + "=" * 50)
     print("      ADAPT ROUTER PERFORMANCE REPORT")
     print("=" * 50)
     print(f"Total simulated events     : {num_samples}")
-    print(f"Waveforms successfully made: {n_waveforms_ok}/{waveform_samples}")
+    print(f"Real waveforms generated   : {n_waveforms_ok}/{num_samples}")
+    print(f"Peak |h+| range            : {peaks.min():.3e} .. {peaks.max():.3e}")
     print(f"Exact route matches        : {n_match}  ({accuracy:.2f}%)")
     print(f"Conservative AMBIGUOUS     : {n_ambiguous}  ({100.0 * n_ambiguous / num_samples:.2f}%)")
     print(f"Hard mismatches            : {n_mismatch}  ({100.0 * n_mismatch / num_samples:.2f}%)")
@@ -217,8 +256,9 @@ def run_simulation_campaign(
         writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
         writer.writeheader()
         writer.writerows(rows)
-    print(f"\nFull results table saved to: {RESULTS_CSV_PATH}")
+    print(f"\nFull physical dataset saved to: {RESULTS_CSV_PATH}")
 
+    assert n_waveforms_ok == num_samples, "Not every sample produced a real waveform."
     assert n_mismatch == 0, f"{n_mismatch} hard misclassifications in the simulation campaign."
     return {
         "num_samples": num_samples,
@@ -227,8 +267,9 @@ def run_simulation_campaign(
         "n_ambiguous": n_ambiguous,
         "n_mismatch": n_mismatch,
         "safe_rate": safe_rate,
+        "n_waveforms_ok": n_waveforms_ok,
     }
 
 
 if __name__ == "__main__":
-    run_simulation_campaign(num_samples=1000, waveform_samples=50)
+    run_simulation_campaign(num_samples=1000)
