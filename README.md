@@ -75,15 +75,10 @@ python tests/test_real_event_full_validation.py    # downloads real raw strain (
                                                     # parameters for GW150914/GW170817, runs the
                                                     # router, and checks it against the verified
                                                     # classification
-python tests/test_large_scale_validation.py        # runs the router against every confident event
-                                                    # published across GWTC-1/2.1/3 (~90 real
-                                                    # detections). For each, fetches LVK's own
-                                                    # real-time source classification (p_astro:
-                                                    # BNS/NSBH/BBH/MassGap/Terrestrial) from GraceDB
-                                                    # where public (O3 onward), falling back to a
-                                                    # labeled mass-threshold heuristic for older
-                                                    # (O1/O2) events with no public classifier.
-                                                    # Takes a few minutes (per-event network calls).
+python tests/test_large_scale_validation.py        # runs the router against every confirmed event
+                                                    # with published masses from GWOSC's cumulative
+                                                    # GWTC catalog (through GWTC-5.0, ~280+ events).
+                                                    # Takes several minutes (per-event GraceDB calls).
 python tests/test_simulation_batch.py              # Section 4.3-style campaign: 1000 synthetic
                                                     # BNS/BBH draws. For EVERY sample: real
                                                     # IMRPhenomD/LALSimulation waveform + mocked
@@ -93,11 +88,11 @@ python tests/test_simulation_batch.py              # Section 4.3-style campaign:
                                                     # (includes peak/RMS strain columns).
 python plot_results.py                             # reads the latest simulation_batch_<ts>.csv and
                                                     # writes a timestamped two-panel figure to
-                                                    # results/router_performance_<ts>.png
+                                                    # results/router_performance_<ts>.pdf (vector)
 ```
 
 Generated CSVs and figures are timestamped (e.g. `simulation_batch_20260716_185310.csv`,
-`router_performance_20260716_185318.png`), so each run adds a new file
+`router_performance_20260716_185318.pdf`), so each run adds a new file
 rather than overwriting the previous one.
 
 Note on GWOSC downloads: the continuous archive (`test_noise.py`,
@@ -118,11 +113,11 @@ possible.
       plus router decisions checked against real confirmed events (live
       published parameters and real raw strain from GWOSC) -- `src/adapt/gwosc_events.py`,
       `tests/test_known_answer_validation.py`, `tests/test_real_event_full_validation.py`
-- [x] Large-scale validation against all ~90 confident confirmed events across
-      GWTC-1/2.1/3, checked against LVK's own real-time source classification
-      (p_astro, from GraceDB) where public, not a self-invented threshold:
-      0 hard mismatches, with NSBH/MassGap events routed to AMBIGUOUS as
-      designed -- `tests/test_large_scale_validation.py`
+- [x] Large-scale validation against all confirmed events with published masses
+      from GWOSC's cumulative GWTC catalog (through GWTC-5.0, ~280+ events),
+      checked against LVK's real-time p_astro classification where public:
+      0 hard mismatches, NSBH/MassGap events routed to AMBIGUOUS as designed
+      -- `tests/test_large_scale_validation.py`
 - [x] Distributed simulation campaign (Section 4.3): 1000 synthetic BNS/BBH
       draws, each with a real IMRPhenomD waveform + mocked matched-filter
       noise into the boundary router (99.6% exact match, 0 hard mismatches,
