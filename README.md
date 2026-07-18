@@ -29,13 +29,14 @@ pip install "astropy==7.2.2" "setuptools==69.5.1"
 
 ```
 src/adapt/
-  physics.py       # chirp mass / total mass / mass ratio / effective spin helpers
-  router.py        # component-mass boundary router (BNS / BBH / AMBIGUOUS)
-  injection.py      # synthetic waveform injection into real noise (Section 4.3 preview)
-  gwosc_events.py   # live GWOSC lookups: published event parameters + real strain files
-tests/             # standalone test/verification scripts
-plot_results.py    # publication-quality figure from the simulation-batch CSV
-results/           # generated CSVs and figures (timestamped per run)
+  physics.py         # chirp mass / total mass / mass ratio / effective spin helpers
+  router.py          # component-mass boundary router (BNS / BBH / AMBIGUOUS)
+  injection.py        # synthetic waveform injection into real noise (Section 4.3 preview)
+  gwosc_events.py     # live GWOSC lookups: published event parameters + real strain files
+  noise_analytics.py  # isolated single-detector rich noise profiling (local encoder)
+tests/               # standalone test/verification scripts
+plot_results.py      # publication-quality figure from the simulation-batch CSV
+results/             # generated CSVs and figures (timestamped per run)
 ```
 
 ## Routing scheme
@@ -55,6 +56,22 @@ confidence is `1.0` for a clean BNS/BBH classification and `0.5` for
 AMBIGUOUS. (`chi_eff` is accepted for pipeline compatibility but does not
 change the boundary decision.)
 
+## Local noise profiling (isolated module)
+
+`src/adapt/noise_analytics.py` is a standalone single-detector subsystem
+(not yet wired into the router). It builds a fixed-length **Rich Noise
+Profile** from real GWOSC strain (default 256 s @ 4096 Hz after an
+explicit `.resample()`), combining:
+
+- Welch PSD features on a log-spaced grid from **20 Hz** to Nyquist
+- Windowed std / skewness / excess kurtosis (default 4 s windows)
+
+If GWOSC is unavailable, `fetch_background_strain` falls back to colored
+Gaussian noise from `pycbc.psd.aLIGOZeroDetHighPower` + `noise_from_psd`.
+`LocalNoiseTracker` maintains a sliding history and an environmental
+drift delta; `plot_rich_profile` writes a timestamped multi-panel PDF to
+`results/rich_noise_profile_<ts>.pdf`.
+
 ## Running tests
 
 Test scripts are plain runnable Python scripts (no `pytest` required):
@@ -62,6 +79,8 @@ Test scripts are plain runnable Python scripts (no `pytest` required):
 ```bash
 conda activate adapt_env
 python tests/test_router.py                      # fast, no network needed
+python tests/test_noise_analytics.py             # offline noise-profile unit tests
+                                                    # (fallback, glitch sensitivity, tracker + PDF)
 python tests/test_noise.py                        # downloads ~10s of real noise from GWOSC
 python tests/test_injection.py                     # downloads a real 64s noise segment, then
                                                     # injects synthetic BNS/BBH waveforms and
@@ -122,7 +141,12 @@ possible.
       draws, each with a real IMRPhenomD waveform + mocked matched-filter
       noise into the boundary router (99.6% exact match, 0 hard mismatches,
       100% safe-path rate) -- `tests/test_simulation_batch.py`, `plot_results.py`
+- [x] Isolated single-detector rich noise profiling: Welch PSD (>= 20 Hz) +
+      windowed higher-order moments, GWOSC fetch with colored-noise fallback,
+      epoch-aware waveform injection sandbox, LocalNoiseTracker drift, and
+      timestamped vector diagnostics -- `src/adapt/noise_analytics.py`,
+      `tests/test_noise_analytics.py`
 - [ ] NSBH-specific routing refinement
-- [ ] Local noise adaptation layer
+- [ ] Wire noise profiler into the dual-pathway backbone (integration phase)
 - [ ] Dual-pathway global backbone
 - [ ] Continuous training hub
