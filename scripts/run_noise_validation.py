@@ -45,6 +45,15 @@ FETCH_TIMEOUT_S = float(os.environ.get("ADAPT_FETCH_TIMEOUT_S", "600"))
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RESULTS_DIR = os.path.join(REPO_ROOT, "results")
+DATA_DIR = os.path.join(REPO_ROOT, "data", "gwosc")
+# Official O3a 4 kHz continuous-archive file covering GPS 1240559616 (+4096 s).
+LOCAL_HDF5 = os.path.join(
+    DATA_DIR, "H-H1_GWOSC_O3a_4KHZ_R1-1240559616-4096.hdf5"
+)
+GWOSC_URL = (
+    "https://gwosc.org/archive/data/O3a_4KHZ_R1/1240465408/"
+    "H-H1_GWOSC_O3a_4KHZ_R1-1240559616-4096.hdf5"
+)
 
 
 def _fetch_worker(queue: Queue) -> None:
@@ -76,12 +85,89 @@ def _fallback_segment(reason: str) -> NoiseSegment:
     )
 
 
+def _strain_from_timeseries(ts) -> np.ndarray:
+    """Resample/crop a gwpy TimeSeries to the campaign length and sample rate."""
+    if abs(float(ts.sample_rate.value) - float(SAMPLE_RATE)) > 1e-9:
+        ts = ts.resample(SAMPLE_RATE)
+    strain = np.asarray(ts.value, dtype=np.float64)
+    n_expected = int(round(TOTAL_DURATION_S * SAMPLE_RATE))
+    if len(strain) > n_expected:
+        strain = strain[:n_expected]
+    elif len(strain) < n_expected:
+        padded = np.zeros(n_expected, dtype=np.float64)
+        padded[: len(strain)] = strain
+        strain = padded
+    return strain
+
+
+def load_local_gwosc_hdf5(path: str) -> NoiseSegment:
+    """Load the first TOTAL_DURATION_S of a local GWOSC HDF5 as real strain."""
+    from gwpy.timeseries import TimeSeries
+
+    print(f"  loading local GWOSC file: {path}", flush=True)
+    ts = TimeSeries.read(path, format="hdf5.gwosc")
+    # Archive files are typically longer than the campaign (e.g. 4096 s).
+    end_gps = GPS_START + TOTAL_DURATION_S
+    ts = ts.crop(GPS_START, end_gps)
+    strain = _strain_from_timeseries(ts)
+    rms = float(np.sqrt(np.mean(strain**2)))
+    print(
+        f"  real H1 strain loaded: n={len(strain)}, rms={rms:.3e}, "
+        f"t0={float(ts.t0.value):.1f}",
+        flush=True,
+    )
+    return NoiseSegment(
+        strain=strain,
+        sample_rate=SAMPLE_RATE,
+        detector=DETECTOR,
+        start_gps=GPS_START,
+        duration_seconds=TOTAL_DURATION_S,
+        used_fallback=False,
+        fallback_reason=None,
+    )
+
+
+def download_gwosc_hdf5(dest: str = LOCAL_HDF5) -> str:
+    """Download the continuous-archive HDF5 with curl (resumable, progress bar)."""
+    os.makedirs(os.path.dirname(dest), exist_ok=True)
+    print(f"  downloading real H1 archive via curl:\n    {GWOSC_URL}", flush=True)
+    cmd = (
+        f'curl -L --fail --retry 5 --retry-delay 5 -C - '
+        f'-o "{dest}" "{GWOSC_URL}"'
+    )
+    rc = os.system(cmd)
+    if rc != 0 or not os.path.isfile(dest) or os.path.getsize(dest) < 1_000_000:
+        raise RuntimeError(f"curl download failed (rc={rc})")
+    print(f"  downloaded {os.path.getsize(dest) / 1e6:.1f} MB -> {dest}", flush=True)
+    return dest
+
+
 def fetch_with_timeout():
     """Fetch GWOSC strain, or force colored-noise fallback if the download hangs.
 
-    Uses a subprocess so a hung GWOSC download can be terminated without
-    blocking interpreter exit (threads cannot be killed reliably).
+    Preference order:
+      1. Local HDF5 under data/gwosc/ (fast, real data)
+      2. curl download of the official continuous-archive file (real data)
+      3. fetch_background_strain in a subprocess (real data or library fallback)
+      4. Local colored-noise synthesis if everything else fails/times out
     """
+    # 1–2. Prefer an explicit curl/local path — gwpy's fetch_open_data often
+    # stalls on multi-hundred-MB continuous archives.
+    if os.path.isfile(LOCAL_HDF5) and os.path.getsize(LOCAL_HDF5) > 1_000_000:
+        try:
+            return load_local_gwosc_hdf5(LOCAL_HDF5)
+        except Exception as exc:
+            print(f"  local HDF5 load failed: {exc}", flush=True)
+
+    force_curl = os.environ.get("ADAPT_FORCE_CURL", "1") == "1"
+    if force_curl:
+        try:
+            download_gwosc_hdf5(LOCAL_HDF5)
+            return load_local_gwosc_hdf5(LOCAL_HDF5)
+        except Exception as exc:
+            print(f"  curl download/load failed: {exc}", flush=True)
+            print("  falling back to fetch_background_strain...", flush=True)
+
     queue: Queue = Queue()
     proc = Process(target=_fetch_worker, args=(queue,))
     proc.start()
