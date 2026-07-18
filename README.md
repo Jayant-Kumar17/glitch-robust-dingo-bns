@@ -72,6 +72,21 @@ Gaussian noise from `pycbc.psd.aLIGOZeroDetHighPower` + `noise_from_psd`.
 drift delta; `plot_rich_profile` writes a timestamped multi-panel PDF to
 `results/rich_noise_profile_<ts>.pdf`.
 
+### Long-duration real noise validation campaign
+
+```bash
+python scripts/run_noise_validation.py
+```
+
+Fetches a continuous **2048 s** H1 block from GWOSC (GPS `1240559616`),
+injects a loud BBH (40+30 M☉) at the stream midpoint, then rolls
+`LocalNoiseTracker` over **256 s** windows stepped by **32 s** (57
+updates). Writes `results/real_validation_profile_<ts>.pdf`. The first
+GWOSC fetch may download a large continuous-archive file (~500 MB);
+subsequent runs use the cache when available. If GWOSC fails or the
+fetch exceeds 600 s (override with `ADAPT_FETCH_TIMEOUT_S`), the script
+continues on the colored-noise fallback.
+
 ## Running tests
 
 Test scripts are plain runnable Python scripts (no `pytest` required):
