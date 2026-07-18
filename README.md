@@ -82,10 +82,11 @@ Fetches a continuous **2048 s** H1 block from GWOSC (GPS `1240559616`),
 injects a loud BBH (40+30 M☉) at the stream midpoint, then rolls
 `LocalNoiseTracker` over **256 s** windows stepped by **32 s** (57
 updates). Writes `results/real_validation_profile_<ts>.pdf`. The first
-GWOSC fetch may download a large continuous-archive file (~500 MB);
-subsequent runs use the cache when available. If GWOSC fails or the
-fetch exceeds 600 s (override with `ADAPT_FETCH_TIMEOUT_S`), the script
-continues on the colored-noise fallback.
+run downloads the O3a 4 kHz continuous-archive HDF5 (~130 MB) via `curl`
+into `data/gwosc/` (gitignored); later runs reuse that file. Confirm
+`used_fallback=False` in the log for real data. If download/load fails,
+the script falls back to colored noise (`ADAPT_FETCH_TIMEOUT_S` controls
+the secondary `fetch_background_strain` timeout).
 
 ## Running tests
 

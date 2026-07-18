@@ -16,3 +16,6 @@ env/
 
 .pytest_cache/
 .mypy_cache/
+
+# Large GWOSC continuous-archive downloads (local cache only)
+data/gwosc/
