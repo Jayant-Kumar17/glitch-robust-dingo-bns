@@ -1,0 +1,48 @@
+{
+  "n_events": 23,
+  "kat_pass_rate": 0.8695652173913043,
+  "n_glitch_rows": 160,
+  "n_glitch_ok": 160,
+  "overall": {
+    "gated_recovery_rate": 0.91875,
+    "poison_collapse_rate": 0.35625,
+    "mean_abs_delta_med_d_L_successes": 1.383713877930933,
+    "detector_fire_rate": 1.0
+  },
+  "by_held_out": {
+    "false": 0.8916666666666667,
+    "true": 1.0
+  },
+  "by_family": [
+    {
+      "family": "broadband_burst",
+      "n": 40,
+      "gated_recovery": 0.95,
+      "poison_collapse": 0.7
+    },
+    {
+      "family": "ringing",
+      "n": 40,
+      "gated_recovery": 1.0,
+      "poison_collapse": 0.375
+    },
+    {
+      "family": "scattered_light",
+      "n": 40,
+      "gated_recovery": 0.725,
+      "poison_collapse": 0.175
+    },
+    {
+      "family": "sine_gaussian",
+      "n": 40,
+      "gated_recovery": 1.0,
+      "poison_collapse": 0.175
+    }
+  ],
+  "by_severity": {
+    "6.0": 0.95,
+    "10.0": 0.8875
+  },
+  "n_failures": 13,
+  "config_ref": "synth_config.json"
+}

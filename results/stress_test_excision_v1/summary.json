@@ -1,0 +1,109 @@
+{
+  "n_rows": 240,
+  "n_ok": 240,
+  "n_errors": 0,
+  "clean_reference_d_L": {
+    "lo": 19.081661796569826,
+    "med": 33.69267272949219,
+    "hi": 45.384322547912596,
+    "n": 512
+  },
+  "overall": {
+    "gated_recovery_rate": 0.8583333333333333,
+    "oracle_recovery_rate": 0.7125,
+    "poison_collapse_rate": 0.4625,
+    "mean_abs_delta_med_d_L_successes": 1.099843289088277
+  },
+  "by_held_out": {
+    "false": 0.8,
+    "true": 0.9555555555555556
+  },
+  "by_family": [
+    {
+      "family": "broadband_burst",
+      "n": 30,
+      "gated_recovery": 0.7666666666666667,
+      "oracle_recovery": 0.9666666666666667,
+      "poison_collapse": 0.8333333333333334
+    },
+    {
+      "family": "double_blip",
+      "n": 30,
+      "gated_recovery": 0.9,
+      "oracle_recovery": 0.9666666666666667,
+      "poison_collapse": 0.36666666666666664
+    },
+    {
+      "family": "glitch_train",
+      "n": 30,
+      "gated_recovery": 0.9666666666666667,
+      "oracle_recovery": 0.9333333333333333,
+      "poison_collapse": 0.4666666666666667
+    },
+    {
+      "family": "narrowband_tone",
+      "n": 30,
+      "gated_recovery": 1.0,
+      "oracle_recovery": 0.6,
+      "poison_collapse": 0.16666666666666666
+    },
+    {
+      "family": "ringing",
+      "n": 30,
+      "gated_recovery": 0.9666666666666667,
+      "oracle_recovery": 0.5666666666666667,
+      "poison_collapse": 0.6333333333333333
+    },
+    {
+      "family": "scattered_light",
+      "n": 30,
+      "gated_recovery": 0.5,
+      "oracle_recovery": 0.23333333333333334,
+      "poison_collapse": 0.4666666666666667
+    },
+    {
+      "family": "sine_gaussian",
+      "n": 30,
+      "gated_recovery": 0.9666666666666667,
+      "oracle_recovery": 0.9,
+      "poison_collapse": 0.23333333333333334
+    },
+    {
+      "family": "whistle",
+      "n": 30,
+      "gated_recovery": 0.8,
+      "oracle_recovery": 0.5333333333333333,
+      "poison_collapse": 0.5333333333333333
+    }
+  ],
+  "by_severity": {
+    "3.0": 0.9,
+    "6.0": 0.8625,
+    "10.0": 0.8125
+  },
+  "by_asd_policy": {
+    "poison_collapse": {
+      "stationary": 0.6,
+      "welch": 0.325
+    },
+    "gated_recovery": {
+      "stationary": 0.8416666666666667,
+      "welch": 0.875
+    }
+  },
+  "tier_c_clean_fp": {
+    "n": 50,
+    "fp_fires": 0,
+    "fp_rate": 0.0,
+    "threshold_event": 0.7283049106597901,
+    "clean_d_L": {
+      "lo": 19.081661796569826,
+      "med": 33.69267272949219,
+      "hi": 45.384322547912596,
+      "n": 512
+    },
+    "note": "Pass 0 is exact clean spectrogram; passes 1\u201349 add 1e-6 Gaussian jitter to test threshold robustness."
+  },
+  "n_failures": 34,
+  "config_ref": "stress_config.json"
+}

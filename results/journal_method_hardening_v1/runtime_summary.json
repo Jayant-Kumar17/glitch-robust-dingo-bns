@@ -1,0 +1,33 @@
+{
+  "stages": {
+    "clean_pe_once": {
+      "mean": 4.057748079299927,
+      "std": 0.0,
+      "n": 1
+    },
+    "inject_detect": {
+      "mean": 3.158047154545784,
+      "std": 0.052433285251840975,
+      "n": 16
+    },
+    "rebuild_all_gated_arms": {
+      "mean": 0.026443377137184143,
+      "std": 0.0015168910917840004,
+      "n": 16
+    },
+    "poison_pe": {
+      "mean": 1.4588037878274918,
+      "std": 0.06252280580728888,
+      "n": 16
+    },
+    "adapt_pe": {
+      "mean": 1.5151047557592392,
+      "std": 0.06137739948698329,
+      "n": 16
+    }
+  },
+  "adapt_total_over_poison_pe_mean": 3.214924536634628,
+  "adapt_overhead_vs_poison_pe": 2.214924536634628,
+  "note": "adapt_total \u2248 inject_detect + rebuild/3 + adapt_pe; overhead = adapt_total/poison_pe - 1",
+  "n_cells_timed": 16
+}

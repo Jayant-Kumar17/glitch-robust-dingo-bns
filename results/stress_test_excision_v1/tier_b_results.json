@@ -1,0 +1,602 @@
+{
+  "hf_samples": 2000,
+  "cells": [
+    {
+      "cell_id": "canonical_sg",
+      "family": "sine_gaussian",
+      "held_out": false,
+      "severity": 8.0,
+      "asd_policy": "welch",
+      "seed": 999001,
+      "detectors": [
+        "H1"
+      ],
+      "t_rel": -1.0,
+      "params": {
+        "f0": 100.0,
+        "q": 5.0
+      },
+      "poison_d_L": {
+        "lo": 9.97010555267334,
+        "med": 10.06550407409668,
+        "hi": 10.642329788208007,
+        "n": 2000
+      },
+      "gated_d_L": {
+        "lo": 18.184949684143067,
+        "med": 33.31873321533203,
+        "hi": 45.14797744750977,
+        "n": 2000
+      },
+      "poison_collapsed": true,
+      "gated_recovers": true,
+      "n_gates": 2
+    },
+    {
+      "cell_id": 110,
+      "family": "scattered_light",
+      "held_out": false,
+      "severity": 10.0,
+      "asd_policy": "welch",
+      "seed": 11000000,
+      "detectors": [
+        "H1"
+      ],
+      "t_rel": -0.7452876364637794,
+      "tag": "worst_failure",
+      "params": {
+        "duration": 2.1418877296425918,
+        "f_min": 35.95049828483457,
+        "f_max": 108.46197628726948
+      },
+      "poison_d_L": {
+        "lo": 9.993923759460449,
+        "med": 10.276683807373047,
+        "hi": 12.047707748413083,
+        "n": 2000
+      },
+      "gated_d_L": {
+        "lo": 99.9379726409912,
+        "med": 100.66338729858398,
+        "hi": 101.5291519165039,
+        "n": 2000
+      },
+      "poison_collapsed": true,
+      "gated_recovers": false,
+      "n_gates": 1
+    },
+    {
+      "cell_id": 98,
+      "family": "scattered_light",
+      "held_out": false,
+      "severity": 3.0,
+      "asd_policy": "stationary",
+      "seed": 9800051,
+      "detectors": [
+        "H1"
+      ],
+      "t_rel": -1.2526376254342622,
+      "tag": "worst_failure",
+      "params": {
+        "duration": 0.9744179886361262,
+        "f_min": 26.171558423173984,
+        "f_max": 87.9751053330963
+      },
+      "poison_d_L": {
+        "lo": 7.602237701416016,
+        "med": 7.602924346923828,
+        "hi": 7.634468078613281,
+        "n": 2000
+      },
+      "gated_d_L": {
+        "lo": 99.98939476013183,
+        "med": 99.99166870117188,
+        "hi": 99.99378967285156,
+        "n": 2000
+      },
+      "poison_collapsed": true,
+      "gated_recovers": false,
+      "n_gates": 1
+    },
+    {
+      "cell_id": 67,
+      "family": "whistle",
+      "held_out": false,
+      "severity": 3.0,
+      "asd_policy": "stationary",
+      "seed": 6700034,
+      "detectors": [
+        "H1"
+      ],
+      "t_rel": -1.164657543085111,
+      "tag": "worst_failure",
+      "params": {
+        "duration": 1.3970173075380032,
+        "f0": 43.23261162036708,
+        "f1": 204.7071569241364
+      },
+      "poison_d_L": {
+        "lo": 7.6241449356079105,
+        "med": 7.62762451171875,
+        "hi": 7.631348419189453,
+        "n": 2000
+      },
+      "gated_d_L": {
+        "lo": 99.92335510253906,
+        "med": 99.97459030151367,
+        "hi": 102.28428802490234,
+        "n": 2000
+      },
+      "poison_collapsed": true,
+      "gated_recovers": false,
+      "n_gates": 1
+    },
+    {
+      "cell_id": 95,
+      "family": "scattered_light",
+      "held_out": false,
+      "severity": 3.0,
+      "asd_policy": "stationary",
+      "seed": 9500000,
+      "detectors": [
+        "H1"
+      ],
+      "t_rel": -1.2610265247166292,
+      "tag": "worst_failure",
+      "params": {
+        "duration": 2.251858412709724,
+        "f_min": 34.209680413615175,
+        "f_max": 112.59947977133166
+      },
+      "poison_d_L": {
+        "lo": 102.8936767578125,
+        "med": 102.90143966674805,
+        "hi": 103.32032012939453,
+        "n": 2000
+      },
+      "gated_d_L": {
+        "lo": 99.9547348022461,
+        "med": 99.95601654052734,
+        "hi": 99.95845794677734,
+        "n": 2000
+      },
+      "poison_collapsed": true,
+      "gated_recovers": false,
+      "n_gates": 1
+    },
+    {
+      "cell_id": 90,
+      "family": "scattered_light",
+      "held_out": false,
+      "severity": 3.0,
+      "asd_policy": "welch",
+      "seed": 9000000,
+      "detectors": [
+        "H1"
+      ],
+      "t_rel": -1.4780031931557085,
+      "tag": "worst_failure",
+      "params": {
+        "duration": 1.1796450496031112,
+        "f_min": 26.107522022956683,
+        "f_max": 96.97812778216782
+      },
+      "poison_d_L": {
+        "lo": 17.46282196044922,
+        "med": 24.612448692321777,
+        "hi": 44.4359167098999,
+        "n": 2000
+      },
+      "gated_d_L": {
+        "lo": 99.91445922851562,
+        "med": 99.95071411132812,
+        "hi": 99.98164367675781,
+        "n": 2000
+      },
+      "poison_collapsed": false,
+      "gated_recovers": false,
+      "n_gates": 1
+    },
+    {
+      "cell_id": 83,
+      "family": "whistle",
+      "held_out": false,
+      "severity": 10.0,
+      "asd_policy": "welch",
+      "seed": 8300051,
+      "detectors": [
+        "H1"
+      ],
+      "t_rel": -1.1455080440869392,
+      "tag": "worst_failure",
+      "params": {
+        "duration": 0.655003644682487,
+        "f0": 70.50590390715203,
+        "f1": 176.33869530617432
+      },
+      "poison_d_L": {
+        "lo": 10.08625373840332,
+        "med": 11.03840446472168,
+        "hi": 13.609032630920408,
+        "n": 2000
+      },
+      "gated_d_L": {
+        "lo": 99.94526634216308,
+        "med": 99.95030212402344,
+        "hi": 99.9733154296875,
+        "n": 2000
+      },
+      "poison_collapsed": true,
+      "gated_recovers": false,
+      "n_gates": 1
+    },
+    {
+      "cell_id": 107,
+      "family": "scattered_light",
+      "held_out": false,
+      "severity": 6.0,
+      "asd_policy": "stationary",
+      "seed": 10700034,
+      "detectors": [
+        "H1"
+      ],
+      "t_rel": -1.1126269482248152,
+      "tag": "worst_failure",
+      "params": {
+        "duration": 1.5434204603231518,
+        "f_min": 39.60305601571171,
+        "f_max": 115.2825673632765
+      },
+      "poison_d_L": {
+        "lo": 7.646999359130859,
+        "med": 7.673906326293945,
+        "hi": 7.686383056640625,
+        "n": 2000
+      },
+      "gated_d_L": {
+        "lo": 99.94356536865234,
+        "med": 99.94422149658203,
+        "hi": 99.95994644165039,
+        "n": 2000
+      },
+      "poison_collapsed": true,
+      "gated_recovers": false,
+      "n_gates": 1
+    },
+    {
+      "cell_id": 108,
+      "family": "scattered_light",
+      "held_out": false,
+      "severity": 6.0,
+      "asd_policy": "stationary",
+      "seed": 10800051,
+      "detectors": [
+        "H1"
+      ],
+      "t_rel": -1.2306368032119956,
+      "tag": "worst_failure",
+      "params": {
+        "duration": 1.8502065413185866,
+        "f_min": 28.633123536010306,
+        "f_max": 101.26356890375017
+      },
+      "poison_d_L": {
+        "lo": 103.19509887695312,
+        "med": 103.19590759277344,
+        "hi": 103.26511688232422,
+        "n": 2000
+      },
+      "gated_d_L": {
+        "lo": 7.621127700805664,
+        "med": 7.66741943359375,
+        "hi": 7.677731704711914,
+        "n": 2000
+      },
+      "poison_collapsed": true,
+      "gated_recovers": false,
+      "n_gates": 1
+    },
+    {
+      "cell_id": 115,
+      "error": "AssertionError (NSF rational-quadratic spline discriminant during poison PE @ N=2000)",
+      "tag": "worst_failure",
+      "family": "scattered_light",
+      "severity": 10.0,
+      "asd_policy": "stationary"
+    },
+    {
+      "cell_id": 146,
+      "family": "glitch_train",
+      "held_out": false,
+      "severity": 10.0,
+      "asd_policy": "stationary",
+      "seed": 14600017,
+      "detectors": [
+        "H1"
+      ],
+      "t_rel": -1.4427991975892829,
+      "tag": "worst_failure",
+      "params": {
+        "n_pulses": 5,
+        "spacing": 0.2349101273666143,
+        "f0": 130.60072383755025,
+        "q": 3.4849380708378304
+      },
+      "poison_d_L": {
+        "lo": 99.42237663269043,
+        "med": 99.9854736328125,
+        "hi": 99.98611488342286,
+        "n": 2000
+      },
+      "gated_d_L": {
+        "lo": 8.688841247558594,
+        "med": 8.725059509277344,
+        "hi": 8.748782539367676,
+        "n": 2000
+      },
+      "poison_collapsed": true,
+      "gated_recovers": false,
+      "n_gates": 2
+    },
+    {
+      "cell_id": 41,
+      "family": "broadband_burst",
+      "held_out": false,
+      "severity": 6.0,
+      "asd_policy": "welch",
+      "seed": 4100017,
+      "detectors": [
+        "H1"
+      ],
+      "t_rel": -1.4858780364491937,
+      "tag": "worst_failure",
+      "params": {
+        "duration": 0.15011886321245657
+      },
+      "poison_d_L": {
+        "lo": 9.926166152954101,
+        "med": 9.973169326782227,
+        "hi": 10.048070335388184,
+        "n": 2000
+      },
+      "gated_d_L": {
+        "lo": 8.809233474731446,
+        "med": 8.866195678710938,
+        "hi": 8.885274505615234,
+        "n": 2000
+      },
+      "poison_collapsed": true,
+      "gated_recovers": false,
+      "n_gates": 1
+    },
+    {
+      "cell_id": 93,
+      "family": "scattered_light",
+      "held_out": false,
+      "severity": 3.0,
+      "asd_policy": "welch",
+      "seed": 9300051,
+      "detectors": [
+        "H1"
+      ],
+      "t_rel": -1.3238844772576497,
+      "tag": "worst_failure",
+      "params": {
+        "duration": 1.6783634068253068,
+        "f_min": 37.26131040501302,
+        "f_max": 84.97725320698494
+      },
+      "poison_d_L": {
+        "lo": 11.325473976135253,
+        "med": 16.267539978027344,
+        "hi": 24.932090950012206,
+        "n": 2000
+      },
+      "gated_d_L": {
+        "lo": 8.789947700500488,
+        "med": 8.878211975097656,
+        "hi": 8.969160842895509,
+        "n": 2000
+      },
+      "poison_collapsed": false,
+      "gated_recovers": false,
+      "n_gates": 2
+    },
+    {
+      "cell_id": 177,
+      "family": "ringing",
+      "held_out": true,
+      "severity": 10.0,
+      "asd_policy": "stationary",
+      "seed": 17700034,
+      "detectors": [
+        "H1"
+      ],
+      "t_rel": -0.9215307984648006,
+      "tag": "best_held_out",
+      "params": {
+        "f0": 196.3903551251265,
+        "decay": 0.2926500867419897
+      },
+      "poison_d_L": {
+        "lo": 8.940433311462403,
+        "med": 8.994888305664062,
+        "hi": 9.032013702392579,
+        "n": 2000
+      },
+      "gated_d_L": {
+        "lo": 20.040803337097167,
+        "med": 34.587249755859375,
+        "hi": 44.975572967529295,
+        "n": 2000
+      },
+      "poison_collapsed": true,
+      "gated_recovers": true,
+      "n_gates": 1
+    },
+    {
+      "cell_id": 164,
+      "family": "ringing",
+      "held_out": true,
+      "severity": 6.0,
+      "asd_policy": "welch",
+      "seed": 16400068,
+      "detectors": [
+        "L1"
+      ],
+      "t_rel": -1.2801655920254955,
+      "tag": "best_held_out",
+      "params": {
+        "f0": 71.11591016024632,
+        "decay": 0.39475110318449136
+      },
+      "poison_d_L": {
+        "lo": 10.290264511108399,
+        "med": 12.326269149780273,
+        "hi": 17.32245407104492,
+        "n": 2000
+      },
+      "gated_d_L": {
+        "lo": 18.333488845825194,
+        "med": 33.17297554016113,
+        "hi": 44.89784603118896,
+        "n": 2000
+      },
+      "poison_collapsed": false,
+      "gated_recovers": true,
+      "n_gates": 1
+    },
+    {
+      "cell_id": 192,
+      "family": "double_blip",
+      "held_out": true,
+      "severity": 6.0,
+      "asd_policy": "welch",
+      "seed": 19200034,
+      "detectors": [
+        "H1"
+      ],
+      "t_rel": -0.8430156307132275,
+      "tag": "best_held_out",
+      "params": {
+        "sep": 0.09158895507787272,
+        "f0": 155.721441914567,
+        "q": 7.8868424582676555
+      },
+      "poison_d_L": {
+        "lo": 10.334436798095703,
+        "med": 11.868335723876953,
+        "hi": 14.97009105682373,
+        "n": 2000
+      },
+      "gated_d_L": {
+        "lo": 17.428329277038575,
+        "med": 32.731075286865234,
+        "hi": 44.99233264923096,
+        "n": 2000
+      },
+      "poison_collapsed": true,
+      "gated_recovers": true,
+      "n_gates": 1
+    },
+    {
+      "cell_id": 234,
+      "family": "narrowband_tone",
+      "held_out": true,
+      "severity": 10.0,
+      "asd_policy": "welch",
+      "seed": 23400068,
+      "detectors": [
+        "L1"
+      ],
+      "t_rel": -1.267132596441746,
+      "tag": "best_held_out",
+      "params": {
+        "duration": 0.5302355611159083,
+        "f0": 153.87880916011414
+      },
+      "poison_d_L": {
+        "lo": 20.128402519226075,
+        "med": 36.32133865356445,
+        "hi": 47.22109794616699,
+        "n": 2000
+      },
+      "gated_d_L": {
+        "lo": 17.786160469055176,
+        "med": 33.48989486694336,
+        "hi": 45.079484176635745,
+        "n": 2000
+      },
+      "poison_collapsed": false,
+      "gated_recovers": true,
+      "n_gates": 1
+    }
+  ],
+  "gold_control_20k_is": {
+    "verdict": "A",
+    "js_divergence_nat": {
+      "delta_chirp_mass": 0.007266476173683549,
+      "mass_ratio": 0.007975766407112292,
+      "a_1": 0.009818521737692426,
+      "a_2": 0.01179026030099959,
+      "tilt_1": 0.008467183355166575,
+      "tilt_2": 0.009794842904698682,
+      "phi_12": 0.005652380455264111,
+      "phi_jl": 0.007002055346629595,
+      "theta_jn": 0.006978291003804772,
+      "luminosity_distance": 0.00656084914942656,
+      "geocent_time": 0.004885782411485165,
+      "psi": 0.007396511320092408,
+      "lambda_1": 0.0013776714727429104,
+      "lambda_2": 0.0014241388868397975,
+      "chirp_mass": 0.007195350465852108
+    },
+    "ci_overlap": {
+      "delta_chirp_mass": true,
+      "mass_ratio": true,
+      "a_1": true,
+      "a_2": true,
+      "tilt_1": true,
+      "tilt_2": true,
+      "phi_12": true,
+      "phi_jl": true,
+      "theta_jn": true,
+      "luminosity_distance": true,
+      "geocent_time": true,
+      "psi": true,
+      "lambda_1": true,
+      "lambda_2": true,
+      "chirp_mass": true
+    },
+    "core_js_ok": true,
+    "core_overlap_ok": true,
+    "dl_med_ok": true,
+    "dl_med_delta_mpc": -0.30191058862288855,
+    "poison_collapsed": true,
+    "efficiency_ok": true,
+    "js_threshold": 0.02,
+    "paper_js_threshold": 0.0005,
+    "paper_scale_js": {
+      "chirp_mass": false,
+      "mass_ratio": false,
+      "luminosity_distance": false,
+      "theta_jn": false,
+      "geocent_time": false
+    },
+    "criteria": {
+      "core_params": [
+        "chirp_mass",
+        "mass_ratio",
+        "luminosity_distance",
+        "theta_jn",
+        "geocent_time"
+      ],
+      "dl_med_tol_mpc": 5.0
+    },
+    "gate_meta": {},
+    "glitch_meta": {},
+    "control_efficiency": 0.11128324827509177,
+    "gated_efficiency": 0.08524346561364406,
+    "ablation": "skipped_verdict_A"
+  }
+}

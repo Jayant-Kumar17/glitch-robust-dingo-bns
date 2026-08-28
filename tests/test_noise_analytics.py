@@ -9,11 +9,20 @@ import os
 
 import numpy as np
 
+import adapt.noise_analytics as noise_analytics
 from adapt.noise_analytics import (
     AdvancedNoiseEncoder,
+    DEFAULT_NETWORK_DETECTORS,
+    GWOSC_DETECTORS,
+    GlobalNoiseHub,
     LocalNoiseTracker,
+    NoiseSegment,
     fetch_background_strain,
+    fetch_network_strain,
+    get_observatory_spec,
     inject_waveform_into_background,
+    list_observatory_catalog,
+    plot_network_diagnostics,
     plot_rich_profile,
 )
 
@@ -147,6 +156,176 @@ def run_noise_analytics_tests():
     assert pdf_path.endswith(".pdf"), "Error: diagnostic must be a PDF!"
     assert os.path.isfile(pdf_path), "Error: diagnostic PDF was not written!"
     assert os.path.getsize(pdf_path) > 0, "Error: diagnostic PDF is empty!"
+    print("  => PASS")
+
+    # ------------------------------------------------------------------
+    # Test 6: Asymmetric anomaly (H1 spike, L1 pristine)
+    # ------------------------------------------------------------------
+    print("\n[Test 6] Asymmetric anomaly across GlobalNoiseHub (H1 vs L1)...")
+    hub = GlobalNoiseHub(
+        ["H1", "L1"],
+        sample_rate=sample_rate,
+        expected_duration_seconds=duration,
+        history_size=5,
+        psd_bins=128,
+        window_size_seconds=4.0,
+    )
+    # Warm both detectors with quiet, independent noise.
+    for _ in range(2):
+        quiet_h1 = rng.normal(0.0, 1e-22, size=n_samples)
+        quiet_l1 = rng.normal(0.0, 1e-22, size=n_samples)
+        hub.update_network({"H1": quiet_h1, "L1": quiet_l1})
+
+    quiet_h1 = rng.normal(0.0, 1e-22, size=n_samples)
+    quiet_l1 = rng.normal(0.0, 1e-22, size=n_samples)
+    spiked_h1 = quiet_h1.copy()
+    spike_idx = encoder.window_samples + encoder.window_samples // 2
+    spiked_h1[spike_idx] += 1e-18
+
+    drifts = hub.update_network({"H1": spiked_h1, "L1": quiet_l1})
+    print(f"  drifts after H1-only spike: H1={drifts['H1']:.4f}, L1={drifts['L1']:.4f}")
+    assert drifts["H1"] > 10.0 * max(drifts["L1"], 1e-9), (
+        "Error: H1 drift did not dominate after exclusive H1 spike!"
+    )
+    assert drifts["H1"] > 1.0, "Error: H1 drift too small for massive spike!"
+    assert drifts["L1"] < drifts["H1"] / 10.0, "Error: L1 should remain relatively undisturbed!"
+
+    net_pdf = plot_network_diagnostics(hub.state, output_dir=RESULTS_DIR)
+    print(f"  network diagnostic PDF: {net_pdf}")
+    assert os.path.basename(net_pdf).startswith("global_network_profile_")
+    assert net_pdf.endswith(".pdf")
+    assert os.path.isfile(net_pdf) and os.path.getsize(net_pdf) > 0
+    print("  => PASS")
+
+    # ------------------------------------------------------------------
+    # Test 7: Dimensional safety on the full observatory catalog
+    # ------------------------------------------------------------------
+    print("\n[Test 7] Dimensional safety of full-catalog global profile...")
+    catalog = list_observatory_catalog()
+    n_sites = len(DEFAULT_NETWORK_DETECTORS)
+    print(f"  catalog size={n_sites} (GWOSC-capable={len(GWOSC_DETECTORS)}: {GWOSC_DETECTORS})")
+    assert 20 <= n_sites <= 30, f"Error: catalog size {n_sites} not in 20–30!"
+    assert set(GWOSC_DETECTORS) == {"H1", "L1", "V1", "K1", "G1"}
+    assert get_observatory_spec("CE1") is not None and get_observatory_spec("CE1").gwosc is False
+
+    hub_dim = GlobalNoiseHub(
+        None,  # full default catalog
+        sample_rate=sample_rate,
+        expected_duration_seconds=duration,
+        history_size=3,
+        psd_bins=128,
+        window_size_seconds=4.0,
+    )
+    assert hub_dim.detectors == DEFAULT_NETWORK_DETECTORS
+    strain_dict = {
+        det: rng.normal(0.0, 1e-22, size=n_samples) for det in hub_dim.detectors
+    }
+    hub_dim.update_network(strain_dict)
+    global_vec = hub_dim.get_global_profile()
+    expected_global = encoder.vector_length * n_sites
+    print(
+        f"  global length={global_vec.shape[0]} "
+        f"(expected {expected_global} = {encoder.vector_length} × {n_sites})"
+    )
+    assert global_vec.shape == (expected_global,), "Error: global profile length mismatch!"
+    assert hub_dim.global_profile_length == expected_global
+    assert hub_dim.profile_length == encoder.vector_length
+    assert np.all(np.isfinite(global_vec)), "Error: non-finite values in global profile!"
+    print("  => PASS")
+
+    # ------------------------------------------------------------------
+    # Test 8: Graceful individual / catalog hybrid fallback
+    # ------------------------------------------------------------------
+    print("\n[Test 8] Graceful individual fallback + catalog hybrid acquisition...")
+    # Non-GWOSC catalog site must simulate immediately (no network).
+    ce = fetch_background_strain(
+        "CE1",
+        start_gps=1240559616.0,
+        duration_seconds=4.0,
+        sample_rate=sample_rate,
+        seed=3,
+        allow_fallback=True,
+    )
+    print(f"  CE1 used_fallback={ce.used_fallback}, reason={ce.fallback_reason}")
+    assert ce.used_fallback is True
+    assert "NoGWOSCArchive" in (ce.fallback_reason or "")
+
+    # Offline: invalid GPS falls back for GWOSC-capable IFOs.
+    both_fallback = fetch_network_strain(
+        ["H1", "L1"],
+        start_gps=0.0,
+        duration_seconds=4.0,
+        sample_rate=sample_rate,
+        seed=7,
+        allow_fallback=True,
+    )
+    assert both_fallback["H1"].used_fallback is True
+    assert both_fallback["L1"].used_fallback is True
+
+    # Monkeypatch: H1 returns synthetic "real"; L1 raises -> fallback;
+    # non-GWOSC sites still go through the real fetch_background_strain path.
+    original_fetch = noise_analytics.fetch_background_strain
+
+    def _hybrid_fetch(detector, start_gps, duration_seconds=256.0, sample_rate=4096.0,
+                      seed=None, allow_fallback=True):
+        det = str(detector).upper()
+        n = int(round(duration_seconds * sample_rate))
+        if det == "H1":
+            return NoiseSegment(
+                strain=np.random.default_rng(0).normal(0.0, 1e-22, size=n),
+                sample_rate=float(sample_rate),
+                detector="H1",
+                start_gps=float(start_gps),
+                duration_seconds=float(duration_seconds),
+                used_fallback=False,
+                fallback_reason=None,
+            )
+        if det == "L1":
+            strain = noise_analytics._synthesize_colored_noise(
+                duration_seconds, sample_rate, seed=seed, detector="L1"
+            )
+            return NoiseSegment(
+                strain=strain,
+                sample_rate=float(sample_rate),
+                detector="L1",
+                start_gps=float(start_gps),
+                duration_seconds=float(duration_seconds),
+                used_fallback=True,
+                fallback_reason="RuntimeError: simulated L1 fetch failure",
+            )
+        # Preserve catalog behaviour for CE1 / other non-GWOSC sites.
+        return original_fetch(
+            detector,
+            start_gps,
+            duration_seconds=duration_seconds,
+            sample_rate=sample_rate,
+            seed=seed,
+            allow_fallback=allow_fallback,
+        )
+
+    noise_analytics.fetch_background_strain = _hybrid_fetch
+    try:
+        hybrid = noise_analytics.fetch_network_strain(
+            ["H1", "L1", "CE1"],
+            start_gps=1240559616.0,
+            duration_seconds=4.0,
+            sample_rate=sample_rate,
+            seed=11,
+            allow_fallback=True,
+        )
+    finally:
+        noise_analytics.fetch_background_strain = original_fetch
+
+    print(
+        f"  hybrid flags: H1={hybrid['H1'].used_fallback}, "
+        f"L1={hybrid['L1'].used_fallback}, CE1={hybrid['CE1'].used_fallback}"
+    )
+    assert hybrid["H1"].used_fallback is False, "Error: H1 should report real data!"
+    assert hybrid["L1"].used_fallback is True, "Error: L1 should report simulated fallback!"
+    assert hybrid["CE1"].used_fallback is True, "Error: CE1 must stay simulated!"
+    assert hybrid["L1"].fallback_reason is not None
+    assert len(hybrid["H1"].strain) == int(4.0 * sample_rate)
+    assert len(catalog) == n_sites
     print("  => PASS")
 
     print("\nALL NOISE ANALYTICS TESTS PASSED SUCCESSFULLY!")

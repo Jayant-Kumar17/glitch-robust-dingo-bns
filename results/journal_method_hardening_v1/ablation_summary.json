@@ -1,0 +1,50 @@
+{
+  "n_cells": 16,
+  "clean_reference_d_L": {
+    "lo": 18.40447006225586,
+    "med": 33.86054992675781,
+    "hi": 45.17384414672851,
+    "n": 512
+  },
+  "t_clean_pe_s": 4.057748079299927,
+  "thr_event": 0.7283049106597901,
+  "by_arm": {
+    "adapt_full": {
+      "n": 16,
+      "recovers_like_clean": 0.8125,
+      "poison_collapsed": 0.125,
+      "median_med_d_L": 34.5980281829834
+    },
+    "fft_replace": {
+      "n": 16,
+      "recovers_like_clean": 0.0,
+      "poison_collapsed": 1.0,
+      "median_med_d_L": 10.019615173339844
+    },
+    "gate_welch": {
+      "n": 16,
+      "recovers_like_clean": 0.125,
+      "poison_collapsed": 0.625,
+      "median_med_d_L": 10.112682342529297
+    },
+    "glitch_orig_asd": {
+      "n": 16,
+      "recovers_like_clean": 0.125,
+      "poison_collapsed": 0.8125,
+      "median_med_d_L": 27.758115768432617
+    },
+    "poison_welch": {
+      "n": 16,
+      "recovers_like_clean": 0.0625,
+      "poison_collapsed": 0.625,
+      "median_med_d_L": 10.547426223754883
+    }
+  },
+  "arms": [
+    "poison_welch",
+    "glitch_orig_asd",
+    "gate_welch",
+    "adapt_full",
+    "fft_replace"
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "outdir": "results/stress_test_excision_v1",
+  "master_seed": 0,
+  "n_seeds_per_cell": 5,
+  "num_samples": 512,
+  "hf_samples": 2000,
+  "batch_size": 256,
+  "gate_half_s": 0.4,
+  "families": [
+    "sine_gaussian",
+    "broadband_burst",
+    "whistle",
+    "scattered_light",
+    "glitch_train",
+    "ringing",
+    "double_blip",
+    "narrowband_tone"
+  ],
+  "severity_mids": [
+    3.0,
+    6.0,
+    10.0
+  ],
+  "asd_policies": [
+    "welch",
+    "stationary"
+  ],
+  "n_cells_planned": 240,
+  "detector_ckpt": "/Users/jayantkumar/Desktop/ADAPT-Project/checkpoints/glitch_detector_v1/best_glitch_detector.pt",
+  "detector_sha256": "e1abd4e40ce173de17c7c915b43ac138c1cabb8f6f61e1ef983be9b1589762b5",
+  "git_commit": "1ac30f5828385e8e013a1f62410035ecaf5f4567",
+  "python": "3.11.14 | packaged by conda-forge | (main, Oct 13 2025, 14:29:50) [Clang 19.1.7 ]",
+  "platform": "macOS-26.5.2-arm64-arm-64bit",
+  "success_criteria": {
+    "poison_collapsed": "d_L hi<15 or lo>90",
+    "gated_recovers": "med in [20,50], CI overlaps clean, |med-clean_med|<=10"
+  },
+  "scope_limitation": "GW170817 only (in-repo DINGO-BNS model). Synthetic glitch families; demo strain is LOSC_CLN (already LVK-cleaned).",
+  "gold_control": "/Users/jayantkumar/Desktop/ADAPT-Project/results/dingo_official_control/comparison_report.json",
+  "baseline_ckpt": "/Users/jayantkumar/Desktop/ADAPT-Project/DINGO-BNS/dingo/binary-neutron-star-demo/GW170817/downloads/dingo-bns-model_GW170817.pt",
+  "baseline_sha256": "aebe9cade3943342b6dfe758eb9922410bbc01db6a346a647559bed383d14f10",
+  "threshold_base": 0.4647887647151947,
+  "gate_half_s_effective": 0.4,
+  "threshold_event": 0.7283049106597901,
+  "clean_fp_gates": 0
+}
