@@ -1,21 +1,88 @@
+# Python
 __pycache__/
 *.py[cod]
+*$py.class
 *.egg-info/
 *.egg
 build/
 dist/
-
-.venv/
-venv/
-env/
-
-.DS_Store
-
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 .ipynb_checkpoints/
 *.ipynb_checkpoints
 
-.pytest_cache/
-.mypy_cache/
+# Virtual environments (never publish)
+.venv/
+venv/
+venv-*/
+env/
+*-env/
 
-# Large GWOSC continuous-archive downloads (local cache only)
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Local secrets
+.env
+.env.*
+*.pem
+credentials*
+
+# Large local model weights / checkpoints
+*.pt
+*.pth
+*.ckpt
+checkpoints/
+models_checkpoint/
+dingo_t1.pt
+
+# Vendored / local DINGO installs (obtain upstream; do not commit)
+DINGO-BNS/
+dingo/
+third_party/
+
+# Local GWOSC caches
 data/gwosc/
+data/**/*.gwf
+data/**/*.hdf5
+
+# Heavy PE sample dumps (keep JSON/CSV/PDF summaries)
+*.hdf5
+*.h5
+results/**/*.pt
+results/**/*_samples.*
+results/**/run.log
+results/**/*_smoke/
+results/**/*smoke*/
+
+# Only track paper-canonical result directories (ignore exploratory campaigns)
+results/*
+!results/README.md
+!results/dingo_official_control/
+!results/dingo_official_control/**
+!results/excision_honest/
+!results/excision_honest/**
+!results/stress_test_excision_v1/
+!results/stress_test_excision_v1/**
+!results/stress_test_synthetic_bns_v1/
+!results/stress_test_synthetic_bns_v1/**
+!results/journal_method_hardening_v1/
+!results/journal_method_hardening_v1/**
+
+# Re-ignore heavy artifacts even inside canonical dirs
+*.hdf5
+*.h5
+results/**/*.hdf5
+results/**/*.h5
+results/**/*.pt
+results/**/*_samples.*
+results/**/run.log
+
+# Misc local clutter
+logs/
+*.log
+check_shapes.py
+try_it.py

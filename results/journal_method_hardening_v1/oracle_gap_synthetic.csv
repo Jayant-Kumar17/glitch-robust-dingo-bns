@@ -1,0 +1,14 @@
+event_id,cell_id,family,severity,detector_fired,detector_n_gates,gated_med,gated_recovers,oracle_med,oracle_recovers,classification,error,elapsed_s
+2,4,scattered_light,6.0,True,1,39.82414245605469,True,45.93487358093262,True,detector_recovers_on_rerun,,4.018
+2,5,scattered_light,10.0,True,2,38.900503158569336,True,44.62497329711914,True,detector_recovers_on_rerun,,3.766
+4,5,scattered_light,10.0,True,1,14.180866241455078,False,100.01290512084961,False,gate_insufficient,,3.695
+5,5,scattered_light,10.0,True,1,9.085336685180664,False,99.94248962402344,False,gate_insufficient,,3.705
+10,5,scattered_light,10.0,True,1,11.592662811279297,False,13.175498962402344,False,gate_insufficient,,3.671
+12,2,broadband_burst,6.0,True,1,19.47516632080078,True,34.29688262939453,True,detector_recovers_on_rerun,,4.041
+12,5,scattered_light,10.0,True,1,30.151519775390625,True,33.631038665771484,True,detector_recovers_on_rerun,,3.655
+13,5,scattered_light,10.0,True,1,31.80931282043457,True,11.365537643432617,False,detector_recovers_on_rerun,,3.773
+17,3,broadband_burst,10.0,True,1,10.336576461791992,False,35.13275718688965,True,detector_gap,,3.744
+17,5,scattered_light,10.0,True,1,99.96302795410156,False,7.648664474487305,False,gate_insufficient,,3.577
+19,4,scattered_light,6.0,True,1,99.87826156616211,False,99.97076416015625,False,gate_insufficient,,3.929
+19,5,scattered_light,10.0,True,1,99.96994400024414,False,99.7989273071289,False,gate_insufficient,,3.858
+22,4,scattered_light,6.0,True,1,8.816141128540039,False,100.00992584228516,False,gate_insufficient,,3.681

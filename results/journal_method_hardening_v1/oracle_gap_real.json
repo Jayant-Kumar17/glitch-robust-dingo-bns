@@ -1,0 +1,61 @@
+{
+  "source": "/Users/jayantkumar/Desktop/ADAPT-Project/results/stress_test_excision_v1/results.csv",
+  "n_total": 240,
+  "n_gated_failures": 34,
+  "among_failures": {
+    "oracle_recovers_rate": 0.38235294117647056,
+    "oracle_only_recovery_rate": 0.38235294117647056,
+    "detector_fired_rate": 1.0
+  },
+  "by_family": [
+    {
+      "family": "broadband_burst",
+      "n": 7,
+      "oracle_recovers": 0.8571428571428571,
+      "oracle_only_recovery": 0.8571428571428571,
+      "detector_fired": 1.0
+    },
+    {
+      "family": "double_blip",
+      "n": 3,
+      "oracle_recovers": 1.0,
+      "oracle_only_recovery": 1.0,
+      "detector_fired": 1.0
+    },
+    {
+      "family": "glitch_train",
+      "n": 1,
+      "oracle_recovers": 0.0,
+      "oracle_only_recovery": 0.0,
+      "detector_fired": 1.0
+    },
+    {
+      "family": "ringing",
+      "n": 1,
+      "oracle_recovers": 0.0,
+      "oracle_only_recovery": 0.0,
+      "detector_fired": 1.0
+    },
+    {
+      "family": "scattered_light",
+      "n": 15,
+      "oracle_recovers": 0.13333333333333333,
+      "oracle_only_recovery": 0.13333333333333333,
+      "detector_fired": 1.0
+    },
+    {
+      "family": "sine_gaussian",
+      "n": 1,
+      "oracle_recovers": 1.0,
+      "oracle_only_recovery": 1.0,
+      "detector_fired": 1.0
+    },
+    {
+      "family": "whistle",
+      "n": 6,
+      "oracle_recovers": 0.16666666666666666,
+      "oracle_only_recovery": 0.16666666666666666,
+      "detector_fired": 1.0
+    }
+  ]
+}

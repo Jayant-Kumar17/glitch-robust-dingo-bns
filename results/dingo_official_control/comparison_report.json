@@ -1,0 +1,67 @@
+{
+  "verdict": "A",
+  "js_divergence_nat": {
+    "delta_chirp_mass": 0.007266476173683549,
+    "mass_ratio": 0.007975766407112292,
+    "a_1": 0.009818521737692426,
+    "a_2": 0.01179026030099959,
+    "tilt_1": 0.008467183355166575,
+    "tilt_2": 0.009794842904698682,
+    "phi_12": 0.005652380455264111,
+    "phi_jl": 0.007002055346629595,
+    "theta_jn": 0.006978291003804772,
+    "luminosity_distance": 0.00656084914942656,
+    "geocent_time": 0.004885782411485165,
+    "psi": 0.007396511320092408,
+    "lambda_1": 0.0013776714727429104,
+    "lambda_2": 0.0014241388868397975,
+    "chirp_mass": 0.007195350465852108
+  },
+  "ci_overlap": {
+    "delta_chirp_mass": true,
+    "mass_ratio": true,
+    "a_1": true,
+    "a_2": true,
+    "tilt_1": true,
+    "tilt_2": true,
+    "phi_12": true,
+    "phi_jl": true,
+    "theta_jn": true,
+    "luminosity_distance": true,
+    "geocent_time": true,
+    "psi": true,
+    "lambda_1": true,
+    "lambda_2": true,
+    "chirp_mass": true
+  },
+  "core_js_ok": true,
+  "core_overlap_ok": true,
+  "dl_med_ok": true,
+  "dl_med_delta_mpc": -0.30191058862288855,
+  "poison_collapsed": true,
+  "efficiency_ok": true,
+  "js_threshold": 0.02,
+  "paper_js_threshold": 0.0005,
+  "paper_scale_js": {
+    "chirp_mass": false,
+    "mass_ratio": false,
+    "luminosity_distance": false,
+    "theta_jn": false,
+    "geocent_time": false
+  },
+  "criteria": {
+    "core_params": [
+      "chirp_mass",
+      "mass_ratio",
+      "luminosity_distance",
+      "theta_jn",
+      "geocent_time"
+    ],
+    "dl_med_tol_mpc": 5.0
+  },
+  "gate_meta": {},
+  "glitch_meta": {},
+  "control_efficiency": 0.11128324827509177,
+  "gated_efficiency": 0.08524346561364406,
+  "ablation": "skipped_verdict_A"
+}

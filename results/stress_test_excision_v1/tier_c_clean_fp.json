@@ -1,0 +1,13 @@
+{
+  "n": 50,
+  "fp_fires": 0,
+  "fp_rate": 0.0,
+  "threshold_event": 0.7283049106597901,
+  "clean_d_L": {
+    "lo": 19.081661796569826,
+    "med": 33.69267272949219,
+    "hi": 45.384322547912596,
+    "n": 512
+  },
+  "note": "Pass 0 is exact clean spectrogram; passes 1\u201349 add 1e-6 Gaussian jitter to test threshold robustness."
+}

@@ -1,0 +1,116 @@
+{
+  "outdir": "results/excision_honest",
+  "detector_ckpt": "/Users/jayantkumar/Desktop/ADAPT-Project/checkpoints/glitch_detector_v1/best_glitch_detector.pt",
+  "threshold": 0.4647887647151947,
+  "gate_half_s": 0.4,
+  "clean_baseline_d_L": {
+    "lo": 18.746394538879393,
+    "med": 34.15962791442871,
+    "hi": 45.4561689376831,
+    "n": 512
+  },
+  "clean_noop_bit_exact": true,
+  "glitch_meta": {
+    "det": "H1",
+    "f0": 100.0,
+    "q": 5.0,
+    "t_rel": -1.0,
+    "amplitude": 3.728430670043055e-19,
+    "rms": 4.660538337553819e-20,
+    "rms_inband": 4.660538337553819e-20,
+    "rms_broadband": 4.9419635140010266e-18,
+    "rms_basis": "inband",
+    "t_peak_in_segment": 125.0,
+    "sample_rate": 4096.0,
+    "duration": 128.0,
+    "time_buffer": 2.0,
+    "roll_off": 0.4,
+    "f_min": 23.0,
+    "f_max": 1535.3046875,
+    "asd_policy": "welch"
+  },
+  "ungated_welch_d_L": {
+    "lo": 9.97292366027832,
+    "med": 10.06655502319336,
+    "hi": 10.69651756286621,
+    "n": 512
+  },
+  "glitch_welch_d_L": {
+    "lo": 9.97292366027832,
+    "med": 10.06655502319336,
+    "hi": 10.69651756286621,
+    "n": 512
+  },
+  "ungated_original_asd_d_L": {
+    "lo": 99.99209899902344,
+    "med": 100.01586532592773,
+    "hi": 100.0373908996582,
+    "n": 512
+  },
+  "glitch_original_asd_d_L": {
+    "lo": 99.99209899902344,
+    "med": 100.01586532592773,
+    "hi": 100.0373908996582,
+    "n": 512
+  },
+  "gated_welch_d_L": {
+    "lo": 10.04781665802002,
+    "med": 10.420770645141602,
+    "hi": 12.067927742004395,
+    "n": 512
+  },
+  "gated_welch_still_collapsed": true,
+  "residual_power_frac_oracle": {
+    "H1": 0.03415302666468386
+  },
+  "oracle_gate_d_L": {
+    "lo": 16.126456832885744,
+    "med": 31.856760025024414,
+    "hi": 44.84974136352539,
+    "n": 512
+  },
+  "gated_original_asd_d_L": {
+    "lo": 16.126456832885744,
+    "med": 31.856760025024414,
+    "hi": 44.84974136352539,
+    "n": 512
+  },
+  "oracle_escaped": true,
+  "honest_recovered": true,
+  "threshold_base": 0.4647887647151947,
+  "threshold_event": 0.7283049106597901,
+  "clean_fp_audit": {
+    "n_gates": 0,
+    "probs_max": {
+      "H1": 0.6709587574005127,
+      "L1": 0.67830491065979,
+      "V1": 0.2985738515853882
+    },
+    "fires": false
+  },
+  "clean_detector_silent": true,
+  "detector_probs_max": {
+    "H1": 1.0,
+    "L1": 0.553485095500946,
+    "V1": 0.14545653760433197
+  },
+  "detector_n_gates": 2,
+  "detector_log_energy": {
+    "H1": 20.377260208129883,
+    "L1": 0.6497552394866943,
+    "V1": 1.3612744808197021
+  },
+  "detector_ifo_whitelist": [
+    "H1"
+  ],
+  "detector_residual_power_frac": {
+    "H1": 0.07444296115094165
+  },
+  "detector_gate_d_L": {
+    "lo": 17.579529190063475,
+    "med": 33.32139587402344,
+    "hi": 45.03420696258545,
+    "n": 512
+  },
+  "detector_escaped": true
+}
