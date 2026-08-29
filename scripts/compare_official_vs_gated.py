@@ -251,7 +251,7 @@ def _detector_gates(
     device: torch.device,
 ):
     from adapt.glitch_excision import time_bin_mask_to_windows
-    from adapt.train_t1 import SPECTROGRAM_ANALYSIS_SECONDS
+    from adapt.spectrogram_geometry import SPECTROGRAM_ANALYSIS_SECONDS
 
     spec_t = torch.from_numpy(np.asarray(spectrogram, dtype=np.float32)).unsqueeze(0)
     with torch.no_grad():
@@ -290,7 +290,7 @@ def build_glitchy_packages(
         build_robust_spectrogram_from_td,
         whiten_td_map_with_asds,
     )
-    from adapt.train_t1 import SPECTROGRAM_ANALYSIS_SECONDS
+    from adapt.spectrogram_geometry import SPECTROGRAM_ANALYSIS_SECONDS
     from dingo.gw.domains import build_domain_from_model_metadata
     from evaluate_glitch_robustness import inject_h1_glitch_into_event
     from evaluate_gw170817_comparison import (

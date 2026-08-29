@@ -11,7 +11,7 @@ from typing import Any, Dict, Mapping, Optional, Sequence, Tuple
 
 import numpy as np
 
-from adapt.train_t1 import (
+from adapt.spectrogram_geometry import (
     SPECTROGRAM_ANALYSIS_SECONDS,
     SPECTROGRAM_FREQ_BINS,
     SPECTROGRAM_TIME_STEPS,

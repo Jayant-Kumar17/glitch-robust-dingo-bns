@@ -203,7 +203,7 @@ def inject_h1_glitch_into_event(
     )
 
     # STFT TD crops: centered 4 s around trigger (includes t=-1.0 s).
-    from adapt.train_t1 import SPECTROGRAM_ANALYSIS_SECONDS
+    from adapt.spectrogram_geometry import SPECTROGRAM_ANALYSIS_SECONDS
 
     n_crop = int(round(SPECTROGRAM_ANALYSIS_SECONDS * f_s))
     # Within full segment, trigger is at index (duration - time_buffer) * f_s
@@ -363,7 +363,7 @@ def _detector_gates_from_crop(
     ifo_whitelist: Optional[Sequence[str]] = None,
 ):
     from adapt.glitch_excision import time_bin_mask_to_windows
-    from adapt.train_t1 import SPECTROGRAM_ANALYSIS_SECONDS
+    from adapt.spectrogram_geometry import SPECTROGRAM_ANALYSIS_SECONDS
 
     spec_t = torch.from_numpy(np.asarray(spectrogram, dtype=np.float32)).unsqueeze(0)
     with torch.no_grad():
@@ -400,7 +400,7 @@ def _detector_gates_from_crop(
 def run_legacy_embedding_repair(args: argparse.Namespace) -> None:
     """Historical ablation: frozen/custom STFT embedding repair on Welch glitch."""
     from adapt.glitch_augmentation import make_fixed_eval_glitch, stft_whitening_asds
-    from adapt.train_t1 import SPECTROGRAM_ANALYSIS_SECONDS
+    from adapt.spectrogram_geometry import SPECTROGRAM_ANALYSIS_SECONDS
     from evaluate_gw170817_comparison import (
         build_event_spectrogram_stack,
         discover_assets,
@@ -561,7 +561,7 @@ def run_detect_and_gate(args: argparse.Namespace) -> None:
         build_robust_spectrogram_from_td,
         whiten_td_map_with_asds,
     )
-    from adapt.train_t1 import SPECTROGRAM_ANALYSIS_SECONDS
+    from adapt.spectrogram_geometry import SPECTROGRAM_ANALYSIS_SECONDS
     from dingo.gw.domains import build_domain_from_model_metadata
     from evaluate_gw170817_comparison import (
         discover_assets,

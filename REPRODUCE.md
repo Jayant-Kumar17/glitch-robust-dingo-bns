@@ -1,19 +1,15 @@
 # Reproduce paper experiments
 
-All commands assume a working DINGO-BNS install, GW170817 demo event packaging, and:
-
 ```bash
 conda activate adapt_env
-cd /path/to/this/repo
+cd /path/to/glitch-robust-dingo-bns
 export PYTHONPATH=src:scripts
 export KMP_DUPLICATE_LIB_OK=TRUE
-# If needed for local demo data:
-# export PYTHONPATH=/path/to/dingo/src:src:scripts
 ```
 
-Device defaults below match the paper runs (`cpu`, N=512). Use `--overwrite` to ignore resume caches.
+Requires official DINGO-BNS demo assets (event HDF5, ASDs, strain frames) and, for detector-gated runs, `checkpoints/glitch_detector_v1/best_glitch_detector.pt`.
 
-## 1) Method hardening (ablation + oracle + runtime)
+## 1) Ablation + oracle gap + runtime
 
 ```bash
 python -u scripts/journal_method_hardening.py \
@@ -29,9 +25,7 @@ python -u scripts/journal_method_hardening.py \
   --outdir results/journal_method_hardening_v1_smoke
 ```
 
-Artifacts: `ablation_*.csv/json`, `oracle_gap_*.json/csv`, `runtime_summary.json`, `method_hardening_report.pdf`.
-
-## 2) GW170817 glitch stress grid
+## 2) GW170817 stress grid
 
 ```bash
 python -u scripts/stress_test_glitch_excision.py \
@@ -48,7 +42,7 @@ python -u scripts/stress_test_synthetic_bns.py \
   --outdir results/stress_test_synthetic_bns_v1
 ```
 
-(Use the flags recorded in `results/stress_test_synthetic_bns_v1/synth_config.json` / `REPRODUCE.md` for an exact match.)
+Match flags in `results/stress_test_synthetic_bns_v1/synth_config.json` for an exact rerun.
 
 ## 4) Official control (clean / poison / gated)
 
@@ -57,15 +51,9 @@ python -u scripts/compare_official_vs_gated.py \
   --outdir results/dingo_official_control
 ```
 
-Large HDF5 sample files are **not** stored in git. JSON summaries and the corner PDF are.
+Large HDF5 sample dumps are not stored in git (JSON/PDF summaries are).
 
-## Success criteria (stress / ablation)
+## Success criteria (as implemented in the scripts)
 
-- **Poison collapsed:** `d_L` hi < 15 or lo > 90 (Mpc-scale rails used in scripts).
-- **Recovers like clean:** median in the clean-compatible window and CI overlap rules implemented in the stress scripts.
-
-## What is not redistributed
-
-- Official DINGO-BNS network weights (obtain from upstream / Zenodo).
-- Local `DINGO-BNS/` source+env trees and multi-GB checkpoints.
-- Raw GWOSC `.gwf` caches (downloaded on demand).
+- **Poison collapsed:** distance posterior rails (hi < 15 or lo > 90 Mpc-scale cuts used in code).
+- **Recovers like clean:** median / CI overlap rules vs the clean reference in each script.

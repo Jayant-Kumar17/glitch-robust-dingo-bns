@@ -13,7 +13,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-# Avoid importing adapt.stft_context here (circular via train_t1 → models).
+# Avoid importing adapt.stft_context here (keep detector free of STFT builders).
 _DEFAULT_N_TIME = 32
 _DEFAULT_N_FREQ = 128
 

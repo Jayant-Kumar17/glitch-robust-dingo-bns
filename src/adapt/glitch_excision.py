@@ -18,7 +18,7 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 import numpy as np
 from scipy import signal as sp_signal
 
-# Keep this module free of adapt.train_t1 imports (circular via models package).
+# Keep this module free of heavy STFT-builder imports.
 SPECTROGRAM_ANALYSIS_SECONDS = 4.0
 
 # Gate half-width that recovered d_L in the motivating ablation.

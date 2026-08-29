@@ -294,7 +294,7 @@ def write_report(
 def run(args: argparse.Namespace) -> None:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     from adapt.glitch_excision import rebuild_event_from_gated_td
-    from adapt.train_t1 import SPECTROGRAM_ANALYSIS_SECONDS
+    from adapt.spectrogram_geometry import SPECTROGRAM_ANALYSIS_SECONDS
     from dingo.gw.domains import build_domain_from_model_metadata
     from evaluate_gw170817_comparison import (
         discover_assets,
