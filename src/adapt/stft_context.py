@@ -1,8 +1,7 @@
-"""Shared STFT / coherence spectrogram context builders for BNS models.
+"""STFT / coherence spectrogram builders for the glitch detector front-end.
 
-Legacy path: 3-channel H1–L1 mag/coherence ``(3, 5, 128)``.
-Robust path: 6-channel H1/L1/V1 mag + HL/HV/LV cross mag ``(6, 32, 128)``
-with fixed robust channel statistics (not per-sample Z-score).
+Supports the 6-channel H1/L1/V1 magnitude + cross-magnitude stack used by
+``GlitchDetectorSTFT`` (fixed channel statistics; not per-sample Z-score).
 """
 
 from __future__ import annotations

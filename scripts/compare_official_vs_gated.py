@@ -292,7 +292,7 @@ def build_glitchy_packages(
     )
     from adapt.spectrogram_geometry import SPECTROGRAM_ANALYSIS_SECONDS
     from dingo.gw.domains import build_domain_from_model_metadata
-    from evaluate_glitch_robustness import inject_h1_glitch_into_event
+    from event_glitch_io import inject_h1_glitch_into_event
     from evaluate_gw170817_comparison import (
         discover_assets,
         load_event_dataset,
@@ -757,7 +757,7 @@ def run_gate_width_ablation(
 ) -> Dict[str, Any]:
     """Empirical gate half-width sweep; NN-only 2k samples for speed."""
     from adapt.glitch_excision import rebuild_event_from_gated_td
-    from evaluate_glitch_robustness import inject_h1_glitch_into_event
+    from event_glitch_io import inject_h1_glitch_into_event
     from evaluate_gw170817_comparison import discover_assets, load_event_dataset
 
     pe = (

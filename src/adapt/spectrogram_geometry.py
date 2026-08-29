@@ -1,8 +1,6 @@
 """Shared spectrogram / STFT geometry for glitch detection and gating.
 
-These constants and helpers used to live in a DINGO-T1 adaptation trainer.
-They are kept here so the paper code path has no dependency on network
-retraining.
+Constants and STFT grid helpers used by the frozen-DINGO-BNS front-end.
 """
 
 from __future__ import annotations
