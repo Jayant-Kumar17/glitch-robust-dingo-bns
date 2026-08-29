@@ -9,9 +9,9 @@ Persists under ``results/excision_honest/``:
   - clean no-op / clean FP audit
   - learned-detector vs oracle gates on the glitchy object
 
-Unlike the earlier excision_v1 report, gates are applied to the **glitchy**
-package via ``rebuild_event_from_gated_td`` (replace FD from gated TD), not
-delta-added onto the clean HDF5.
+Gates are applied to the **glitchy** package via ``rebuild_event_from_gated_td``
+(matched-delta / replace rebuild from gated TD), not delta-added onto a clean
+HDF5 copy.
 
 Usage::
 

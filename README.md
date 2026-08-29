@@ -1,12 +1,10 @@
 # Glitch-robust DINGO-BNS inference (no retraining)
 
-Companion code for the methods study defined in **[SCOPE.md](SCOPE.md)**.
+Public companion code for a methods study on restoring [DINGO-BNS](https://github.com/dingo-gw/dingo) posteriors under transient glitches **without retraining** the neural network.
 
-**Aim:** restore frozen [DINGO-BNS](https://github.com/dingo-gw/dingo) posteriors under transient glitches **without retraining**.
+See **[SCOPE.md](SCOPE.md)** for the locked claim, method, and canonical results.
 
-**Recipe:** detect → Tukey gate → **matched-delta** FD rebuild → **keep analysis ASD** → sample frozen official DINGO-BNS.
-
-This is **not** the earlier hub-and-spoke / dual-pathway ADAPT framework (router, BBH pathway, continuous training hub, site noise hubs). Those pieces are out of scope and removed.
+**Recipe:** detect → Tukey gate → **matched-delta** frequency-domain rebuild → **keep the original analysis ASD** → sample with frozen official DINGO-BNS.
 
 ## Headline results
 
@@ -17,26 +15,26 @@ This is **not** the earlier hub-and-spoke / dual-pathway ADAPT framework (router
 | Ablation (16 cells) | full recipe ≈ **81%** recover; FFT-replace **0%** |
 | Runtime | front-end overhead ≈ **2×** vs poison-only PE |
 
-Details and artifacts: `results/` (see also [REPRODUCE.md](REPRODUCE.md)).
+Artifacts live under `results/`. Exact commands: [REPRODUCE.md](REPRODUCE.md).
 
 ## Layout
 
 ```
-SCOPE.md                         # locked paper claim
+SCOPE.md
 src/adapt/
   glitch_excision.py             # matched-delta / replace rebuild
   glitch_augmentation.py         # synthetic glitch families
   stft_context.py                # STFT helpers for the detector
   spectrogram_geometry.py        # STFT grid constants
-  models/glitch_detector.py      # time-bin detector (NSF frozen)
+  models/glitch_detector.py      # time-bin detector (NSF stays frozen)
 scripts/
-  event_glitch_io.py             # TD/FD inject helpers only
+  event_glitch_io.py             # TD/FD inject helpers
   compare_official_vs_gated.py
   evaluate_glitch_excision.py
   stress_test_glitch_excision.py
   stress_test_synthetic_bns.py
   journal_method_hardening.py
-results/                         # five canonical paper dirs only
+results/
 tests/
 ```
 
@@ -51,7 +49,7 @@ export PYTHONPATH=src:scripts
 export KMP_DUPLICATE_LIB_OK=TRUE
 ```
 
-Official DINGO-BNS weights / GW170817 demo packaging are upstream (not redistributed). Detector-gated runs expect `checkpoints/glitch_detector_v1/best_glitch_detector.pt`.
+Official DINGO-BNS weights and the GW170817 demo packaging are obtained upstream (not redistributed here). Detector-gated runs expect `checkpoints/glitch_detector_v1/best_glitch_detector.pt`.
 
 ## Citation
 
@@ -60,4 +58,4 @@ Working title: *Transient-glitch resilience in neural gravitational-wave paramet
 
 ## License
 
-MIT (`LICENSE`). Upstream DINGO and LIGO/Virgo data remain under their own terms.
+MIT (`LICENSE`). Upstream DINGO and LIGO/Virgo data products remain under their own terms.
