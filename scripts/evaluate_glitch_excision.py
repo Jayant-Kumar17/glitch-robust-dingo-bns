@@ -143,7 +143,7 @@ def _detector_gates_from_crop(
     ifo_whitelist: Optional[Sequence[str]] = None,
 ):
     from adapt.glitch_excision import time_bin_mask_to_windows
-    from adapt.train_t1 import SPECTROGRAM_ANALYSIS_SECONDS
+    from adapt.spectrogram_geometry import SPECTROGRAM_ANALYSIS_SECONDS
 
     spec_t = torch.from_numpy(np.asarray(spectrogram, dtype=np.float32)).unsqueeze(0)
     with torch.no_grad():
@@ -424,7 +424,7 @@ def run(args: argparse.Namespace) -> None:
         trig_idx, crop_start, crop_end = analysis_crop_bounds(
             duration=duration, time_buffer=time_buffer, sample_rate=sample_rate
         )
-        from adapt.train_t1 import SPECTROGRAM_ANALYSIS_SECONDS
+        from adapt.spectrogram_geometry import SPECTROGRAM_ANALYSIS_SECONDS
 
         crops_g = {
             "H1": td_h1_glitch[crop_start:crop_end].copy(),

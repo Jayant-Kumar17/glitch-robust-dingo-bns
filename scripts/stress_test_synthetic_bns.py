@@ -337,7 +337,7 @@ def inject_glitch_on_synthetic(
     """Glitch overlay on in-memory synthetic TD/FD (no GWF)."""
     from adapt.glitch_augmentation import GlitchSpec, synthesize_glitch_td
     from adapt.stft_context import inband_rms
-    from adapt.train_t1 import SPECTROGRAM_ANALYSIS_SECONDS
+    from adapt.spectrogram_geometry import SPECTROGRAM_ANALYSIS_SECONDS
     from evaluate_glitch_robustness import td_to_fd_strain, welch_asd
 
     duration = float(settings.get("T", 128.0))
@@ -622,7 +622,7 @@ def write_artifacts(
 def run(args: argparse.Namespace) -> None:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     from adapt.glitch_excision import rebuild_event_from_gated_td
-    from adapt.train_t1 import SPECTROGRAM_ANALYSIS_SECONDS
+    from adapt.spectrogram_geometry import SPECTROGRAM_ANALYSIS_SECONDS
     from dingo.gw.domains import build_domain_from_model_metadata
     from evaluate_gw170817_comparison import (
         discover_assets,

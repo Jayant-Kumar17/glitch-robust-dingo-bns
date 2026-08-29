@@ -1,6 +1,6 @@
-# Reproduce detect-and-gate stress test
+# Reproduce GW170817 glitch stress test
 
-Event: **GW170817** only (in-repo DINGO-BNS Zenodo model).
+Event: **GW170817** only (official DINGO-BNS Zenodo/demo model).
 Glitches: synthetic families from `adapt.glitch_augmentation` (held-in + held-out).
 PE: frozen official DINGO; gated path = detect-and-gate + original ASD.
 

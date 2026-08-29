@@ -216,7 +216,7 @@ def inject_spec_into_event(
     """Inject GlitchSpec onto analysis-segment TD; return poison package + td_full."""
     from adapt.glitch_augmentation import GlitchSpec, synthesize_glitch_td
     from adapt.stft_context import inband_rms
-    from adapt.train_t1 import SPECTROGRAM_ANALYSIS_SECONDS
+    from adapt.spectrogram_geometry import SPECTROGRAM_ANALYSIS_SECONDS
     from evaluate_glitch_robustness import load_full_event_td, td_to_fd_strain, welch_asd
     from evaluate_gw170817_comparison import load_event_td_crops
 
@@ -338,7 +338,7 @@ def _detector_gates(
     ifo_whitelist: Optional[Sequence[str]] = None,
 ):
     from adapt.glitch_excision import time_bin_mask_to_windows
-    from adapt.train_t1 import SPECTROGRAM_ANALYSIS_SECONDS
+    from adapt.spectrogram_geometry import SPECTROGRAM_ANALYSIS_SECONDS
 
     spec_t = torch.from_numpy(np.asarray(spectrogram, dtype=np.float32)).unsqueeze(0)
     with torch.no_grad():
@@ -489,7 +489,7 @@ def append_csv_row(path: Path, row: Dict[str, Any], fieldnames: List[str]) -> No
 def run(args: argparse.Namespace) -> None:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     from adapt.glitch_excision import rebuild_event_from_gated_td
-    from adapt.train_t1 import SPECTROGRAM_ANALYSIS_SECONDS
+    from adapt.spectrogram_geometry import SPECTROGRAM_ANALYSIS_SECONDS
     from dingo.gw.domains import build_domain_from_model_metadata
     from evaluate_gw170817_comparison import (
         discover_assets,

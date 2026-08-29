@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "adapt"
-version = "0.1.0"
+version = "0.2.0"
 description = "Glitch-aware front-end for frozen DINGO-BNS parameter estimation (matched-delta rebuild + analysis ASD)"
 requires-python = ">=3.9"
 
