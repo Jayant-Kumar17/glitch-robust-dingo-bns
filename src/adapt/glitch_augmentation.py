@@ -582,7 +582,7 @@ def sample_glitch_spec_with_hard_eval(
 ) -> GlitchSpec:
     """Sample glitches, with a fraction locked to the GW170817-style H1 SG.
 
-    The hard eval twin matches ``evaluate_glitch_robustness.py``: H1
+    The hard eval twin matches ``event_glitch_io.py``: H1
     sine-Gaussian near ``t_rel=-1``, Welch ASD on FD, severity in a loud band.
     """
     if (not held_out) and float(rng.random()) < float(hard_eval_frac):

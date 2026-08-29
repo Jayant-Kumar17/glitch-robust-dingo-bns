@@ -338,7 +338,7 @@ def inject_glitch_on_synthetic(
     from adapt.glitch_augmentation import GlitchSpec, synthesize_glitch_td
     from adapt.stft_context import inband_rms
     from adapt.spectrogram_geometry import SPECTROGRAM_ANALYSIS_SECONDS
-    from evaluate_glitch_robustness import td_to_fd_strain, welch_asd
+    from event_glitch_io import td_to_fd_strain, welch_asd
 
     duration = float(settings.get("T", 128.0))
     time_buffer = float(settings.get("time_buffer", 2.0))

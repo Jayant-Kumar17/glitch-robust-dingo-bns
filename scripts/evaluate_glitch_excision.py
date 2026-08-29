@@ -199,7 +199,7 @@ def run(args: argparse.Namespace) -> None:
     )
     from adapt.stft_context import inband_rms
     from dingo.gw.domains import build_domain_from_model_metadata
-    from evaluate_glitch_robustness import (
+    from event_glitch_io import (
         glitch_meta_for_json,
         inject_h1_glitch_into_event,
         sine_gaussian_glitch,

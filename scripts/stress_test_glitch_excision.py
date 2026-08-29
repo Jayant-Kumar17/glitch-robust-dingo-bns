@@ -217,7 +217,7 @@ def inject_spec_into_event(
     from adapt.glitch_augmentation import GlitchSpec, synthesize_glitch_td
     from adapt.stft_context import inband_rms
     from adapt.spectrogram_geometry import SPECTROGRAM_ANALYSIS_SECONDS
-    from evaluate_glitch_robustness import load_full_event_td, td_to_fd_strain, welch_asd
+    from event_glitch_io import load_full_event_td, td_to_fd_strain, welch_asd
     from evaluate_gw170817_comparison import load_event_td_crops
 
     settings = dict(event.settings)
