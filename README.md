@@ -186,3 +186,5 @@ remain subject to their respective terms of use.
 ## Contact
 
 Jayant Kumar, Karachi Grammar School
+
+j.kumar16224@kgs.edu.pk

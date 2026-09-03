@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "adapt"
 version = "0.2.0"
 authors = [
-  { name = "Jayant Kumar" },
+  { name = "Jayant Kumar", email = "j.kumar16224@kgs.edu.pk" },
 ]
 description = "Glitch-aware front-end for frozen DINGO-BNS parameter estimation"
 readme = "README.md"
