@@ -33,10 +33,14 @@ credentials*
 
 # Large local model weights / checkpoints
 *.pt
+!checkpoints/glitch_detector_v1/*.pt
+!checkpoints/glitch_detector_v1/*.json
 *.pth
 *.ckpt
 checkpoints/**
 !checkpoints/README.md
+!checkpoints/glitch_detector_v1/
+!checkpoints/glitch_detector_v1/**
 models_checkpoint/
 dingo_t1.pt
 
@@ -87,3 +91,4 @@ logs/
 *.log
 check_shapes.py
 try_it.py
+checkpoints/glitch_detector_v1/last.pt

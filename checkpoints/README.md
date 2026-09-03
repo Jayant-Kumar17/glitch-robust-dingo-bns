@@ -1,13 +1,24 @@
-# Checkpoints (not in git)
+# Checkpoints
 
-Place the paper glitch-detector weights here:
+## Included (paper front-end)
 
-```text
-checkpoints/glitch_detector_v1/best_glitch_detector.pt
+| File | Role |
+|---|---|
+| `glitch_detector_v1/best_glitch_detector.pt` | Trained STFT glitch detector used for detect-and-gate |
+| `glitch_detector_v1/train_summary.json` | Training / calibration log (threshold, metrics) |
+
+Retrain from scratch:
+
+```bash
+python -u examples/train_glitch_detector.py \
+  --epochs 30 --batch-size 16 --steps-per-epoch 100 \
+  --outdir checkpoints/glitch_detector_v1
 ```
 
-Official DINGO-BNS weights belong under the DINGO-BNS demo `downloads/` tree
-(see root README), not in this folder.
+## Not included (and not part of the paper claim)
 
-Contact the corresponding author if you need the detector checkpoint used for
-the published tables.
+- **Official DINGO-BNS weights** (~2 GB): obtain from the upstream DINGO-BNS
+  GW170817 demo / Zenodo. The paper uses this network **frozen** (no NSF /
+  embedding retrain).
+- Older experimental “glitch-robust” fine-tuned DINGO heads (multi‑GB): **not**
+  used in the manuscript; do not confuse them with the published method.
