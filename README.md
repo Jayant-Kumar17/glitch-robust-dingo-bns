@@ -13,7 +13,23 @@ segment. This repository implements a small front-end:
 4. **keep the original analysis ASD**,
 5. sample with the frozen DINGO-BNS model.
 
-Claim / method / headline numbers: [`paper/SCOPE.md`](paper/SCOPE.md).
+Claim / method / headline numbers: [`paper/SCOPE.md`](paper/SCOPE.md).  
+**Exact “what we changed vs stock DINGO” recipe:** [`paper/METHOD.md`](paper/METHOD.md).
+
+## How this uses official DINGO (read this)
+
+We **do not modify** the official DINGO-BNS network weights or architecture.
+
+Replication means:
+
+1. Fetch the **same official** GW170817 DINGO-BNS demo model as everyone else.
+2. Apply **our front-end** to the event package before sampling:
+   detect → Tukey gate → **matched-delta** FD rebuild → **keep original ASD**.
+3. Call the **same frozen** DINGO sampler on that cleaned package.
+
+The only trained artifact of ours is the small STFT glitch detector in
+`checkpoints/glitch_detector_v1/`. Details and the critical API call are in
+[`paper/METHOD.md`](paper/METHOD.md).
 
 ## Prerequisites (required to re-run)
 
@@ -41,7 +57,8 @@ DINGO weights or LIGO strain frames. To regenerate results you need:
 
 **Important:** the published method does **not** fine-tune DINGO-BNS. The only
 trained component here is the small STFT **glitch detector**. Official DINGO
-weights stay frozen and come from upstream.
+weights stay frozen and come from upstream. See [`paper/METHOD.md`](paper/METHOD.md).
+
 ## Installation
 
 ```bash
