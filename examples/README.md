@@ -1,6 +1,6 @@
-# Examples
+# Experimental drivers
 
-End-to-end studies for the frozen DINGO-BNS glitch front-end.
+Executable studies for the frozen DINGO-BNS glitch front-end.
 
 ```bash
 pip install -e .
@@ -8,15 +8,16 @@ export PYTHONPATH=src:examples
 export KMP_DUPLICATE_LIB_OK=TRUE
 ```
 
-| Script | What it does | Paper output |
+| Script | Purpose | Canonical output |
 |---|---|---|
-| `official_control.py` | Clean / poison / gated control | `results/dingo_official_control/` |
-| `honest_excision.py` | Matched-delta vs Welch / replace | `results/excision_honest/` |
-| `stress_gw170817.py` | GW170817 240-cell stress grid | `results/stress_test_excision_v1/` |
+| `official_control.py` | Clean, poisoned, and gated control | `results/dingo_official_control/` |
+| `honest_excision.py` | Matched-delta versus Welch and FFT-replace diagnostics | `results/excision_honest/` |
+| `stress_gw170817.py` | GW170817 stress grid (240 cells) | `results/stress_test_excision_v1/` |
 | `stress_synthetic_bns.py` | Synthetic BNS stress panel | `results/stress_test_synthetic_bns_v1/` |
-| `method_hardening.py` | Ablation + oracle + runtime | `results/journal_method_hardening_v1/` |
-| `train_glitch_detector.py` | Train the STFT detector (weights also shipped) | `checkpoints/glitch_detector_v1/` |
+| `method_hardening.py` | Ablation, oracle gap, and runtime | `results/journal_method_hardening_v1/` |
+| `train_glitch_detector.py` | Detector training (checkpoint also distributed) | `checkpoints/glitch_detector_v1/` |
 
-Full flags: [`../paper/REPRODUCE.md`](../paper/REPRODUCE.md) and the root README.
+Command-line flags for paper-matching runs are listed in
+[`../paper/REPRODUCE.md`](../paper/REPRODUCE.md) and the root README.
 
-DINGO-BNS itself is **not** retrained in this study — only the glitch detector is.
+DINGO-BNS weights remain frozen throughout; only the glitch detector is trained.

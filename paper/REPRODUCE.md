@@ -1,8 +1,9 @@
-# Reproduce paper experiments
+# Reproduction commands
 
-Same commands as the root [`README.md`](../README.md) (kept here for the paper
-folder). Prerequisites: DINGO-BNS GW170817 demo assets + glitch-detector
-checkpoint (see README).
+Commands identical to those in the root [`README.md`](../README.md) are collected
+here for convenience. Required external assets are the DINGO-BNS GW170817
+demonstration packaging and the glitch-detector checkpoint described in the
+README.
 
 ```bash
 conda activate adapt_env
@@ -13,7 +14,7 @@ export PYTHONPATH=src:examples
 export KMP_DUPLICATE_LIB_OK=TRUE
 ```
 
-## Full paper suite
+## Full experimental suite
 
 ```bash
 python -u examples/official_control.py \
@@ -36,7 +37,10 @@ python -u examples/method_hardening.py \
   --outdir results/journal_method_hardening_v1
 ```
 
-## Smoke (not paper numbers)
+## Restricted smoke configuration
+
+Intended for software verification only; reported paper metrics use the full
+suite above.
 
 ```bash
 python -u examples/method_hardening.py \
@@ -44,7 +48,9 @@ python -u examples/method_hardening.py \
   --outdir results/journal_method_hardening_v1_smoke
 ```
 
-## Success criteria (as implemented)
+## Success criteria (as coded)
 
-- **Poison collapsed:** `d_L` hi < 15 or lo > 90 (Mpc-scale rails in code).
-- **Recovers like clean:** median / CI overlap rules vs the clean reference.
+- Poisoned collapse: luminosity-distance credible interval with upper edge
+  below 15 Mpc or lower edge above 90 Mpc.
+- Recovery relative to clean: median and interval-overlap criteria implemented
+  in the respective example drivers.

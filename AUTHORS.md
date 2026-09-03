@@ -1,3 +1,3 @@
 # Authors
 
-- Jayant Kumar (Karachi Grammar School)
+- Jayant Kumar, Karachi Grammar School

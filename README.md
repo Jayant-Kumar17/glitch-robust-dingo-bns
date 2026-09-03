@@ -1,68 +1,69 @@
-# Glitch-robust DINGO-BNS inference
+# Glitch mitigation for neural BNS parameter estimation with frozen DINGO-BNS
 
-Companion code for restoring [DINGO-BNS](https://github.com/dingo-gw/dingo)
-posteriors under short-duration transient glitches **without retraining** the
-neural network.
+This repository provides the software accompanying a methods study on restoring
+[DINGO-BNS](https://github.com/dingo-gw/dingo) posterior inference in the presence
+of short-duration transient glitches, without retraining the neural posterior
+estimator.
 
-Frozen official DINGO-BNS can collapse when a glitch contaminates the analysis
-segment. This repository implements a small front-end:
+When the analysis segment is contaminated by a transient, official DINGO-BNS
+posteriors can collapse (most conspicuously in luminosity distance). The
+procedure implemented here is a preprocessing front-end applied to the event
+data package prior to sampling:
 
-1. detect candidate glitch intervals,
-2. apply Tukey gates in the time domain,
-3. rebuild frequency-domain strain with **matched-delta** reconstruction,
-4. **keep the original analysis ASD**,
-5. sample with the frozen DINGO-BNS model.
+1. detection of candidate glitch intervals;
+2. Tukey gating in the time domain;
+3. frequency-domain reconstruction via a matched-delta update;
+4. retention of the original analysis amplitude spectral densities (ASDs);
+5. sampling with the frozen official DINGO-BNS model.
 
-Claim / method / headline numbers: [`paper/SCOPE.md`](paper/SCOPE.md).  
-**Exact “what we changed vs stock DINGO” recipe:** [`paper/METHOD.md`](paper/METHOD.md).
-
-## How this uses official DINGO (read this)
-
-We **do not modify** the official DINGO-BNS network weights or architecture.
-
-Replication means:
-
-1. Fetch the **same official** GW170817 DINGO-BNS demo model as everyone else.
-2. Apply **our front-end** to the event package before sampling:
-   detect → Tukey gate → **matched-delta** FD rebuild → **keep original ASD**.
-3. Call the **same frozen** DINGO sampler on that cleaned package.
-
-The only trained artifact of ours is the small STFT glitch detector in
-`checkpoints/glitch_detector_v1/`. Details and the critical API call are in
+Scientific scope and summary metrics are given in [`paper/SCOPE.md`](paper/SCOPE.md).
+The precise relationship to stock DINGO-BNS inference is specified in
 [`paper/METHOD.md`](paper/METHOD.md).
 
-## Prerequisites (required to re-run)
+## Relation to official DINGO-BNS
 
-This repo ships **code + paper result tables/PDFs**. It does **not** redistribute
-DINGO weights or LIGO strain frames. To regenerate results you need:
+The official DINGO-BNS network weights and architecture are left unchanged.
+Reproduction therefore consists of:
 
-1. **DINGO-BNS GW170817 demo** under the repo (or symlink) at:
+1. obtaining the official GW170817 DINGO-BNS demo model and event packaging from
+   upstream sources;
+2. applying the front-end defined in this repository to the event data package
+   (detection, gating, matched-delta reconstruction, original ASD retention);
+3. sampling with the same frozen DINGO-BNS posterior model.
+
+The sole trained component contributed here is a compact STFT glitch detector
+(`checkpoints/glitch_detector_v1/`). Algorithmic detail and the reconstruction
+API are documented in [`paper/METHOD.md`](paper/METHOD.md).
+
+## External dependencies
+
+The repository distributes source code, the glitch-detector checkpoint, and
+summary result artefacts (JSON/CSV/PDF). Official DINGO-BNS weights and LIGO
+strain frames are not redistributed. Regeneration of numerical results requires:
+
+1. The DINGO-BNS GW170817 demonstration tree (or an equivalent layout), e.g.
    ```text
    DINGO-BNS/dingo/binary-neutron-star-demo/GW170817/
-     downloads/                 # dingo-bns-model_*.pt, H/L/V *.gwf, PSD txt
-     inference-dingo-pipe/      # GW170817.ini + outdir/data/*_event_data.hdf5
+     downloads/                 # dingo-bns-model_*.pt, H/L/V *.gwf, PSD files
+     inference-dingo-pipe/      # GW170817.ini and outdir/data/*_event_data.hdf5
    ```
-   Follow the upstream DINGO-BNS demo / Zenodo instructions from
-   [dingo-gw/dingo](https://github.com/dingo-gw/dingo).
+   Installation follows the upstream DINGO-BNS demo documentation
+   ([dingo-gw/dingo](https://github.com/dingo-gw/dingo)).
 
-2. **Glitch detector** — weights **are in this repo**:
+2. The glitch-detector checkpoint included in this repository:
    ```text
    checkpoints/glitch_detector_v1/best_glitch_detector.pt
    ```
-   Training recipe: `examples/train_glitch_detector.py` (see below).
-   SHA-256 of the paper run is also recorded in `results/stress_test_*/` configs.
+   Optional retraining is provided by `examples/train_glitch_detector.py`.
+   File hashes for the paper runs are recorded under `results/stress_test_*/`.
 
-3. A scientific Python env with the pins in `requirements.txt` (includes
-   `dingo-gw`, `torch`, `gwpy`, `bilby`, …).
-
-**Important:** the published method does **not** fine-tune DINGO-BNS. The only
-trained component here is the small STFT **glitch detector**. Official DINGO
-weights stay frozen and come from upstream. See [`paper/METHOD.md`](paper/METHOD.md).
+3. A Python environment consistent with `requirements.txt` (including
+   `dingo-gw`, PyTorch, GWpy, Bilby, and related dependencies).
 
 ## Installation
 
 ```bash
-conda activate adapt_env   # or your env
+conda activate adapt_env
 cd /path/to/glitch-robust-dingo-bns
 pip install -e .
 pip install -r requirements.txt
@@ -70,10 +71,12 @@ export PYTHONPATH=src:examples
 export KMP_DUPLICATE_LIB_OK=TRUE
 ```
 
-Optional: if your DINGO install is a local checkout, prepend it:
+If DINGO is installed from a local source tree, prepend that path:
 `export PYTHONPATH=/path/to/dingo:src:examples`.
 
-## Train the glitch detector (optional — weights already shipped)
+## Glitch-detector training (optional)
+
+The paper checkpoint is already present. To retrain:
 
 ```bash
 python -u examples/train_glitch_detector.py \
@@ -81,29 +84,29 @@ python -u examples/train_glitch_detector.py \
   --outdir checkpoints/glitch_detector_v1
 ```
 
-Writes `best_glitch_detector.pt` + `train_summary.json`. You can skip this if
-you use the committed checkpoint.
+This writes `best_glitch_detector.pt` and `train_summary.json`.
 
-## Reproduce all paper experiments
+## Reproduction of paper experiments
 
-Commands below match the published artifact directories. Wall time is roughly
-**~1–2 hours on CPU** for the full suite (N=512). Use `--overwrite` to ignore
-resume caches.
+The following commands regenerate the canonical artefact directories. On CPU with
+`N=512` posterior samples, the full suite typically requires of order one to two
+hours. Resume behaviour may be overridden with `--overwrite`.
 
-### 1) Official control (clean / poison / gated)
+### 1. Official control (clean, poisoned, and gated)
+
 ```bash
 python -u examples/official_control.py \
   --outdir results/dingo_official_control
 ```
 
-### 2) Honest excision diagnostics
+### 2. Honest excision diagnostics
 
 ```bash
 python -u examples/honest_excision.py \
   --outdir results/excision_honest
 ```
 
-### 3) GW170817 stress grid (240 cells)
+### 3. GW170817 stress grid (240 cells)
 
 ```bash
 python -u examples/stress_gw170817.py \
@@ -113,17 +116,17 @@ python -u examples/stress_gw170817.py \
   --outdir results/stress_test_excision_v1
 ```
 
-### 4) Synthetic BNS stress (160 cells)
+### 4. Synthetic BNS stress panel (160 cells)
 
 ```bash
 python -u examples/stress_synthetic_bns.py \
   --outdir results/stress_test_synthetic_bns_v1
 ```
 
-Match any extra flags from `results/stress_test_synthetic_bns_v1/synth_config.json`
-for an exact rerun.
+Additional flags for an exact match to the archived run are recorded in
+`results/stress_test_synthetic_bns_v1/synth_config.json`.
 
-### 5) Method hardening (ablation + oracle + runtime)
+### 5. Method hardening (ablation, oracle gap, and runtime)
 
 ```bash
 python -u examples/method_hardening.py \
@@ -131,7 +134,7 @@ python -u examples/method_hardening.py \
   --outdir results/journal_method_hardening_v1
 ```
 
-### Optional smoke (debug only — not paper numbers)
+### Restricted smoke run (development only)
 
 ```bash
 python -u examples/method_hardening.py \
@@ -139,22 +142,23 @@ python -u examples/method_hardening.py \
   --outdir results/journal_method_hardening_v1_smoke
 ```
 
-Same commands are also listed in [`paper/REPRODUCE.md`](paper/REPRODUCE.md) and
+Equivalent instructions appear in [`paper/REPRODUCE.md`](paper/REPRODUCE.md) and
 [`examples/README.md`](examples/README.md).
 
-## What is already in the repo (no re-run needed to read)
+## Archived results
 
-| Study | Directory | Headline |
+| Experiment | Directory | Principal finding |
 |---|---|---|
-| Official control | `results/dingo_official_control/` | clean / poison / gated summaries |
-| Honest excision | `results/excision_honest/` | matched-delta + orig ASD recovers |
-| GW170817 stress | `results/stress_test_excision_v1/` | gated recovery ≈ **85.8%** |
-| Synthetic BNS | `results/stress_test_synthetic_bns_v1/` | gated recovery ≈ **91.9%** |
-| Method hardening | `results/journal_method_hardening_v1/` | full recipe ≈ **81%**; FFT-replace **0%** |
+| Official control | `results/dingo_official_control/` | clean / poisoned / gated summaries |
+| Honest excision | `results/excision_honest/` | matched-delta with original ASD recovers inference |
+| GW170817 stress | `results/stress_test_excision_v1/` | gated recovery ≈ 85.8% |
+| Synthetic BNS | `results/stress_test_synthetic_bns_v1/` | gated recovery ≈ 91.9% |
+| Method hardening | `results/journal_method_hardening_v1/` | full recipe ≈ 81%; FFT replacement 0% |
 
-Large HDF5 PE sample dumps are gitignored; JSON/CSV/PDF summaries are tracked.
+Large HDF5 posterior sample files are omitted from version control; JSON, CSV,
+and PDF summaries are retained.
 
-## Library API
+## Library interface
 
 ```python
 from adapt.glitch_excision import rebuild_event_from_gated_td
@@ -167,17 +171,18 @@ from adapt.dingo_bns_demo import discover_assets, run_baseline_sampling
 
 Manuscript in preparation for *Astronomy and Computing* (Elsevier).
 
-Working title: *Transient-glitch resilience in neural gravitational-wave
+Provisional title: *Transient-glitch resilience in neural gravitational-wave
 parameter estimation without network retraining*.
 
-Please cite the paper when available and acknowledge
-[DINGO](https://github.com/dingo-gw/dingo) for the underlying neural PE model.
+Users of this software are requested to cite the published article when
+available and to acknowledge [DINGO](https://github.com/dingo-gw/dingo) as the
+underlying neural parameter-estimation framework.
 
-## License
+## Licence
 
-MIT — see [`LICENSE`](LICENSE). Upstream DINGO and LIGO/Virgo data products
-remain under their own terms.
+MIT Licence (`LICENSE`). Upstream DINGO software and LIGO/Virgo data products
+remain subject to their respective terms of use.
 
 ## Contact
 
-Jayant Kumar — Karachi Grammar School
+Jayant Kumar, Karachi Grammar School

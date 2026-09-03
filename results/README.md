@@ -1,14 +1,15 @@
 # Results
 
-Canonical artifacts for [`paper/SCOPE.md`](../paper/SCOPE.md).
+Archived summary artefacts corresponding to [`paper/SCOPE.md`](../paper/SCOPE.md).
 
 | Directory | Contents |
 |---|---|
-| `dingo_official_control/` | Clean / poison / gated control summaries + corner PDF |
-| `excision_honest/` | Honest matched-delta excision report + comparison figure |
-| `stress_test_excision_v1/` | GW170817 240-cell stress grid |
-| `stress_test_synthetic_bns_v1/` | Synthetic BNS stress + figures |
-| `journal_method_hardening_v1/` | Ablation, oracle gap, runtime |
+| `dingo_official_control/` | Clean, poisoned, and gated control summaries and corner figure |
+| `excision_honest/` | Honest matched-delta excision report and comparison figure |
+| `stress_test_excision_v1/` | GW170817 stress grid (240 cells) |
+| `stress_test_synthetic_bns_v1/` | Synthetic BNS stress panel and figures |
+| `journal_method_hardening_v1/` | Ablation, oracle-gap, and runtime summaries |
 
-Reproduce with [`paper/REPRODUCE.md`](../paper/REPRODUCE.md).  
-Heavy regenerable files (`*.hdf5`, smoke runs, logs) are gitignored.
+Reproduction commands are given in [`paper/REPRODUCE.md`](../paper/REPRODUCE.md).
+Large regenerable products (HDF5 sample dumps, smoke runs, and logs) are
+excluded from version control.
