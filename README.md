@@ -29,16 +29,19 @@ DINGO weights or LIGO strain frames. To regenerate results you need:
    Follow the upstream DINGO-BNS demo / Zenodo instructions from
    [dingo-gw/dingo](https://github.com/dingo-gw/dingo).
 
-2. **Glitch detector checkpoint** at:
+2. **Glitch detector** — weights **are in this repo**:
    ```text
    checkpoints/glitch_detector_v1/best_glitch_detector.pt
    ```
-   (SHA-256 of the paper run is recorded in
-   `results/stress_test_*/` config JSONs.)
+   Training recipe: `examples/train_glitch_detector.py` (see below).
+   SHA-256 of the paper run is also recorded in `results/stress_test_*/` configs.
 
 3. A scientific Python env with the pins in `requirements.txt` (includes
    `dingo-gw`, `torch`, `gwpy`, `bilby`, …).
 
+**Important:** the published method does **not** fine-tune DINGO-BNS. The only
+trained component here is the small STFT **glitch detector**. Official DINGO
+weights stay frozen and come from upstream.
 ## Installation
 
 ```bash
@@ -53,6 +56,17 @@ export KMP_DUPLICATE_LIB_OK=TRUE
 Optional: if your DINGO install is a local checkout, prepend it:
 `export PYTHONPATH=/path/to/dingo:src:examples`.
 
+## Train the glitch detector (optional — weights already shipped)
+
+```bash
+python -u examples/train_glitch_detector.py \
+  --epochs 30 --batch-size 16 --steps-per-epoch 100 \
+  --outdir checkpoints/glitch_detector_v1
+```
+
+Writes `best_glitch_detector.pt` + `train_summary.json`. You can skip this if
+you use the committed checkpoint.
+
 ## Reproduce all paper experiments
 
 Commands below match the published artifact directories. Wall time is roughly
@@ -60,7 +74,6 @@ Commands below match the published artifact directories. Wall time is roughly
 resume caches.
 
 ### 1) Official control (clean / poison / gated)
-
 ```bash
 python -u examples/official_control.py \
   --outdir results/dingo_official_control

@@ -15,5 +15,8 @@ export KMP_DUPLICATE_LIB_OK=TRUE
 | `stress_gw170817.py` | GW170817 240-cell stress grid | `results/stress_test_excision_v1/` |
 | `stress_synthetic_bns.py` | Synthetic BNS stress panel | `results/stress_test_synthetic_bns_v1/` |
 | `method_hardening.py` | Ablation + oracle + runtime | `results/journal_method_hardening_v1/` |
+| `train_glitch_detector.py` | Train the STFT detector (weights also shipped) | `checkpoints/glitch_detector_v1/` |
 
 Full flags: [`../paper/REPRODUCE.md`](../paper/REPRODUCE.md) and the root README.
+
+DINGO-BNS itself is **not** retrained in this study — only the glitch detector is.
