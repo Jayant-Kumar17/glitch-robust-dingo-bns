@@ -62,7 +62,7 @@ def _dl_ci(arr: np.ndarray) -> Dict[str, float]:
 
 
 def _sample_baseline(assets, event_data, settings, fixed, *, device, n, bs):
-    from evaluate_gw170817_comparison import run_baseline_sampling
+    from adapt.dingo_bns_demo import run_baseline_sampling
 
     ev = SimpleNamespace(data=event_data, settings=settings)
     df = run_baseline_sampling(
@@ -88,7 +88,7 @@ def _load_detector(path: Path, device: torch.device):
 
 
 def _build_event_spectrogram(td_map, asds, detectors, sample_rate, delta_f, noise_std, norm_stats, stft_kwargs):
-    from evaluate_gw170817_comparison import build_event_spectrogram_stack
+    from adapt.dingo_bns_demo import build_event_spectrogram_stack
 
     return build_event_spectrogram_stack(
         td_map,
@@ -206,13 +206,13 @@ def run(args: argparse.Namespace) -> None:
         td_to_fd_strain,
         welch_asd,
     )
-    from evaluate_gw170817_comparison import (
+    from adapt.dingo_bns_demo import (
         discover_assets,
         load_event_dataset,
         load_event_td_crops,
         select_device,
     )
-    from train_bns_spectrogram import load_bns_checkpoint
+    from adapt.dingo_bns_demo import load_bns_checkpoint
 
     device = select_device(args.device)
     outdir = Path(args.outdir)
