@@ -9,7 +9,7 @@ import numpy as np
 import torch
 
 REPO = Path(__file__).resolve().parents[1]
-for _p in (REPO / "src", REPO / "scripts", REPO / "DINGO-BNS" / "dingo"):
+for _p in (REPO / "src", REPO / "examples", REPO / "DINGO-BNS" / "dingo"):
     if _p.is_dir() and str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 

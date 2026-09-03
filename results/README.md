@@ -1,6 +1,6 @@
-# Paper results
+# Results
 
-Canonical artifacts for the claim in [`SCOPE.md`](../SCOPE.md).
+Canonical artifacts for [`paper/SCOPE.md`](../paper/SCOPE.md).
 
 | Directory | Contents |
 |---|---|
@@ -10,5 +10,5 @@ Canonical artifacts for the claim in [`SCOPE.md`](../SCOPE.md).
 | `stress_test_synthetic_bns_v1/` | Synthetic BNS stress + figures |
 | `journal_method_hardening_v1/` | Ablation, oracle gap, runtime |
 
-Reproduce with [`REPRODUCE.md`](../REPRODUCE.md).  
+Reproduce with [`paper/REPRODUCE.md`](../paper/REPRODUCE.md).  
 Heavy regenerable files (`*.hdf5`, smoke runs, logs) are gitignored.

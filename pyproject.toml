@@ -5,8 +5,35 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "adapt"
 version = "0.2.0"
-description = "Glitch-aware front-end for frozen DINGO-BNS parameter estimation (matched-delta rebuild + analysis ASD)"
+authors = [
+  { name = "Jayant Kumar" },
+]
+description = "Glitch-aware front-end for frozen DINGO-BNS parameter estimation"
+readme = "README.md"
+license = { text = "MIT" }
 requires-python = ">=3.9"
+dependencies = [
+  "numpy",
+  "scipy",
+  "torch",
+  "gwpy",
+  "matplotlib",
+  "pandas",
+]
+
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Topic :: Scientific/Engineering :: Astronomy",
+]
+
+[project.urls]
+Homepage = "https://github.com/Jayant-Kumar17/glitch-robust-dingo-bns"
+Repository = "https://github.com/Jayant-Kumar17/glitch-robust-dingo-bns"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "examples"]

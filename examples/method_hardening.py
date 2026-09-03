@@ -11,8 +11,8 @@ Produces paper-ready methodology artifacts under
 Usage::
 
     conda activate adapt_env
-    export PYTHONPATH=DINGO-BNS/dingo:src:scripts KMP_DUPLICATE_LIB_OK=TRUE
-    python -u scripts/journal_method_hardening.py \\
+    export PYTHONPATH=DINGO-BNS/dingo:src:examples KMP_DUPLICATE_LIB_OK=TRUE
+    python -u examples/method_hardening.py \\
       --num-samples 512 --batch-size 256 --device cpu \\
       --outdir results/journal_method_hardening_v1
 """
@@ -35,7 +35,7 @@ import torch
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 for _p in (
-    REPO_ROOT / "scripts",
+    REPO_ROOT / "examples",
     REPO_ROOT / "src",
     REPO_ROOT / "DINGO-BNS" / "dingo",
     REPO_ROOT,
@@ -86,7 +86,7 @@ def build_ablation_cells(
     max_cells: Optional[int] = None,
 ) -> List[Dict[str, Any]]:
     from adapt.glitch_augmentation import HELD_OUT_FAMILIES
-    from stress_test_glitch_excision import _sample_family_params
+    from stress_gw170817 import _sample_family_params
 
     held = set(HELD_OUT_FAMILIES)
     cells: List[Dict[str, Any]] = []
@@ -301,7 +301,7 @@ def run(args: argparse.Namespace) -> None:
         load_event_dataset,
         select_device,
     )
-    from stress_test_glitch_excision import (
+    from stress_gw170817 import (
         _build_spec_stack,
         _detector_gates,
         _dl_ci,
@@ -698,8 +698,8 @@ def run(args: argparse.Namespace) -> None:
                 "```bash",
                 "conda activate adapt_env",
                 f"cd {REPO_ROOT}",
-                "export PYTHONPATH=DINGO-BNS/dingo:src:scripts KMP_DUPLICATE_LIB_OK=TRUE",
-                "python -u scripts/journal_method_hardening.py \\",
+                "export PYTHONPATH=DINGO-BNS/dingo:src:examples KMP_DUPLICATE_LIB_OK=TRUE",
+                "python -u examples/method_hardening.py \\",
                 f"  --num-samples {args.num_samples} --batch-size {args.batch_size} --device cpu \\",
                 f"  --outdir {outdir}",
                 "```",
@@ -735,7 +735,7 @@ def run_synthetic_oracle_gap(
         discover_assets,
         load_event_dataset,
     )
-    from stress_test_glitch_excision import (
+    from stress_gw170817 import (
         _build_spec_stack,
         _detector_gates,
         _load_detector,

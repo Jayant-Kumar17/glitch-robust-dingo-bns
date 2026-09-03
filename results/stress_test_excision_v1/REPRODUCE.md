@@ -8,14 +8,14 @@ PE: frozen official DINGO; gated path = detect-and-gate + original ASD.
 
 ```bash
 conda activate adapt_env
-cd /Users/jayantkumar/Desktop/ADAPT-Project
-export PYTHONPATH=DINGO-BNS/dingo:src:scripts KMP_DUPLICATE_LIB_OK=TRUE
+cd /path/to/glitch-robust-dingo-bns
+export PYTHONPATH=DINGO-BNS/dingo:src:examples KMP_DUPLICATE_LIB_OK=TRUE
 ```
 
 ## Run
 
 ```bash
-python scripts/stress_test_glitch_excision.py \
+python examples/stress_gw170817.py \
   --seed 0 --n-seeds-per-cell 5 \
   --num-samples 512 --hf-samples 2000 \
   --batch-size 256 --device cpu \

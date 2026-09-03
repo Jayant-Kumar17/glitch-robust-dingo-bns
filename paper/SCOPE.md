@@ -19,13 +19,13 @@ without network retraining*.
 2. Detect candidate intervals (STFT time-bin detector; oracle gates for diagnostics).
 3. Apply Tukey gates in the time domain.
 4. Rebuild frequency-domain strain with **matched-delta** reconstruction
-   (`src/adapt/glitch_excision.py`), not naive full-FFT replacement.
+   (`adapt.glitch_excision`), not naive full-FFT replacement.
 5. **Keep the original analysis ASDs** (do not replace with Welch estimated from
    the gated segment).
 6. Sample with the **frozen official DINGO-BNS** model.
 
 In ablation tables the full recipe is labeled `adapt_full`. That label means:
-**gate + matched-delta + original ASD** (the complete front-end).
+**gate + matched-delta + original ASD**.
 
 ## Canonical results
 
@@ -42,25 +42,13 @@ In ablation tables the full recipe is labeled `adapt_full`. That label means:
 - Target model: **DINGO-BNS** only (frozen weights).
 - Events / panels: **GW170817** packaging + locked **synthetic BNS** stress set.
 - No network retraining; no BBH DINGO port in this manuscript.
-- Package import name is `adapt` (front-end utilities); it does not imply a larger system.
 
-## Code map
+## Repository map
 
 ```
-src/adapt/glitch_excision.py
-src/adapt/glitch_augmentation.py
-src/adapt/stft_context.py
-src/adapt/spectrogram_geometry.py
-src/adapt/models/glitch_detector.py
-scripts/event_glitch_io.py
-scripts/compare_official_vs_gated.py
-scripts/evaluate_glitch_excision.py
-scripts/stress_test_glitch_excision.py
-scripts/stress_test_synthetic_bns.py
-scripts/journal_method_hardening.py
-tests/test_glitch_excision.py
-tests/test_honest_excision_dl.py
-results/{dingo_official_control,excision_honest,
-         stress_test_excision_v1,stress_test_synthetic_bns_v1,
-         journal_method_hardening_v1}/
+src/adapt/                 # installable library
+examples/                  # end-to-end paper studies
+paper/                     # SCOPE + reproduce commands
+results/                   # canonical artifacts
+tests/
 ```

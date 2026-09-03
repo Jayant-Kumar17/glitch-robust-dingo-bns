@@ -7,8 +7,8 @@ then a locked 8-cell glitch panel (poison vs detector-gated). No oracle arm.
 Usage::
 
     conda activate adapt_env
-    export PYTHONPATH=DINGO-BNS/dingo:src:scripts KMP_DUPLICATE_LIB_OK=TRUE
-    python -u scripts/stress_test_synthetic_bns.py \\
+    export PYTHONPATH=DINGO-BNS/dingo:src:examples KMP_DUPLICATE_LIB_OK=TRUE
+    python -u examples/stress_synthetic_bns.py \\
       --seed 0 --n-events 20 --num-samples 512 --batch-size 256 --device cpu \\
       --outdir results/stress_test_synthetic_bns_v1
 """
@@ -35,7 +35,7 @@ import torch
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 for _p in (
-    REPO_ROOT / "scripts",
+    REPO_ROOT / "examples",
     REPO_ROOT / "src",
     REPO_ROOT / "DINGO-BNS" / "dingo",
     REPO_ROOT,
@@ -165,7 +165,7 @@ def _calibrate_thr_event(
     return float(raw)
 
 def _sample_family_params(family: str, rng: np.random.Generator) -> Dict[str, Any]:
-    from stress_test_glitch_excision import _sample_family_params as _sfp
+    from stress_gw170817 import _sample_family_params as _sfp
 
     return _sfp(family, rng)
 
@@ -338,7 +338,7 @@ def inject_glitch_on_synthetic(
     from adapt.glitch_augmentation import GlitchSpec, synthesize_glitch_td
     from adapt.stft_context import inband_rms
     from adapt.spectrogram_geometry import SPECTROGRAM_ANALYSIS_SECONDS
-    from event_glitch_io import td_to_fd_strain, welch_asd
+    from adapt.event_glitch_io import td_to_fd_strain, welch_asd
 
     duration = float(settings.get("T", 128.0))
     time_buffer = float(settings.get("time_buffer", 2.0))
@@ -428,19 +428,19 @@ def inject_glitch_on_synthetic(
 
 
 def _load_detector(path: Path, device: torch.device):
-    from stress_test_glitch_excision import _load_detector as _ld
+    from stress_gw170817 import _load_detector as _ld
 
     return _ld(path, device)
 
 
 def _detector_gates(*args, **kwargs):
-    from stress_test_glitch_excision import _detector_gates as _dg
+    from stress_gw170817 import _detector_gates as _dg
 
     return _dg(*args, **kwargs)
 
 
 def _build_spec_stack(*args, **kwargs):
-    from stress_test_glitch_excision import _build_spec_stack as _bs
+    from stress_gw170817 import _build_spec_stack as _bs
 
     return _bs(*args, **kwargs)
 
@@ -593,13 +593,13 @@ def write_artifacts(
                 "```bash",
                 "conda activate adapt_env",
                 f"cd {REPO_ROOT}",
-                "export PYTHONPATH=DINGO-BNS/dingo:src:scripts KMP_DUPLICATE_LIB_OK=TRUE",
+                "export PYTHONPATH=DINGO-BNS/dingo:src:examples KMP_DUPLICATE_LIB_OK=TRUE",
                 "```",
                 "",
                 "## Run",
                 "",
                 "```bash",
-                "python -u scripts/stress_test_synthetic_bns.py \\",
+                "python -u examples/stress_synthetic_bns.py \\",
                 f"  --seed {cfg.get('master_seed', 0)} --n-events {cfg.get('n_events', 20)} \\",
                 f"  --num-samples {cfg.get('num_samples', 512)} --batch-size {cfg.get('batch_size', 256)} \\",
                 "  --device cpu \\",
