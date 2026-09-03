@@ -1,13 +1,13 @@
 # Checkpoints
 
-## Included (paper front-end)
+## Distributed with this study
 
-| File | Role |
+| File | Description |
 |---|---|
-| `glitch_detector_v1/best_glitch_detector.pt` | Trained STFT glitch detector used for detect-and-gate |
-| `glitch_detector_v1/train_summary.json` | Training / calibration log (threshold, metrics) |
+| `glitch_detector_v1/best_glitch_detector.pt` | Trained STFT glitch detector used for detect-and-gate inference |
+| `glitch_detector_v1/train_summary.json` | Training and calibration summary (threshold and validation metrics) |
 
-Retrain from scratch:
+Optional retraining:
 
 ```bash
 python -u examples/train_glitch_detector.py \
@@ -15,10 +15,10 @@ python -u examples/train_glitch_detector.py \
   --outdir checkpoints/glitch_detector_v1
 ```
 
-## Not included (and not part of the paper claim)
+## Not distributed
 
-- **Official DINGO-BNS weights** (~2 GB): obtain from the upstream DINGO-BNS
-  GW170817 demo / Zenodo. The paper uses this network **frozen** (no NSF /
-  embedding retrain).
-- Older experimental “glitch-robust” fine-tuned DINGO heads (multi‑GB): **not**
-  used in the manuscript; do not confuse them with the published method.
+- Official DINGO-BNS weights (approximately 2 GB) are obtained from the upstream
+  GW170817 demonstration release. In this study the network is used with frozen
+  parameters (no NSF or embedding retraining).
+- Earlier exploratory fine-tuned DINGO variants are not part of the reported
+  method and are not required for reproduction.
