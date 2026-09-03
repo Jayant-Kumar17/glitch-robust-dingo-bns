@@ -218,7 +218,7 @@ def inject_spec_into_event(
     from adapt.stft_context import inband_rms
     from adapt.spectrogram_geometry import SPECTROGRAM_ANALYSIS_SECONDS
     from adapt.event_glitch_io import load_full_event_td, td_to_fd_strain, welch_asd
-    from evaluate_gw170817_comparison import load_event_td_crops
+    from adapt.dingo_bns_demo import load_event_td_crops
 
     settings = dict(event.settings)
     duration = float(settings.get("T", 128.0))
@@ -388,7 +388,7 @@ def _oracle_gates(meta: Dict[str, Any], cell: Dict[str, Any], gate_half_s: float
 
 
 def _sample_dl(assets, event_data, settings, fixed, *, device, n, bs) -> Dict[str, float]:
-    from evaluate_gw170817_comparison import run_baseline_sampling
+    from adapt.dingo_bns_demo import run_baseline_sampling
 
     df = run_baseline_sampling(
         assets["baseline_ckpt"],
@@ -491,13 +491,13 @@ def run(args: argparse.Namespace) -> None:
     from adapt.glitch_excision import rebuild_event_from_gated_td
     from adapt.spectrogram_geometry import SPECTROGRAM_ANALYSIS_SECONDS
     from dingo.gw.domains import build_domain_from_model_metadata
-    from evaluate_gw170817_comparison import (
+    from adapt.dingo_bns_demo import (
         discover_assets,
         load_event_dataset,
         load_event_td_crops,
         select_device,
     )
-    from train_bns_spectrogram import load_bns_checkpoint
+    from adapt.dingo_bns_demo import load_bns_checkpoint
 
     outdir = Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)

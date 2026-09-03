@@ -24,7 +24,7 @@ for _p in (REPO / "src", REPO / "examples", REPO / "DINGO-BNS" / "dingo"):
 
 def _assets_available() -> bool:
     try:
-        from evaluate_gw170817_comparison import discover_assets
+        from adapt.dingo_bns_demo import discover_assets
 
         assets = discover_assets(
             baseline_ckpt=None,
@@ -40,7 +40,7 @@ def test_glitchy_package_gate_orig_asd_recovers_dl():
     """Honest path on the object ``inject_h1_glitch_into_event`` returns."""
     from adapt.glitch_excision import GateWindow, rebuild_event_from_gated_td
     from adapt.event_glitch_io import inject_h1_glitch_into_event
-    from evaluate_gw170817_comparison import (
+    from adapt.dingo_bns_demo import (
         discover_assets,
         load_event_dataset,
         run_baseline_sampling,

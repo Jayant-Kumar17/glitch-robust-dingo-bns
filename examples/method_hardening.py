@@ -296,7 +296,7 @@ def run(args: argparse.Namespace) -> None:
     from adapt.glitch_excision import rebuild_event_from_gated_td
     from adapt.spectrogram_geometry import SPECTROGRAM_ANALYSIS_SECONDS
     from dingo.gw.domains import build_domain_from_model_metadata
-    from evaluate_gw170817_comparison import (
+    from adapt.dingo_bns_demo import (
         discover_assets,
         load_event_dataset,
         select_device,
@@ -312,7 +312,7 @@ def run(args: argparse.Namespace) -> None:
         _sample_dl,
         inject_spec_into_event,
     )
-    from train_bns_spectrogram import load_bns_checkpoint
+    from adapt.dingo_bns_demo import load_bns_checkpoint
 
     outdir = Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
@@ -378,7 +378,7 @@ def run(args: argparse.Namespace) -> None:
     thr_event = float(threshold)
     # Better: load clean crops via evaluate path
     try:
-        from evaluate_gw170817_comparison import load_event_td_crops
+        from adapt.dingo_bns_demo import load_event_td_crops
 
         clean_crops = load_event_td_crops(
             assets, sample_rate=sample_rate, crop_seconds=SPECTROGRAM_ANALYSIS_SECONDS
@@ -731,7 +731,7 @@ def run_synthetic_oracle_gap(
 
     from adapt.glitch_excision import rebuild_event_from_gated_td
     from dingo.gw.domains import build_domain_from_model_metadata
-    from evaluate_gw170817_comparison import (
+    from adapt.dingo_bns_demo import (
         discover_assets,
         load_event_dataset,
     )
@@ -748,7 +748,7 @@ def run_synthetic_oracle_gap(
         inject_glitch_on_synthetic,
         _gated_recovers as _gated_recovers_synth,
     )
-    from train_bns_spectrogram import build_base_domain_injection, load_bns_checkpoint
+    from adapt.dingo_bns_demo import build_base_domain_injection, load_bns_checkpoint
 
     fails = pd.read_csv(fail_path)
     assets = discover_assets(baseline_ckpt=None, custom_ckpt=None)

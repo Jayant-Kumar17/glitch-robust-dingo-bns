@@ -35,7 +35,8 @@ credentials*
 *.pt
 *.pth
 *.ckpt
-checkpoints/
+checkpoints/**
+!checkpoints/README.md
 models_checkpoint/
 dingo_t1.pt
 

@@ -293,12 +293,12 @@ def build_glitchy_packages(
     from adapt.spectrogram_geometry import SPECTROGRAM_ANALYSIS_SECONDS
     from dingo.gw.domains import build_domain_from_model_metadata
     from adapt.event_glitch_io import inject_h1_glitch_into_event
-    from evaluate_gw170817_comparison import (
+    from adapt.dingo_bns_demo import (
         discover_assets,
         load_event_dataset,
         load_event_td_crops,
     )
-    from train_bns_spectrogram import load_bns_checkpoint
+    from adapt.dingo_bns_demo import load_bns_checkpoint
 
     pe = None
     for cand in (
@@ -758,7 +758,7 @@ def run_gate_width_ablation(
     """Empirical gate half-width sweep; NN-only 2k samples for speed."""
     from adapt.glitch_excision import rebuild_event_from_gated_td
     from adapt.event_glitch_io import inject_h1_glitch_into_event
-    from evaluate_gw170817_comparison import discover_assets, load_event_dataset
+    from adapt.dingo_bns_demo import discover_assets, load_event_dataset
 
     pe = (
         REPO_ROOT
@@ -845,7 +845,7 @@ def run_gate_width_ablation(
 
 def run(args: argparse.Namespace) -> None:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
-    from evaluate_gw170817_comparison import select_device
+    from adapt.dingo_bns_demo import select_device
 
     outdir = Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)

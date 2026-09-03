@@ -455,7 +455,7 @@ def _sample_posterior(
     n,
     bs,
 ) -> pd.DataFrame:
-    from evaluate_gw170817_comparison import run_baseline_sampling
+    from adapt.dingo_bns_demo import run_baseline_sampling
 
     return run_baseline_sampling(
         assets["baseline_ckpt"],
@@ -624,12 +624,12 @@ def run(args: argparse.Namespace) -> None:
     from adapt.glitch_excision import rebuild_event_from_gated_td
     from adapt.spectrogram_geometry import SPECTROGRAM_ANALYSIS_SECONDS
     from dingo.gw.domains import build_domain_from_model_metadata
-    from evaluate_gw170817_comparison import (
+    from adapt.dingo_bns_demo import (
         discover_assets,
         load_event_dataset,
         select_device,
     )
-    from train_bns_spectrogram import build_base_domain_injection, load_bns_checkpoint
+    from adapt.dingo_bns_demo import build_base_domain_injection, load_bns_checkpoint
 
     outdir = Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
