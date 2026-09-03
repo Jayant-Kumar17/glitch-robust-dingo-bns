@@ -16,8 +16,8 @@ HDF5 copy.
 Usage::
 
     conda activate adapt_env
-    export PYTHONPATH=DINGO-BNS/dingo:src KMP_DUPLICATE_LIB_OK=TRUE
-    python scripts/evaluate_glitch_excision.py \\
+    export PYTHONPATH=DINGO-BNS/dingo:src:examples KMP_DUPLICATE_LIB_OK=TRUE
+    python examples/honest_excision.py \\
       --detector-ckpt checkpoints/glitch_detector_v1/best_glitch_detector.pt \\
       --outdir results/excision_honest
 """
@@ -38,7 +38,7 @@ import torch
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 for _p in (
-    REPO_ROOT / "scripts",
+    REPO_ROOT / "examples",
     REPO_ROOT / "src",
     REPO_ROOT / "DINGO-BNS" / "dingo",
     REPO_ROOT,
@@ -199,7 +199,7 @@ def run(args: argparse.Namespace) -> None:
     )
     from adapt.stft_context import inband_rms
     from dingo.gw.domains import build_domain_from_model_metadata
-    from event_glitch_io import (
+    from adapt.event_glitch_io import (
         glitch_meta_for_json,
         inject_h1_glitch_into_event,
         sine_gaussian_glitch,

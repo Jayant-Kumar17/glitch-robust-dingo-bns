@@ -8,8 +8,8 @@ Artifacts under ``results/stress_test_excision_v1/``.
 Usage::
 
     conda activate adapt_env
-    export PYTHONPATH=DINGO-BNS/dingo:src:scripts KMP_DUPLICATE_LIB_OK=TRUE
-    python scripts/stress_test_glitch_excision.py \\
+    export PYTHONPATH=DINGO-BNS/dingo:src:examples KMP_DUPLICATE_LIB_OK=TRUE
+    python examples/stress_gw170817.py \\
       --seed 0 --n-seeds-per-cell 5 \\
       --num-samples 512 --hf-samples 2000 \\
       --outdir results/stress_test_excision_v1
@@ -38,7 +38,7 @@ import torch
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 for _p in (
-    REPO_ROOT / "scripts",
+    REPO_ROOT / "examples",
     REPO_ROOT / "src",
     REPO_ROOT / "DINGO-BNS" / "dingo",
     REPO_ROOT,
@@ -217,7 +217,7 @@ def inject_spec_into_event(
     from adapt.glitch_augmentation import GlitchSpec, synthesize_glitch_td
     from adapt.stft_context import inband_rms
     from adapt.spectrogram_geometry import SPECTROGRAM_ANALYSIS_SECONDS
-    from event_glitch_io import load_full_event_td, td_to_fd_strain, welch_asd
+    from adapt.event_glitch_io import load_full_event_td, td_to_fd_strain, welch_asd
     from evaluate_gw170817_comparison import load_event_td_crops
 
     settings = dict(event.settings)
@@ -1143,13 +1143,13 @@ PE: frozen official DINGO; gated path = detect-and-gate + original ASD.
 ```bash
 conda activate adapt_env
 cd {REPO_ROOT}
-export PYTHONPATH=DINGO-BNS/dingo:src:scripts KMP_DUPLICATE_LIB_OK=TRUE
+export PYTHONPATH=DINGO-BNS/dingo:src:examples KMP_DUPLICATE_LIB_OK=TRUE
 ```
 
 ## Run
 
 ```bash
-python scripts/stress_test_glitch_excision.py \\
+python examples/stress_gw170817.py \\
   --seed {cfg.get('master_seed', 0)} --n-seeds-per-cell {cfg.get('n_seeds_per_cell', 5)} \\
   --num-samples {cfg.get('num_samples', 512)} --hf-samples {cfg.get('hf_samples', 2000)} \\
   --outdir {outdir}

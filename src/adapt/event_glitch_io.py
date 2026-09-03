@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Shared GW170817 strain I/O and glitch-injection helpers for paper scripts.
+"""Shared GW170817 strain I/O and glitch-injection helpers for the examples.
 
 No network retraining paths live here — only TD/FD packaging utilities used by
 the frozen-DINGO-BNS detect → gate → matched-delta experiments.

@@ -2,9 +2,9 @@
 
 ```bash
 conda activate adapt_env
-cd /Users/jayantkumar/Desktop/ADAPT-Project
-export PYTHONPATH=DINGO-BNS/dingo:src:scripts KMP_DUPLICATE_LIB_OK=TRUE
-python -u scripts/journal_method_hardening.py \
+cd /path/to/glitch-robust-dingo-bns
+export PYTHONPATH=DINGO-BNS/dingo:src:examples KMP_DUPLICATE_LIB_OK=TRUE
+python -u examples/method_hardening.py \
   --num-samples 512 --batch-size 256 --device cpu \
   --outdir results/journal_method_hardening_v1
 ```

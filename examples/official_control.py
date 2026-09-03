@@ -14,8 +14,8 @@ Writes ``results/dingo_official_control/``:
 Usage::
 
     conda activate adapt_env
-    export PYTHONPATH=DINGO-BNS/dingo:src:scripts KMP_DUPLICATE_LIB_OK=TRUE
-    python scripts/compare_official_vs_gated.py
+    export PYTHONPATH=DINGO-BNS/dingo:src:examples KMP_DUPLICATE_LIB_OK=TRUE
+    python examples/official_control.py
 """
 
 from __future__ import annotations
@@ -35,7 +35,7 @@ import torch
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 for _p in (
-    REPO_ROOT / "scripts",
+    REPO_ROOT / "examples",
     REPO_ROOT / "src",
     REPO_ROOT / "DINGO-BNS" / "dingo",
     REPO_ROOT,
@@ -292,7 +292,7 @@ def build_glitchy_packages(
     )
     from adapt.spectrogram_geometry import SPECTROGRAM_ANALYSIS_SECONDS
     from dingo.gw.domains import build_domain_from_model_metadata
-    from event_glitch_io import inject_h1_glitch_into_event
+    from adapt.event_glitch_io import inject_h1_glitch_into_event
     from evaluate_gw170817_comparison import (
         discover_assets,
         load_event_dataset,
@@ -757,7 +757,7 @@ def run_gate_width_ablation(
 ) -> Dict[str, Any]:
     """Empirical gate half-width sweep; NN-only 2k samples for speed."""
     from adapt.glitch_excision import rebuild_event_from_gated_td
-    from event_glitch_io import inject_h1_glitch_into_event
+    from adapt.event_glitch_io import inject_h1_glitch_into_event
     from evaluate_gw170817_comparison import discover_assets, load_event_dataset
 
     pe = (

@@ -3,7 +3,7 @@
 Skipped automatically when GW170817 / DINGO assets are unavailable.
 Run explicitly::
 
-    PYTHONPATH=DINGO-BNS/dingo:src:scripts KMP_DUPLICATE_LIB_OK=TRUE \\
+    PYTHONPATH=DINGO-BNS/dingo:src:examples KMP_DUPLICATE_LIB_OK=TRUE \\
       pytest -q tests/test_honest_excision_dl.py
 """
 
@@ -17,7 +17,7 @@ import numpy as np
 import pytest
 
 REPO = Path(__file__).resolve().parents[1]
-for _p in (REPO / "src", REPO / "scripts", REPO / "DINGO-BNS" / "dingo"):
+for _p in (REPO / "src", REPO / "examples", REPO / "DINGO-BNS" / "dingo"):
     if _p.is_dir() and str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
@@ -39,7 +39,7 @@ def _assets_available() -> bool:
 def test_glitchy_package_gate_orig_asd_recovers_dl():
     """Honest path on the object ``inject_h1_glitch_into_event`` returns."""
     from adapt.glitch_excision import GateWindow, rebuild_event_from_gated_td
-    from event_glitch_io import inject_h1_glitch_into_event
+    from adapt.event_glitch_io import inject_h1_glitch_into_event
     from evaluate_gw170817_comparison import (
         discover_assets,
         load_event_dataset,
