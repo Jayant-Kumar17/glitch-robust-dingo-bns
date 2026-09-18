@@ -1,0 +1,54 @@
+cff-version: 1.2.0
+message: >-
+  If you use this software, please cite it using the metadata below and cite
+  the accompanying article when it is published.
+type: software
+title: >-
+  Transient-glitch resilience in neural gravitational-wave parameter estimation
+  without network retraining (glitch-robust-dingo-bns)
+abstract: >-
+  Preprocessing front-end that restores frozen DINGO-BNS posterior inference in
+  the presence of short-duration transient glitches: STFT glitch detection,
+  Tukey gating, matched-delta frequency-domain reconstruction, and retention of
+  the original analysis ASDs. Includes the trained glitch detector, experiment
+  drivers, and archived result summaries.
+authors:
+  - family-names: Kumar
+    given-names: Jayant
+    email: j.kumar16224@kgs.edu.pk
+    affiliation: Karachi Grammar School, Karachi, Pakistan
+version: 1.0.0
+date-released: "2026-09-19"
+license: MIT
+repository-code: https://github.com/Jayant-Kumar17/glitch-robust-dingo-bns
+url: https://github.com/Jayant-Kumar17/glitch-robust-dingo-bns
+keywords:
+  - gravitational waves
+  - binary neutron stars
+  - neural posterior estimation
+  - DINGO
+  - glitch mitigation
+  - signal gating
+references:
+  - type: article
+    title: Real-time inference for binary neutron star mergers using machine learning
+    authors:
+      - family-names: Dax
+        given-names: Maximilian
+      - name: et al.
+    journal: Nature
+    volume: 639
+    start: 49
+    end: 53
+    year: 2025
+    doi: 10.1038/s41586-025-08593-z
+  - type: data
+    title: >-
+      Gravity Spy Machine Learning Classifications of LIGO Glitches from
+      Observing Runs O1, O2, O3a, and O3b
+    authors:
+      - family-names: Glanzer
+        given-names: Jane
+      - name: et al.
+    year: 2023
+    doi: 10.5281/zenodo.5649212
