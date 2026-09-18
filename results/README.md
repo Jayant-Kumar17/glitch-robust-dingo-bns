@@ -10,6 +10,7 @@ Archived summary artefacts corresponding to [`paper/SCOPE.md`](../paper/SCOPE.md
 | `stress_test_synthetic_bns_v1/` | Synthetic BNS stress panel and figures |
 | `journal_method_hardening_v1/` | Ablation, oracle-gap, and runtime summaries |
 | `clean_gate_control_v1/` | Clean-gate cost control: forced `adapt_full` gates on glitch-free data (Fig. S2) |
+| `stress_real_glitches_v1/` | Real Gravity Spy glitch panel (Fig. 8): catalogue, per-cell results, noise-only controls |
 
 Reproduction commands are given in [`paper/REPRODUCE.md`](../paper/REPRODUCE.md).
 Large regenerable products (HDF5 sample dumps, smoke runs, and logs) are

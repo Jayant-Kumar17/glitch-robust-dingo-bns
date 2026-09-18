@@ -18,6 +18,7 @@ export KMP_DUPLICATE_LIB_OK=TRUE
 | `train_glitch_detector.py` | Detector training (checkpoint also distributed) | `checkpoints/glitch_detector_v1/` |
 | `clean_gate_control.py` | Cost of a false-positive gate on clean GW170817 data (25 forced placements) | `results/clean_gate_control_v1/` |
 | `paper_figures_2_3.py` | Paper Figs 2 (injection, spectrogram, detector, gate) and 3 (posterior marginals) | `paper/figures/fig2_*`, `paper/figures/fig3_*` |
+| `stress_real_glitches.py` | Real Gravity Spy O3 H1 glitches transplanted into GW170817 (native SNR + severity ladder, noise-only controls) | `results/stress_real_glitches_v1/` |
 
 Command-line flags for paper-matching runs are listed in
 [`../paper/REPRODUCE.md`](../paper/REPRODUCE.md) and the root README.
