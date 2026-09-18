@@ -48,6 +48,27 @@ python -u examples/method_hardening.py \
   --outdir results/journal_method_hardening_v1_smoke
 ```
 
+## Paper figures
+
+Figures 2 and 3 need the raw GW170817 strain and the posterior-sample HDF5
+dumps written by `examples/official_control.py` (`poison_nn_samples.hdf5`,
+`gated_nn_samples.hdf5` / `gated_is_samples.hdf5` in
+`results/dingo_official_control/`, plus the official importance-sampling
+result of the DINGO-BNS demo). Once those exist:
+
+```bash
+python -u examples/paper_figures_2_3.py --outdir paper/figures --device cpu
+# Fig 3 only (no strain/detector assets needed):
+python -u examples/paper_figures_2_3.py --only fig3 --outdir paper/figures
+```
+
+Writes `paper/figures/fig2_injection_gate.{pdf,png}` and
+`paper/figures/fig3_posteriors.{pdf,png}`. The injected glitch and detector
+output are regenerated deterministically with the archived control flags
+(`--seed 0 --f0 100 --q 5 --t-rel -1.0 --snr-amp-scale 8.0`). RA/Dec are
+fixed context in the GW170817 demo network and are therefore replaced in
+Fig. 3 by geocentric time and $\Lambda_1$.
+
 ## Success criteria (as coded)
 
 - Poisoned collapse: luminosity-distance credible interval with upper edge
