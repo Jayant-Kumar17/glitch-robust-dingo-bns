@@ -39,6 +39,12 @@ python -u examples/method_hardening.py \
 python -u examples/clean_gate_control.py \
   --seed 0 --num-samples 512 --device cpu \
   --outdir results/clean_gate_control_v1
+
+# Real Gravity Spy glitches (downloads Zenodo 5649212 H1 O3 tables to data/gravity_spy/raw/
+# and fetches 8 s H1 excerpts from GWOSC on first run)
+python -u examples/stress_real_glitches.py \
+  --seed 0 --num-samples 512 --device cpu \
+  --outdir results/stress_real_glitches_v1
 ```
 
 ## Restricted smoke configuration
