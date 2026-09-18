@@ -76,6 +76,8 @@ results/*
 !results/stress_test_synthetic_bns_v1/**
 !results/journal_method_hardening_v1/
 !results/journal_method_hardening_v1/**
+!results/clean_gate_control_v1/
+!results/clean_gate_control_v1/**
 
 # Re-ignore heavy artifacts even inside canonical dirs
 *.hdf5

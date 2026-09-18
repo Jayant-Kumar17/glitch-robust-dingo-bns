@@ -35,6 +35,10 @@ python -u examples/stress_synthetic_bns.py \
 python -u examples/method_hardening.py \
   --num-samples 512 --batch-size 256 --device cpu \
   --outdir results/journal_method_hardening_v1
+
+python -u examples/clean_gate_control.py \
+  --seed 0 --num-samples 512 --device cpu \
+  --outdir results/clean_gate_control_v1
 ```
 
 ## Restricted smoke configuration

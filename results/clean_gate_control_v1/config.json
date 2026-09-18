@@ -1,0 +1,31 @@
+{
+  "outdir": "results/clean_gate_control_v1",
+  "seed": 0,
+  "num_samples": 512,
+  "batch_size": 256,
+  "gate_half_s": 0.4,
+  "t_rel_range": [
+    -2.0,
+    -0.2
+  ],
+  "n_placements_h1": 20,
+  "n_placements_h1_l1": 5,
+  "recipe": "Tukey gate (alpha 0.5) -> matched-delta FD rebuild -> original analysis ASD (adapt_full); no glitch injected",
+  "baseline_ckpt": "/Users/jayantkumar/Desktop/ADAPT-Project/.worktrees/task2/DINGO-BNS/dingo/binary-neutron-star-demo/GW170817/downloads/dingo-bns-model_GW170817.pt",
+  "baseline_sha256": "aebe9cade3943342b6dfe758eb9922410bbc01db6a346a647559bed383d14f10",
+  "git_commit": "66d787bf924c8c4e2c861d61096dfbb7bf0d2fbd",
+  "python": "3.11.14 | packaged by conda-forge | (main, Oct 13 2025, 14:29:50) [Clang 19.1.7 ]",
+  "platform": "macOS-26.6.2-arm64-arm-64bit",
+  "criteria": {
+    "gated_recovers": "stress_gw170817._gated_recovers: d_L med in [20,50], CI overlaps clean, |med-clean_med|<=10",
+    "power_removed_frac": "sum|dX|^2 / sum|X|^2 over [f_min,f_max] on the gated IFO packaged FD strain"
+  },
+  "js_null_clean_vs_clean_nat": {
+    "chirp_mass": 0.03245467512501794,
+    "mass_ratio": 0.03583599181429492,
+    "luminosity_distance": 0.027174071696456546,
+    "theta_jn": 0.03247451714295836,
+    "geocent_time": 0.035017183316047945
+  },
+  "js_null_max_nat": 0.03583599181429492
+}
