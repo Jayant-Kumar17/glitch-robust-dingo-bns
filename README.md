@@ -1,9 +1,26 @@
 # Glitch mitigation for neural BNS parameter estimation with frozen DINGO-BNS
 
+[![CITATION.cff](https://img.shields.io/badge/cite-CITATION.cff-blue)](CITATION.cff)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 This repository provides the software accompanying a methods study on restoring
 [DINGO-BNS](https://github.com/dingo-gw/dingo) posterior inference in the presence
 of short-duration transient glitches, without retraining the neural posterior
 estimator.
+
+**Summary.** Short transient glitches overlapping the analysis segment collapse
+the luminosity-distance posterior of the frozen official DINGO-BNS network in
+46% of a 240-cell GW170817 injection grid. A preprocessing front-end (STFT
+glitch detector, Tukey gates, matched-delta frequency-domain reconstruction,
+retention of the original analysis ASD) restores clean-like posteriors in 86%
+of those cells (96% for glitch families never seen by the detector) and in 92%
+of a 160-cell synthetic BNS panel, at a few seconds of overhead and with the
+DINGO-BNS weights untouched. Ablations show the reconstruction step is
+load-bearing: full FFT replacement recovers 0% of cells, and Welch ASDs
+recomputed on gated data recover 13%. A clean-gate control (spurious gate on
+glitch-free data) recovers 92% with no collapse, and a panel of real Gravity Spy
+O3 glitches transplanted into the GW170817 segment is provided as an
+out-of-distribution check (`results/stress_real_glitches_v1/`).
 
 When the analysis segment is contaminated by a transient, official DINGO-BNS
 posteriors can collapse (most conspicuously in luminosity distance). The
@@ -134,29 +151,66 @@ python -u examples/method_hardening.py \
   --outdir results/journal_method_hardening_v1
 ```
 
-### Restricted smoke run (development only)
+### 6. Clean-gate cost control (25 forced placements)
+
+```bash
+python -u examples/clean_gate_control.py \
+  --seed 0 --num-samples 512 --device cpu \
+  --outdir results/clean_gate_control_v1
+```
+
+### 7. Real Gravity Spy glitch panel
+
+```bash
+python -u examples/stress_real_glitches.py \
+  --seed 0 --num-samples 512 --device cpu \
+  --outdir results/stress_real_glitches_v1
+```
+
+Downloads the Gravity Spy H1 O3 tables (Zenodo 5649212, ~190 MB) into
+`data/gravity_spy/raw/` and fetches 8 s H1 excerpts from GWOSC on first run.
+
+### Restricted smoke runs (development / CI only)
+
+The newer drivers (`clean_gate_control.py`, `stress_real_glitches.py`,
+`paper_figures_2_3.py`) accept `--smoke` (2 cells, 64 samples); the original
+drivers expose `--max-cells`, e.g.
 
 ```bash
 python -u examples/method_hardening.py \
   --max-cells 2 --num-samples 128 --batch-size 64 --device cpu \
   --outdir results/journal_method_hardening_v1_smoke
+python -u examples/clean_gate_control.py --smoke --outdir results/clean_gate_control_smoke
 ```
 
 Equivalent instructions appear in [`paper/REPRODUCE.md`](paper/REPRODUCE.md) and
 [`examples/README.md`](examples/README.md).
 
-## Archived results
+## Results at a glance
 
-| Experiment | Directory | Principal finding |
-|---|---|---|
-| Official control | `results/dingo_official_control/` | clean / poisoned / gated summaries |
-| Honest excision | `results/excision_honest/` | matched-delta with original ASD recovers inference |
-| GW170817 stress | `results/stress_test_excision_v1/` | gated recovery ≈ 85.8% |
-| Synthetic BNS | `results/stress_test_synthetic_bns_v1/` | gated recovery ≈ 91.9% |
-| Method hardening | `results/journal_method_hardening_v1/` | full recipe ≈ 81%; FFT replacement 0% |
+| Experiment | Directory | Cells | Principal finding |
+|---|---|---|---|
+| Official control | [`results/dingo_official_control/`](results/dingo_official_control/) | 1 | clean vs poisoned vs gated; max 1-D JS (clean vs gated) 0.012 nat, verdict A |
+| Honest excision | [`results/excision_honest/`](results/excision_honest/) | 1 | matched-delta + original ASD recovers; Welch ASD or FFT replacement collapses |
+| GW170817 stress grid | [`results/stress_test_excision_v1/`](results/stress_test_excision_v1/) | 240 | poisoned collapse 46.3%; gated recovery **85.8%** (held-out families 95.6%); clean false-positive rate 0/50 |
+| Synthetic BNS panel | [`results/stress_test_synthetic_bns_v1/`](results/stress_test_synthetic_bns_v1/) | 160 | gated recovery **91.9%**; detector fire rate 100% |
+| Method hardening (ablation) | [`results/journal_method_hardening_v1/`](results/journal_method_hardening_v1/) | 16 × 5 arms | `adapt_full` 81%; `gate_welch` 13%; `fft_replace` **0%**; front-end overhead ≈ 3 s |
+| Clean-gate cost control | [`results/clean_gate_control_v1/`](results/clean_gate_control_v1/) | 25 | forced gate on clean data: recovery 92%, no collapse, mean \|Δ d_L\| 3.8 Mpc |
+| Real Gravity Spy glitches | [`results/stress_real_glitches_v1/`](results/stress_real_glitches_v1/) | 24 glitches × (native + 3 severities) + noise-only controls | real O3 H1 glitches transplanted into GW170817; see `summary.json` |
 
 Large HDF5 posterior sample files are omitted from version control; JSON, CSV,
 and PDF summaries are retained.
+
+## Paper figures
+
+All figures in `paper/figures/` regenerate from the archived `results/`:
+
+```bash
+python paper/make_figures.py --repo .            # Figs 1, 4, 5, 6, 7, S1
+python -u examples/paper_figures_2_3.py          # Figs 2, 3 (needs DINGO-BNS demo assets + sample HDF5s)
+python -u examples/clean_gate_control.py         # Fig S2 (re-runs the control)
+python -u examples/stress_real_glitches.py       # Fig 8 (re-runs the real-glitch panel)
+```
 
 ## Library interface
 
@@ -174,9 +228,16 @@ Manuscript in preparation for *Astronomy and Computing* (Elsevier).
 Provisional title: *Transient-glitch resilience in neural gravitational-wave
 parameter estimation without network retraining*.
 
+Software citation metadata is in [`CITATION.cff`](CITATION.cff) (GitHub renders
+a "Cite this repository" button from it). Tagged releases are listed under
+[Releases](https://github.com/Jayant-Kumar17/glitch-robust-dingo-bns/releases);
+steps for minting a Zenodo DOI are in [`docs/ZENODO.md`](docs/ZENODO.md).
+
 Users of this software are requested to cite the published article when
 available and to acknowledge [DINGO](https://github.com/dingo-gw/dingo) as the
-underlying neural parameter-estimation framework.
+underlying neural parameter-estimation framework. Real-glitch experiments use
+the Gravity Spy classifications of Glanzer et al. (2023), Zenodo record
+[5649212](https://doi.org/10.5281/zenodo.5649212).
 
 ## Licence
 
