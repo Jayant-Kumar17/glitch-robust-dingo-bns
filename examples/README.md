@@ -16,6 +16,7 @@ export KMP_DUPLICATE_LIB_OK=TRUE
 | `stress_synthetic_bns.py` | Synthetic BNS stress panel | `results/stress_test_synthetic_bns_v1/` |
 | `method_hardening.py` | Ablation, oracle gap, and runtime | `results/journal_method_hardening_v1/` |
 | `train_glitch_detector.py` | Detector training (checkpoint also distributed) | `checkpoints/glitch_detector_v1/` |
+| `paper_figures_2_3.py` | Paper Figs 2 (injection, spectrogram, detector, gate) and 3 (posterior marginals) | `paper/figures/fig2_*`, `paper/figures/fig3_*` |
 
 Command-line flags for paper-matching runs are listed in
 [`../paper/REPRODUCE.md`](../paper/REPRODUCE.md) and the root README.
