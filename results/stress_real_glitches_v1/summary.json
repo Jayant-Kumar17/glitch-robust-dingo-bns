@@ -1,0 +1,174 @@
+{
+  "n_rows": 102,
+  "n_ok": 101,
+  "n_errors": 1,
+  "n_glitch_cells": 95,
+  "n_ladder_cells": 71,
+  "n_native_cells": 20,
+  "n_noise_control_cells": 6,
+  "clean_reference_d_L": {
+    "lo": 19.081661796569826,
+    "med": 33.69267272949219,
+    "hi": 45.384322547912596,
+    "n": 512
+  },
+  "overall": {
+    "n": 71,
+    "gated_recovery_rate": 0.7183098591549296,
+    "oracle_recovery_rate": 0.4225352112676056,
+    "poison_collapse_rate": 0.8591549295774648,
+    "detector_fire_rate": 1.0,
+    "mean_abs_delta_med_d_L_successes": 1.2353732352163278,
+    "median_injected_snr_w": 16989.858275277205
+  },
+  "by_held_out": {
+    "true": 0.7183098591549296
+  },
+  "by_family": [
+    {
+      "family": "Blip",
+      "n": 29,
+      "gated_recovery": 0.5862068965517241,
+      "oracle_recovery": 0.5862068965517241,
+      "poison_collapse": 0.9655172413793104,
+      "detector_fire_rate": 1.0,
+      "median_injected_snr_w": 29042.076415084393
+    },
+    {
+      "family": "Koi_Fish",
+      "n": 15,
+      "gated_recovery": 0.8,
+      "oracle_recovery": 0.2,
+      "poison_collapse": 0.8666666666666667,
+      "detector_fire_rate": 1.0,
+      "median_injected_snr_w": 12798.377830271102
+    },
+    {
+      "family": "Scattered_Light",
+      "n": 12,
+      "gated_recovery": 0.5833333333333334,
+      "oracle_recovery": 0.08333333333333333,
+      "poison_collapse": 0.6666666666666666,
+      "detector_fire_rate": 1.0,
+      "median_injected_snr_w": 9795.350214501563
+    },
+    {
+      "family": "Whistle",
+      "n": 15,
+      "gated_recovery": 1.0,
+      "oracle_recovery": 0.6,
+      "poison_collapse": 0.8,
+      "detector_fire_rate": 1.0,
+      "median_injected_snr_w": 15487.735875168612
+    }
+  ],
+  "by_severity": {
+    "3.0": 0.75,
+    "6.0": 0.6956521739130435,
+    "10.0": 0.7083333333333334
+  },
+  "by_severity_poison_collapse": {
+    "3.0": 0.875,
+    "6.0": 0.782608695652174,
+    "10.0": 0.9166666666666666
+  },
+  "by_asd_policy": {
+    "poison_collapse": {
+      "stationary": 0.8591549295774648
+    },
+    "gated_recovery": {
+      "stationary": 0.7183098591549296
+    }
+  },
+  "native": {
+    "n": 20,
+    "gated_recovery_rate": 0.95,
+    "oracle_recovery_rate": 0.95,
+    "poison_collapse_rate": 0.0,
+    "detector_fire_rate": 0.85,
+    "mean_abs_delta_med_d_L_successes": 0.8372286746376439,
+    "median_injected_snr_w": 33.48902831097084,
+    "by_family": [
+      {
+        "family": "Blip",
+        "n": 9,
+        "gated_recovery": 0.8888888888888888,
+        "oracle_recovery": 0.8888888888888888,
+        "poison_collapse": 0.0,
+        "detector_fire_rate": 0.7777777777777778,
+        "median_injected_snr_w": 27.370771657408472
+      },
+      {
+        "family": "Koi_Fish",
+        "n": 5,
+        "gated_recovery": 1.0,
+        "oracle_recovery": 1.0,
+        "poison_collapse": 0.0,
+        "detector_fire_rate": 1.0,
+        "median_injected_snr_w": 45.263549811444456
+      },
+      {
+        "family": "Scattered_Light",
+        "n": 1,
+        "gated_recovery": 1.0,
+        "oracle_recovery": 1.0,
+        "poison_collapse": 0.0,
+        "detector_fire_rate": 0.0,
+        "median_injected_snr_w": 31.019541626410653
+      },
+      {
+        "family": "Whistle",
+        "n": 5,
+        "gated_recovery": 1.0,
+        "oracle_recovery": 1.0,
+        "poison_collapse": 0.0,
+        "detector_fire_rate": 1.0,
+        "median_injected_snr_w": 102.25437367236518
+      }
+    ],
+    "n_undetectable_excluded": 4,
+    "undetectable_labels": [
+      "Blip",
+      "Scattered_Light"
+    ],
+    "note": "Real glitches transplanted at their observed O3 whitened energy (same SNR as in the Gravity Spy data). Cells whose excerpt had no measurable whitened excess over its own background (injected SNR <= 1) inject nothing and are excluded here."
+  },
+  "noise_control": {
+    "n": 6,
+    "by_mode": [
+      {
+        "severity_mode": "noise_matched_10",
+        "n": 2,
+        "poison_collapse": 1.0,
+        "gated_recovery": 0.5,
+        "oracle_recovery": 0.0,
+        "detector_fire_rate": 1.0,
+        "median_injected_snr_w": 26884.942374513877
+      },
+      {
+        "severity_mode": "noise_matched_6",
+        "n": 2,
+        "poison_collapse": 1.0,
+        "gated_recovery": 0.5,
+        "oracle_recovery": 0.0,
+        "detector_fire_rate": 1.0,
+        "median_injected_snr_w": 15834.868457869015
+      },
+      {
+        "severity_mode": "noise_native",
+        "n": 2,
+        "poison_collapse": 0.0,
+        "gated_recovery": 1.0,
+        "oracle_recovery": 1.0,
+        "detector_fire_rate": 1.0,
+        "median_injected_snr_w": 64.0
+      }
+    ],
+    "poison_collapse_rate": 0.6666666666666666,
+    "gated_recovery_rate": 0.6666666666666666,
+    "note": "Trigger-free O3 H1 windows (no Gravity Spy trigger within +/-10 s), whitened/windowed identically (not thresholded), coloured with the GW170817 ASD. 'noise_native' adds unit-variance O3 noise over the window; 'noise_matched_<sev>' matches the median injected whitened energy of the ladder cells."
+  },
+  "n_failures": 20,
+  "data_note": "Excerpt scaling is done in the whitened domain (see stress_config.json:excerpt_recipe). The synthetic severity ladder corresponds to whitened SNRs far above typical Gravity Spy glitches; the 'native' block reports the realistic regime.",
+  "config_ref": "stress_config.json"
+}

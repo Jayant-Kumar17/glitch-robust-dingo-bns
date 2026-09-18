@@ -16,6 +16,7 @@ export KMP_DUPLICATE_LIB_OK=TRUE
 | `stress_synthetic_bns.py` | Synthetic BNS stress panel | `results/stress_test_synthetic_bns_v1/` |
 | `method_hardening.py` | Ablation, oracle gap, and runtime | `results/journal_method_hardening_v1/` |
 | `train_glitch_detector.py` | Detector training (checkpoint also distributed) | `checkpoints/glitch_detector_v1/` |
+| `stress_real_glitches.py` | Real Gravity Spy O3 H1 glitches transplanted into GW170817 (native SNR + severity ladder, noise-only controls) | `results/stress_real_glitches_v1/` |
 
 Command-line flags for paper-matching runs are listed in
 [`../paper/REPRODUCE.md`](../paper/REPRODUCE.md) and the root README.

@@ -35,6 +35,12 @@ python -u examples/stress_synthetic_bns.py \
 python -u examples/method_hardening.py \
   --num-samples 512 --batch-size 256 --device cpu \
   --outdir results/journal_method_hardening_v1
+
+# Real Gravity Spy glitches (downloads Zenodo 5649212 H1 O3 tables to data/gravity_spy/raw/
+# and fetches 8 s H1 excerpts from GWOSC on first run)
+python -u examples/stress_real_glitches.py \
+  --seed 0 --num-samples 512 --device cpu \
+  --outdir results/stress_real_glitches_v1
 ```
 
 ## Restricted smoke configuration
