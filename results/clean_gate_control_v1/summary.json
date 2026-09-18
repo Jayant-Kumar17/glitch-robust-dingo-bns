@@ -1,0 +1,73 @@
+{
+  "n_placements": 25,
+  "n_ok": 25,
+  "n_errors": 0,
+  "clean_reference": {
+    "luminosity_distance": {
+      "lo": 18.560867691040038,
+      "med": 33.85905075073242,
+      "hi": 45.48638076782226,
+      "n": 512
+    },
+    "chirp_mass": {
+      "lo": 1.197467565536499,
+      "med": 1.1975774765014648,
+      "hi": 1.1976942539215087,
+      "n": 512
+    },
+    "mass_ratio": {
+      "lo": 0.7346965879201889,
+      "med": 0.875179797410965,
+      "hi": 0.9818144410848617,
+      "n": 512
+    },
+    "theta_jn": {
+      "lo": 1.9586291372776032,
+      "med": 2.3673027753829956,
+      "hi": 2.916423225402832,
+      "n": 512
+    }
+  },
+  "recovery_rate": 0.92,
+  "max_js_nat": 0.2363709365841368,
+  "mean_abs_delta_dL_med_mpc": 3.800776901245117,
+  "mean_power_removed_frac": 0.006535445041017336,
+  "by_detectors": {
+    "H1": {
+      "n": 20,
+      "recovery_rate": 0.9,
+      "max_js_nat": 0.2363709365841368,
+      "mean_abs_delta_dL_med_mpc": 4.053551959991455,
+      "max_abs_delta_dL_med_mpc": 15.798833847045898,
+      "mean_power_removed_frac_H1": 0.0063490678662248,
+      "collapse_rate": 0.0
+    },
+    "H1+L1": {
+      "n": 5,
+      "recovery_rate": 1.0,
+      "max_js_nat": 0.1040578432249264,
+      "mean_abs_delta_dL_med_mpc": 2.7896766662597656,
+      "max_abs_delta_dL_med_mpc": 8.961617469787598,
+      "mean_power_removed_frac_H1": 0.007280953740187479,
+      "collapse_rate": 0.0
+    }
+  },
+  "js_by_param_max": {
+    "chirp_mass": 0.0563025863766044,
+    "mass_ratio": 0.0433154247515688,
+    "luminosity_distance": 0.2363709365841368,
+    "theta_jn": 0.2166802241934223,
+    "geocent_time": 0.072850137965121
+  },
+  "js_null_clean_vs_clean_nat": {
+    "chirp_mass": 0.03245467512501794,
+    "mass_ratio": 0.03583599181429492,
+    "luminosity_distance": 0.027174071696456546,
+    "theta_jn": 0.03247451714295836,
+    "geocent_time": 0.035017183316047945
+  },
+  "js_null_max_nat": 0.03583599181429492,
+  "js_excess_over_null_max_nat": 0.20053494476984188,
+  "note": "Forced Tukey gates (half-width 0.40 s) on clean GW170817 data with the full adapt_full recipe; measures the cost of a false-positive gate. Recovery criterion identical to the stress grids.",
+  "config_ref": "config.json"
+}
