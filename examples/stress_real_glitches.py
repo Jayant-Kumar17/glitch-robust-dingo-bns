@@ -112,6 +112,8 @@ FIELDNAMES = [
     "injected_inband_rms_ratio",
     "is_noise_control",
     "gates_json",
+    "gs_snr_bin",
+    "injected_rho_w",
 ]
 
 
@@ -129,9 +131,18 @@ def prepare_catalogue(args: argparse.Namespace) -> Dict[str, Any]:
         selected = gs.load_selected_catalogue(selected_csv)
         logger.info("Loaded cached selection %s (%d rows)", selected_csv, len(selected))
         raw_paths = [raw_dir / n for n in gs.ZENODO_FILES if (raw_dir / n).is_file()]
+    elif args.wide_snr_panel:
+        raw_paths = gs.download_h1_o3_tables(raw_dir, verify=not args.no_verify)
+        df_all = pd.concat([gs.read_gravity_spy_csv(p) for p in raw_paths], ignore_index=True)
+        selected = gs.select_glitches_binned(df_all, n_per_bin=int(args.n_per_bin))
+        selected_csv.parent.mkdir(parents=True, exist_ok=True)
+        selected.to_csv(selected_csv, index=False)
+        logger.info("Wrote wide-SNR selection %s (%d rows)", selected_csv, len(selected))
     else:
         raw_paths = gs.download_h1_o3_tables(raw_dir, verify=not args.no_verify)
         selected = gs.build_selected_catalogue(raw_paths, selected_csv)
+    if "snr_bin" not in selected.columns:
+        selected["snr_bin"] = [gs.snr_bin_label(x) for x in selected["snr"].astype(float)]
 
     # Full H1 trigger times (for noise-only guard). Only event_time is needed.
     all_times: Optional[pd.DataFrame] = None
@@ -350,6 +361,10 @@ def inject_excerpt_into_event(
     g = gs.place_series(g_win, n_samples=td_h1.size, sample_rate=sample_rate, t_peak=t_peak)
     td_full = {d: td_clean_full[d].copy() for d in td_clean_full}
     td_full["H1"] = td_h1 + g
+    from adapt.loudness import whitened_optimal_snr
+
+    rho_w = whitened_optimal_snr(g, sample_rate, asd=transplanter.asd, delta_f=transplanter.delta_f,
+                                 f_min=transplanter.f_min, f_max=f_max, roll_off=roll_off)
 
     data = copy.deepcopy(event.data)
     n_freq = len(np.asarray(next(iter(data["waveform"].values()))))
@@ -385,6 +400,7 @@ def inject_excerpt_into_event(
         "injected_energy_w": float(injected_energy_w),
         "injected_snr_w": float(np.sqrt(max(injected_energy_w, 0.0))),
         "injected_inband_rms_ratio": float(injected_rms_ratio),
+        "injected_rho_w": float(rho_w),
         **excerpt.to_meta(),
     }
     return data, td_stft, meta
@@ -498,7 +514,7 @@ def run(args: argparse.Namespace) -> None:
     # ---- excerpts ----
     glitch_ex = fetch_excerpts(selected, sample_rate=sample_rate, f_min=f_min, f_max=f_max, outdir=outdir)
     noise_ex: Dict[int, Dict[str, Any]] = {}
-    n_noise_times = 1 if args.smoke else max(1, int(args.n_noise_cells) // len(NOISE_SEVERITIES))
+    n_noise_times = 1 if args.smoke else (int(args.n_noise_cells) if args.native_only else max(1, int(args.n_noise_cells) // len(NOISE_SEVERITIES)))
     if cat["all_times"] is not None and not args.skip_noise_control:
         try:
             noise_times = gs.pick_noise_only_times(
@@ -544,7 +560,9 @@ def run(args: argparse.Namespace) -> None:
         "python": sys.version,
         "platform": platform.platform(),
         "zenodo_record": gs.ZENODO_RECORD,
-        "severity_modes": ["native", "ladder"],
+        "severity_modes": ["native"] if args.native_only else ["native", "ladder"],
+        "panel": "wide_snr_native" if args.wide_snr_panel else "capped_snr_ladder",
+        "n_trel_per_glitch": int(args.n_trel) if args.native_only else 1,
         "excerpt_recipe": (
             "8 s H1 open strain (GWOSC, chunk-level HTTP range read of the bulk HDF5) centred on the "
             "Gravity Spy event_time; whitened with a Welch PSD from its own off-window part (unit-variance "
@@ -578,6 +596,12 @@ def run(args: argparse.Namespace) -> None:
     cells: List[Dict[str, Any]] = []
     cid = 0
     for gi, item in sorted(glitch_ex.items()):
+        if args.native_only:
+            for _k in range(int(args.n_trel)):
+                cells.append({"cell_id": cid, "src": item, "mode": "native", "severity": float("nan"), "noise": False,
+                              "t_rel": float(rng.uniform(*T_REL_RANGE)), "seed": int(args.seed)})
+                cid += 1
+            continue
         t_rel = float(rng.uniform(*T_REL_RANGE))
         cells.append({"cell_id": cid, "src": item, "mode": "native", "severity": float("nan"), "noise": False,
                       "t_rel": t_rel, "seed": int(args.seed)})
@@ -630,6 +654,7 @@ def run(args: argparse.Namespace) -> None:
             "severity_mode": cell["mode"],
             "native_snr": float(np.sqrt(max(excerpt.excess_energy_w, 0.0))),
             "is_noise_control": bool(cell["noise"]),
+            "gs_snr_bin": str(row_src.get("snr_bin", "")),
         }
         try:
             poison, td_stft, meta = inject_excerpt_into_event(
@@ -641,6 +666,7 @@ def run(args: argparse.Namespace) -> None:
             row["scale_k"] = meta["scale_k"]
             row["injected_snr_w"] = meta["injected_snr_w"]
             row["injected_inband_rms_ratio"] = meta["injected_inband_rms_ratio"]
+            row["injected_rho_w"] = meta["injected_rho_w"]
             poison_ci = _sample_dl(assets, poison, settings, fixed, device=device, n=n_samples, bs=args.batch_size)
             row.update({"poison_lo": poison_ci["lo"], "poison_med": poison_ci["med"], "poison_hi": poison_ci["hi"],
                         "poison_collapsed": _poison_collapsed(poison_ci)})
@@ -715,7 +741,7 @@ def run(args: argparse.Namespace) -> None:
                                 "target_energy_w": float(n_win), "severity": float("nan"), "noise": True,
                                 "t_rel": t_rel, "seed": int(args.seed)})
             cid += 1
-            for sev in NOISE_SEVERITIES:
+            for sev in ([] if args.native_only else NOISE_SEVERITIES):
                 sub = dfg[(dfg["severity_mode"] == "ladder") & (dfg["severity"] == float(sev))]
                 if not len(sub):
                     continue
@@ -781,10 +807,25 @@ def write_summary_and_figure(outdir: Path, df: pd.DataFrame, clean_ci, cfg, *, f
             .reset_index().rename(columns={"gs_label": "family"}).to_dict(orient="records")
         )
 
-    failures = ladder[~ladder["gated_recovers"]]
+    wide = str(cfg.get("panel", "")) == "wide_snr_native"
+    primary = native if wide else ladder
+    failures = primary[~primary["gated_recovers"]]
     failures.to_csv(outdir / "failures.csv", index=False)
 
-    by_family = _by_family(ladder)
+    def _by_bin(sub):
+        if not len(sub) or "gs_snr_bin" not in sub.columns:
+            return []
+        order = ["[8,30)", "[30,100)", "[100,300)", "[300,inf)"]
+        g = (sub.groupby("gs_snr_bin")
+             .agg(n=("gated_recovers", "size"), n_glitches=("gs_event_time", "nunique"),
+                  gated_recovery=("gated_recovers", "mean"), oracle_recovery=("oracle_recovers", "mean"),
+                  poison_collapse=("poison_collapsed", "mean"), detector_fire_rate=("detector_fired", "mean"),
+                  median_omicron_snr=("gs_snr", "median"), median_injected_rho_w=("injected_rho_w", "median"))
+             .reset_index().rename(columns={"gs_snr_bin": "snr_bin"}))
+        g["_o"] = g["snr_bin"].map({b: i for i, b in enumerate(order)}).fillna(99)
+        return g.sort_values("_o").drop(columns="_o").to_dict(orient="records")
+
+    by_family = _by_family(primary)
     summary = {
         "n_rows": int(len(df)),
         "n_ok": int(len(ok)),
@@ -794,16 +835,34 @@ def write_summary_and_figure(outdir: Path, df: pd.DataFrame, clean_ci, cfg, *, f
         "n_native_cells": int(len(native)),
         "n_noise_control_cells": int(len(noise)),
         "clean_reference_d_L": clean_ci,
-        # 'overall' follows the stress_test_excision_v1 schema and refers to the
-        # synthetic-comparable severity ladder (3, 6, 10).
-        "overall": _block(ladder),
-        "by_held_out": {"true": _rate(ladder, "gated_recovers")} if len(ladder) else {},
+        # 'overall' follows the stress_test_excision_v1 schema. It refers to the
+        # synthetic-comparable severity ladder (3, 6, 10) in the capped panel and
+        # to the native-loudness cells in the wide-SNR panel.
+        "panel": cfg.get("panel", "capped_snr_ladder"),
+        "overall_refers_to": "native" if wide else "ladder",
+        "overall": _block(primary),
+        "by_held_out": {"true": _rate(primary, "gated_recovers")} if len(primary) else {},
         "by_family": by_family,
+        "by_label": by_family,
+        "by_snr_bin": _by_bin(primary),
+        "by_label_and_snr_bin": (
+            primary.groupby(["gs_label", "gs_snr_bin"])
+            .agg(n=("gated_recovers", "size"), poison_collapse=("poison_collapsed", "mean"),
+                 gated_recovery=("gated_recovers", "mean"), oracle_recovery=("oracle_recovers", "mean"),
+                 detector_fire_rate=("detector_fired", "mean"), median_injected_rho_w=("injected_rho_w", "median"))
+            .reset_index().rename(columns={"gs_label": "label", "gs_snr_bin": "snr_bin"}).to_dict(orient="records")
+            if len(primary) and "gs_snr_bin" in primary.columns else []
+        ),
         "by_severity": ladder.groupby("severity")["gated_recovers"].mean().astype(float).to_dict() if len(ladder) else {},
         "by_severity_poison_collapse": ladder.groupby("severity")["poison_collapsed"].mean().astype(float).to_dict() if len(ladder) else {},
         "by_asd_policy": {
-            "poison_collapse": {"stationary": _rate(ladder, "poison_collapsed")},
-            "gated_recovery": {"stationary": _rate(ladder, "gated_recovers")},
+            "poison_collapse": {"stationary": _rate(primary, "poison_collapsed")},
+            "gated_recovery": {"stationary": _rate(primary, "gated_recovers")},
+        },
+        "injected_rho_w": {
+            "native_min": float(native["injected_rho_w"].min()) if len(native) and "injected_rho_w" in native else None,
+            "native_median": float(native["injected_rho_w"].median()) if len(native) and "injected_rho_w" in native else None,
+            "native_max": float(native["injected_rho_w"].max()) if len(native) and "injected_rho_w" in native else None,
         },
         "native": {
             **_block(native),
@@ -872,6 +931,28 @@ def write_summary_and_figure(outdir: Path, df: pd.DataFrame, clean_ci, cfg, *, f
             ax.set_ylim(0, 1.08); ax.set_ylabel("fraction of cells")
             ax.set_title(title, fontsize=7.5)
 
+        if wide:
+            # Fig 8 (wide-SNR native panel): collapse / recovery vs Omicron-SNR bin,
+            # plus per-label breakdown.
+            bins = _by_bin(native)
+            fig, (a1, a2) = plt.subplots(2, 1, figsize=(3.5, 4.9), gridspec_kw={"hspace": 0.6})
+            blabels = [f"{b['snr_bin']}\n(n={b['n']}, {b['n_glitches']} glitches)" for b in bins]
+            _bars(a1, blabels, bins, "(a) real O3 glitches at native loudness, by Omicron SNR")
+            a1.set_xticklabels(blabels, fontsize=5.6)
+            nn = noise[noise["severity_mode"] == "noise_native"] if len(noise) else noise
+            lab_rows = _by_family(native)
+            lab_labels = [r["family"] for r in lab_rows]
+            if len(nn):
+                lab_labels.append("noise only")
+                lab_rows.append({"poison_collapse": _rate(nn, "poison_collapsed"), "gated_recovery": _rate(nn, "gated_recovers"),
+                                 "oracle_recovery": _rate(nn, "oracle_recovers"), "detector_fire_rate": _rate(nn, "detector_fired"),
+                                 "n": len(nn)})
+            _bars(a2, lab_labels, lab_rows, "(b) by Gravity Spy label")
+            a2.legend(frameon=False, fontsize=6, loc="upper center", bbox_to_anchor=(0.5, -0.32), ncol=2)
+            figdir.mkdir(parents=True, exist_ok=True)
+            fig.savefig(figdir / "fig8_real_glitches.pdf"); fig.savefig(figdir / "fig8_real_glitches.png", dpi=300)
+            fig.savefig(outdir / "fig8_real_glitches.pdf"); plt.close(fig)
+            raise StopIteration  # skip the capped-panel figure below
         fig, (a1, a2) = plt.subplots(2, 1, figsize=(3.5, 4.9), gridspec_kw={"hspace": 0.55})
         _bars(a1, labels, rows, "(a) synthetic-comparable severity ladder {3, 6, 10}")
         nat_rows = _by_family(native)
@@ -892,6 +973,8 @@ def write_summary_and_figure(outdir: Path, df: pd.DataFrame, clean_ci, cfg, *, f
         fig.savefig(figdir / "fig8_real_glitches.pdf"); fig.savefig(figdir / "fig8_real_glitches.png", dpi=300)
         fig.savefig(outdir / "fig8_real_glitches.pdf")
         plt.close(fig)
+    except StopIteration:
+        pass
     except Exception as e:
         logger.warning("figure failed: %s", e)
 
@@ -957,6 +1040,11 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     p.add_argument("--gate-half-s", type=float, default=0.4)
     p.add_argument("--threshold-event", type=float, default=None)
     p.add_argument("--n-noise-cells", type=int, default=10)
+    p.add_argument("--wide-snr-panel", action="store_true",
+                   help="select 5 glitches per label x Omicron-SNR bin (no SNR cap) into --selected-csv")
+    p.add_argument("--n-per-bin", type=int, default=5)
+    p.add_argument("--native-only", action="store_true", help="skip the severity ladder; native loudness only")
+    p.add_argument("--n-trel", type=int, default=3, help="native cells (t_rel draws) per glitch in --native-only mode")
     p.add_argument("--skip-noise-control", action="store_true")
     p.add_argument("--max-cells", type=int, default=None)
     p.add_argument("--smoke", action="store_true", help="3 glitch cells + 2 noise cells, 64 samples")

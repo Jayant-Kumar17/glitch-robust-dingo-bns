@@ -196,7 +196,10 @@ Equivalent instructions appear in [`paper/REPRODUCE.md`](paper/REPRODUCE.md) and
 | Synthetic BNS panel | [`results/stress_test_synthetic_bns_v1/`](results/stress_test_synthetic_bns_v1/) | 160 | gated recovery **91.9%**; detector fire rate 100% |
 | Method hardening (ablation) | [`results/journal_method_hardening_v1/`](results/journal_method_hardening_v1/) | 16 × 5 arms | `adapt_full` 81%; `gate_welch` 13%; `fft_replace` **0%**; front-end overhead ≈ 3 s |
 | Clean-gate cost control | [`results/clean_gate_control_v1/`](results/clean_gate_control_v1/) | 25 | forced gate on clean data: recovery 92%, no collapse, mean \|Δ d_L\| 3.8 Mpc |
-| Real Gravity Spy glitches | [`results/stress_real_glitches_v1/`](results/stress_real_glitches_v1/) | 24 glitches × (native + 3 severities) + noise-only controls | real O3 H1 glitches transplanted into GW170817; see `summary.json` |
+| Real Gravity Spy glitches (capped SNR) | [`results/stress_real_glitches_v1/`](results/stress_real_glitches_v1/) | 24 glitches × (native + 3 severities) + noise-only controls | native loudness: 0/20 collapse, 95 % pass-through; synthetic severity ladder: 86 % collapse, 72 % gated recovery |
+| Real Gravity Spy glitches (wide SNR, native) | [`results/stress_real_glitches_v2/`](results/stress_real_glitches_v2/) | 72 glitches × 3 t_rel + 10 noise-only | collapse and recovery vs Omicron-SNR bin; see `summary.json` |
+| Loudness audit | [`results/loudness_audit_v1/`](results/loudness_audit_v1/) | 240 + 1 + 24 | whitened optimal SNR $\rho_w$ of every injected glitch; synthetic severities 3/6/10 span $\rho_w \approx 150$–$6\times10^4$ (medians 4.2k / 7.3k / 10.4k); real glitches at native loudness $\rho_w \le 140$ |
+| Collapse threshold | [`results/collapse_threshold_v1/`](results/collapse_threshold_v1/) | 2 families × 8 $\rho_w$ × 5 seeds | collapse first exceeds 50 % at $\rho_w \approx 2.7\times10^3$ (grid point 3.7k); gated recovery 95 % overall |
 
 Large HDF5 posterior sample files are omitted from version control; JSON, CSV,
 and PDF summaries are retained.
@@ -209,7 +212,10 @@ All figures in `paper/figures/` regenerate from the archived `results/`:
 python paper/make_figures.py --repo .            # Figs 1, 4, 5, 6, 7, S1
 python -u examples/paper_figures_2_3.py          # Figs 2, 3 (needs DINGO-BNS demo assets + sample HDF5s)
 python -u examples/clean_gate_control.py         # Fig S2 (re-runs the control)
-python -u examples/stress_real_glitches.py       # Fig 8 (re-runs the real-glitch panel)
+python -u examples/stress_real_glitches.py --wide-snr-panel --native-only \
+  --selected-csv data/gravity_spy/selected_h1_o3_wide.csv --outdir results/stress_real_glitches_v2   # Fig 8
+python -u examples/loudness_audit.py             # Fig S3 (no PE)
+python -u examples/collapse_threshold.py         # Fig 9
 ```
 
 ## Library interface
