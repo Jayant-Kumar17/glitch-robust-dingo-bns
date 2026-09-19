@@ -9,8 +9,7 @@ Zenodo/GitHub OAuth grant.
 2. Open <https://zenodo.org/account/settings/github/>, refresh the repository
    list, and flip the switch for `glitch-robust-dingo-bns` to **ON**.
 3. Publish (or re-publish) a GitHub release for the tag that should be archived
-   (currently `v1.1.0`; a later patch such as `v1.1.1` is fine if this cleanup
-   lands after the previous tag). Zenodo archives the release tarball and
+   (currently `v1.1.1`). Zenodo archives the release tarball and
    assigns a **version DOI** plus a **concept DOI**.
    The release should carry the detector checkpoint
    `checkpoints/glitch_detector_v1/best_glitch_detector.pt` as an asset; note
@@ -27,7 +26,7 @@ Zenodo/GitHub OAuth grant.
    - `paper/main.tex` Data availability: replace
      `Zenodo DOI to be added on acceptance` with
      `\url{https://doi.org/10.5281/zenodo.<record>}`.
-6. Commit those edits as a patch release (`v1.1.1`) if the DOI must appear in
+6. Commit those edits as a patch release (`v1.1.2`) if the DOI must appear in
    the archived source; otherwise leave them on `main`.
 
 Re-running step 3 for any later tag creates a new version under the same

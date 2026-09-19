@@ -77,7 +77,7 @@ strain frames are not redistributed. Regeneration of numerical results requires:
 The STFT detector weights are 566 KB and are tracked at
 `checkpoints/glitch_detector_v1/best_glitch_detector.pt`. The same file is
 attached to GitHub Release
-[v1.1.0](https://github.com/Jayant-Kumar17/glitch-robust-dingo-bns/releases/tag/v1.1.0).
+[v1.1.1](https://github.com/Jayant-Kumar17/glitch-robust-dingo-bns/releases/tag/v1.1.1).
 
 JSON/CSV summaries cited in the paper live under `results/` (see
 [Results at a glance](#results-at-a-glance)). They are enough to regenerate
@@ -201,7 +201,7 @@ python -u examples/clean_gate_control.py --smoke --outdir results/clean_gate_con
 
 ## Results at a glance
 
-Headline numbers (abstract / release v1.1.0): **0% collapse** below Omicron SNR 100;
+Headline numbers (abstract / release v1.1.1): **0% collapse** below Omicron SNR 100;
 **60% collapse** for Koi Fish at SNR ≥ 300; **99% gated recovery** on 183 real
 cells; **50% collapse** at ρ_w ≈ 2.7×10³; **11%** of confident O3 H1 Gravity Spy
 triggers have SNR ≥ 300.
