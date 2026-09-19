@@ -80,6 +80,12 @@ results/*
 !results/clean_gate_control_v1/**
 !results/stress_real_glitches_v1/
 !results/stress_real_glitches_v1/**
+!results/stress_real_glitches_v2/
+!results/stress_real_glitches_v2/**
+!results/loudness_audit_v1/
+!results/loudness_audit_v1/**
+!results/collapse_threshold_v1/
+!results/collapse_threshold_v1/**
 
 # Re-ignore heavy artifacts even inside canonical dirs
 *.hdf5
@@ -101,3 +107,4 @@ checkpoints/glitch_detector_v1/last.pt
 data/gravity_spy/raw/
 data/gravity_spy/raw_p/
 !data/gravity_spy/selected_h1_o3.csv
+!data/gravity_spy/selected_h1_o3_wide.csv

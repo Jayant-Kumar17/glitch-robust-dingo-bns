@@ -1,0 +1,221 @@
+{
+  "n_rows": 80,
+  "n_ok": 80,
+  "n_errors": 0,
+  "clean_reference_d_L": {
+    "lo": 19.081661796569826,
+    "med": 33.69267272949219,
+    "hi": 45.384322547912596,
+    "n": 512
+  },
+  "rho_w_grid": [
+    10.0,
+    26.826957952797258,
+    71.96856730011521,
+    193.06977288832496,
+    517.9474679231213,
+    1389.4954943731375,
+    3727.593720314938,
+    10000.0
+  ],
+  "n_seeds": 5,
+  "curves": {
+    "all": [
+      {
+        "rho_w_target": 10.0,
+        "n": 10,
+        "collapse": 0.0,
+        "gated_recovery": 1.0,
+        "detector_fire": 0.0
+      },
+      {
+        "rho_w_target": 26.826957952797255,
+        "n": 10,
+        "collapse": 0.0,
+        "gated_recovery": 0.8,
+        "detector_fire": 0.6
+      },
+      {
+        "rho_w_target": 71.96856730011521,
+        "n": 10,
+        "collapse": 0.0,
+        "gated_recovery": 1.0,
+        "detector_fire": 1.0
+      },
+      {
+        "rho_w_target": 193.06977288832496,
+        "n": 10,
+        "collapse": 0.1,
+        "gated_recovery": 1.0,
+        "detector_fire": 1.0
+      },
+      {
+        "rho_w_target": 517.9474679231213,
+        "n": 10,
+        "collapse": 0.3,
+        "gated_recovery": 1.0,
+        "detector_fire": 1.0
+      },
+      {
+        "rho_w_target": 1389.4954943731375,
+        "n": 10,
+        "collapse": 0.3,
+        "gated_recovery": 1.0,
+        "detector_fire": 1.0
+      },
+      {
+        "rho_w_target": 3727.593720314938,
+        "n": 10,
+        "collapse": 0.6,
+        "gated_recovery": 1.0,
+        "detector_fire": 1.0
+      },
+      {
+        "rho_w_target": 10000.0,
+        "n": 10,
+        "collapse": 0.8,
+        "gated_recovery": 0.8,
+        "detector_fire": 1.0
+      }
+    ],
+    "sine_gaussian": [
+      {
+        "rho_w_target": 10.0,
+        "n": 5,
+        "collapse": 0.0,
+        "gated_recovery": 1.0,
+        "detector_fire": 0.0
+      },
+      {
+        "rho_w_target": 26.826957952797255,
+        "n": 5,
+        "collapse": 0.0,
+        "gated_recovery": 1.0,
+        "detector_fire": 0.8
+      },
+      {
+        "rho_w_target": 71.96856730011521,
+        "n": 5,
+        "collapse": 0.0,
+        "gated_recovery": 1.0,
+        "detector_fire": 1.0
+      },
+      {
+        "rho_w_target": 193.06977288832496,
+        "n": 5,
+        "collapse": 0.2,
+        "gated_recovery": 1.0,
+        "detector_fire": 1.0
+      },
+      {
+        "rho_w_target": 517.9474679231213,
+        "n": 5,
+        "collapse": 0.2,
+        "gated_recovery": 1.0,
+        "detector_fire": 1.0
+      },
+      {
+        "rho_w_target": 1389.4954943731375,
+        "n": 5,
+        "collapse": 0.4,
+        "gated_recovery": 1.0,
+        "detector_fire": 1.0
+      },
+      {
+        "rho_w_target": 3727.593720314938,
+        "n": 5,
+        "collapse": 0.4,
+        "gated_recovery": 1.0,
+        "detector_fire": 1.0
+      },
+      {
+        "rho_w_target": 10000.0,
+        "n": 5,
+        "collapse": 0.6,
+        "gated_recovery": 1.0,
+        "detector_fire": 1.0
+      }
+    ],
+    "broadband_burst": [
+      {
+        "rho_w_target": 10.0,
+        "n": 5,
+        "collapse": 0.0,
+        "gated_recovery": 1.0,
+        "detector_fire": 0.0
+      },
+      {
+        "rho_w_target": 26.826957952797255,
+        "n": 5,
+        "collapse": 0.0,
+        "gated_recovery": 0.6,
+        "detector_fire": 0.4
+      },
+      {
+        "rho_w_target": 71.96856730011521,
+        "n": 5,
+        "collapse": 0.0,
+        "gated_recovery": 1.0,
+        "detector_fire": 1.0
+      },
+      {
+        "rho_w_target": 193.06977288832496,
+        "n": 5,
+        "collapse": 0.0,
+        "gated_recovery": 1.0,
+        "detector_fire": 1.0
+      },
+      {
+        "rho_w_target": 517.9474679231213,
+        "n": 5,
+        "collapse": 0.4,
+        "gated_recovery": 1.0,
+        "detector_fire": 1.0
+      },
+      {
+        "rho_w_target": 1389.4954943731375,
+        "n": 5,
+        "collapse": 0.2,
+        "gated_recovery": 1.0,
+        "detector_fire": 1.0
+      },
+      {
+        "rho_w_target": 3727.593720314938,
+        "n": 5,
+        "collapse": 0.8,
+        "gated_recovery": 1.0,
+        "detector_fire": 1.0
+      },
+      {
+        "rho_w_target": 10000.0,
+        "n": 5,
+        "collapse": 1.0,
+        "gated_recovery": 0.6,
+        "detector_fire": 1.0
+      }
+    ]
+  },
+  "collapse_threshold": {
+    "all": {
+      "first_grid_rho_w_with_collapse_ge_50pct": 3727.593720314938,
+      "last_grid_rho_w_with_collapse_lt_50pct": 1389.4954943731375,
+      "interpolated_rho_w_at_50pct": 2682.6957952797247,
+      "collapse_at_max_rho": 0.8
+    },
+    "sine_gaussian": {
+      "first_grid_rho_w_with_collapse_ge_50pct": 10000.0,
+      "last_grid_rho_w_with_collapse_lt_50pct": 3727.593720314938,
+      "interpolated_rho_w_at_50pct": 6105.402296585326,
+      "collapse_at_max_rho": 0.6
+    },
+    "broadband_burst": {
+      "first_grid_rho_w_with_collapse_ge_50pct": 3727.593720314938,
+      "last_grid_rho_w_with_collapse_lt_50pct": 1389.4954943731375,
+      "interpolated_rho_w_at_50pct": 2275.8459260747863,
+      "collapse_at_max_rho": 1.0
+    }
+  },
+  "gated_recovery_overall": 0.95,
+  "gated_recovery_where_collapsed": 0.9047619047619048,
+  "config_ref": "config.json"
+}

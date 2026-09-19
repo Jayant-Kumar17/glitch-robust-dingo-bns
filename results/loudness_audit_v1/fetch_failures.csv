@@ -1,0 +1,2 @@
+gravityspy_id,event_time,ifo,ml_label,ml_confidence,snr,duration,peak_frequency,error
+LSZdUOEshZ,1262790978.0625,H1,Scattered_Light,0.9999990463256836,22.2807502746582,2.0,35.9645385742188,ValueError: non-finite samples in fetched strain (data gap)
