@@ -1,5 +1,6 @@
 # Glitch mitigation for neural BNS parameter estimation with frozen DINGO-BNS
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22844461.svg)](https://doi.org/10.5281/zenodo.22844461)
 [![CITATION.cff](https://img.shields.io/badge/cite-CITATION.cff-blue)](CITATION.cff)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -251,9 +252,11 @@ Provisional title: *Transient-glitch resilience in neural gravitational-wave
 parameter estimation without network retraining*.
 
 Software citation metadata is in [`CITATION.cff`](CITATION.cff) (GitHub renders
-a "Cite this repository" button from it). Tagged releases are listed under
-[Releases](https://github.com/Jayant-Kumar17/glitch-robust-dingo-bns/releases);
-steps for minting a Zenodo DOI are in [`docs/ZENODO.md`](docs/ZENODO.md).
+a "Cite this repository" button from it). The archived snapshot is
+[doi:10.5281/zenodo.22844461](https://doi.org/10.5281/zenodo.22844461)
+(concept DOI [10.5281/zenodo.22844460](https://doi.org/10.5281/zenodo.22844460)).
+Tagged releases are listed under
+[Releases](https://github.com/Jayant-Kumar17/glitch-robust-dingo-bns/releases).
 
 Users of this software are requested to cite the published article when
 available and to acknowledge [DINGO](https://github.com/dingo-gw/dingo) as the
