@@ -20,7 +20,6 @@ from __future__ import annotations
 import argparse
 import json
 import logging
-import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
@@ -31,15 +30,7 @@ from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR
 from torch.utils.data import DataLoader, Dataset
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-for _p in (
-    REPO_ROOT / "examples",
-    REPO_ROOT / "src",
-    REPO_ROOT / "DINGO-BNS" / "dingo",
-    REPO_ROOT,
-):
-    if _p.is_dir() and str(_p) not in sys.path:
-        sys.path.insert(0, str(_p))
+from _repo import REPO_ROOT, resolve_under_repo
 
 DEFAULT_BNS_CKPT = (
     REPO_ROOT
@@ -125,7 +116,6 @@ class DetectorPairDataset(Dataset):
         )
         from adapt.stft_context import (
             build_robust_spectrogram_from_td,
-            crop_td_to_analysis_window,
             fd_waveform_to_td_crop,
         )
 
@@ -610,7 +600,7 @@ def run_training(args: argparse.Namespace) -> None:
 def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--ckpt", type=Path, default=DEFAULT_BNS_CKPT)
-    p.add_argument("--outdir", type=Path, default=DEFAULT_OUTDIR)
+    p.add_argument("--outdir", type=resolve_under_repo, default=DEFAULT_OUTDIR)
     p.add_argument("--epochs", type=int, default=30)
     p.add_argument("--batch-size", type=int, default=16)
     p.add_argument("--steps-per-epoch", type=int, default=100)

@@ -9,6 +9,10 @@ see examples/paper_figures_2_3.py.
 Usage::
 
     conda run -n adapt_env python paper/make_figures.py --repo . --out paper/figures
+
+Paths are resolved from the repository root (``Path(__file__).resolve().parents[1]``),
+so the script does not depend on the process working directory. ``--repo``
+overrides that root when regenerating against a different checkout.
 """
 from __future__ import annotations
 
@@ -23,20 +27,20 @@ import numpy as np
 import pandas as pd
 
 REPO = Path(__file__).resolve().parents[1]
-if str(REPO) not in sys.path:
-    sys.path.insert(0, str(REPO))
+for _p in (REPO, REPO / "src"):
+    if str(_p) not in sys.path:
+        sys.path.insert(0, str(_p))
+
+from adapt.paths import resolve_under_repo  # noqa: E402
 
 from paper.figure_style import (  # noqa: E402
     CLEAN,
-    DOUBLE_W,
     GATED,
-    GRID,
     HELD_OUT,
     NEUTRAL,
     ORACLE,
     POISON,
     PRETTY,
-    SINGLE_W,
     apply,
     as_bool,
     errbar_from_rate,
@@ -46,8 +50,6 @@ from paper.figure_style import (  # noqa: E402
     restyle_axes,
     save,
     sci_rho,
-    takeaway,
-    wilson_from_rate,
 )
 
 
@@ -806,13 +808,16 @@ FIGURES = {
 
 def main(argv=None) -> None:
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--repo", type=Path, default=REPO)
-    p.add_argument("--out", type=Path, default=None)
+    p.add_argument("--repo", type=resolve_under_repo, default=REPO)
+    p.add_argument("--out", type=str, default=None)
     p.add_argument("--only", nargs="*", default=None, choices=list(FIGURES))
     args = p.parse_args(argv)
     apply()
-    repo = args.repo.resolve()
-    out = args.out if args.out is not None else repo / "paper" / "figures"
+    repo = Path(args.repo).resolve()
+    if args.out is None:
+        out = repo / "paper" / "figures"
+    else:
+        out = resolve_under_repo(args.out, repo_root=repo)
     out.mkdir(parents=True, exist_ok=True)
     names = args.only or list(FIGURES)
     for name in names:

@@ -30,17 +30,13 @@ from __future__ import annotations
 import argparse
 import json
 import logging
-import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence
 
 import numpy as np
 import pandas as pd
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-for _p in (REPO_ROOT / "examples", REPO_ROOT / "src", REPO_ROOT / "DINGO-BNS" / "dingo", REPO_ROOT):
-    if _p.is_dir() and str(_p) not in sys.path:
-        sys.path.insert(0, str(_p))
+from _repo import REPO_ROOT, resolve_under_repo
 
 logger = logging.getLogger("loudness_audit")
 
@@ -541,11 +537,11 @@ def repair_real(args: argparse.Namespace) -> None:
 
 def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--outdir", type=Path, default=DEFAULT_OUTDIR)
+    p.add_argument("--outdir", type=resolve_under_repo, default=DEFAULT_OUTDIR)
     p.add_argument("--figdir", type=Path, default=DEFAULT_FIGDIR)
     p.add_argument("--archive", type=Path, default=ARCHIVE)
-    p.add_argument("--selected-csv", type=Path, default=SELECTED)
-    p.add_argument("--raw-dir", type=Path, default=REPO_ROOT / "data" / "gravity_spy" / "raw")
+    p.add_argument("--selected-csv", type=resolve_under_repo, default=SELECTED)
+    p.add_argument("--raw-dir", type=resolve_under_repo, default=REPO_ROOT / "data" / "gravity_spy" / "raw")
     p.add_argument("--baseline-ckpt", type=Path, default=None)
     p.add_argument("--threshold-rho", type=float, default=None, help="Task 5D: report population fraction above this rho_w")
     p.add_argument("--threshold-rho-grid", type=float, default=None, help="optional second (grid-point) threshold")
