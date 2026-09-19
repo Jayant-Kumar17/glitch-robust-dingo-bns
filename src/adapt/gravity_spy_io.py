@@ -247,6 +247,62 @@ def select_glitches(
     return out[cols].reset_index(drop=True)
 
 
+DEFAULT_SNR_BINS: Sequence[Tuple[float, float]] = ((8.0, 30.0), (30.0, 100.0), (100.0, 300.0), (300.0, float("inf")))
+DEFAULT_WIDE_LABELS: Sequence[str] = ("Blip", "Koi_Fish", "Scattered_Light", "Whistle", "Tomte")
+
+
+def snr_bin_label(snr: float, bins: Sequence[Tuple[float, float]] = DEFAULT_SNR_BINS) -> str:
+    for lo, hi in bins:
+        if lo <= float(snr) < hi:
+            return f"[{lo:g},{'inf' if not np.isfinite(hi) else f'{hi:g}'})"
+    return "out_of_range"
+
+
+def select_glitches_binned(
+    df: pd.DataFrame,
+    *,
+    labels: Sequence[str] = DEFAULT_WIDE_LABELS,
+    bins: Sequence[Tuple[float, float]] = DEFAULT_SNR_BINS,
+    n_per_bin: int = 5,
+    ifo: str = "H1",
+    min_confidence: float = 0.95,
+    max_duration_s: float = 3.0,
+    max_peak_frequency_hz: Optional[float] = 1500.0,
+    min_separation_s: float = 60.0,
+) -> pd.DataFrame:
+    """Wide-SNR selection: ``n_per_bin`` top-confidence glitches per label and
+    Omicron-SNR bin (no upper SNR cap). Adds an ``snr_bin`` column."""
+    d = df.copy()
+    d = d[d["ifo"].astype(str).str.upper() == ifo.upper()]
+    d = d[d["ml_confidence"].astype(float) >= float(min_confidence)]
+    d = d[d["duration"].astype(float) <= float(max_duration_s)]
+    if max_peak_frequency_hz and "peak_frequency" in d.columns:
+        d = d[d["peak_frequency"].astype(float) <= float(max_peak_frequency_hz)]
+    parts: List[pd.DataFrame] = []
+    for label in labels:
+        dl = d[d["ml_label"].astype(str) == label]
+        for lo, hi in bins:
+            sub = dl[(dl["snr"].astype(float) >= lo) & (dl["snr"].astype(float) < hi)]
+            sub = sub.sort_values(["ml_confidence", "snr"], ascending=[False, False])
+            chosen: List[int] = []
+            times: List[float] = []
+            for idx, row in sub.iterrows():
+                t = float(row["event_time"])
+                if all(abs(t - u) >= min_separation_s for u in times):
+                    chosen.append(idx); times.append(t)
+                if len(chosen) >= n_per_bin:
+                    break
+            if len(chosen) < n_per_bin:
+                logger.warning("label %s bin [%g,%g): only %d/%d available", label, lo, hi, len(chosen), n_per_bin)
+            p = sub.loc[chosen].copy()
+            p["snr_bin"] = snr_bin_label(lo, bins)
+            parts.append(p)
+    out = pd.concat(parts, ignore_index=True) if parts else d.iloc[0:0]
+    cols = [c for c in ("gravityspy_id", "event_time", "ifo", "ml_label", "ml_confidence", "snr", "snr_bin",
+                        "duration", "peak_frequency") if c in out.columns]
+    return out[cols].reset_index(drop=True)
+
+
 def build_selected_catalogue(
     raw_paths: Sequence[Path],
     out_csv: Path = DEFAULT_SELECTED_CSV,

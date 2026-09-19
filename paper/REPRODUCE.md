@@ -45,6 +45,22 @@ python -u examples/clean_gate_control.py \
 python -u examples/stress_real_glitches.py \
   --seed 0 --num-samples 512 --device cpu \
   --outdir results/stress_real_glitches_v1
+
+# Wide-SNR native-loudness real panel (5 glitches per label x Omicron-SNR bin, 3 t_rel each)
+python -u examples/stress_real_glitches.py \
+  --seed 0 --num-samples 512 --device cpu \
+  --wide-snr-panel --native-only --n-trel 3 --n-noise-cells 10 \
+  --selected-csv data/gravity_spy/selected_h1_o3_wide.csv \
+  --outdir results/stress_real_glitches_v2
+
+# Loudness audit (no PE) and collapse-threshold sweep
+python -u examples/loudness_audit.py --outdir results/loudness_audit_v1
+python -u examples/collapse_threshold.py \
+  --seed 0 --n-seeds 5 --num-samples 512 --device cpu \
+  --outdir results/collapse_threshold_v1
+python -u examples/loudness_audit.py --population-only \
+  --threshold-rho <interpolated_rho_w_at_50pct from collapse_threshold_v1/summary.json> \
+  --outdir results/loudness_audit_v1
 ```
 
 ## Restricted smoke configuration
