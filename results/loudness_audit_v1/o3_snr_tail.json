@@ -1,0 +1,199 @@
+{
+  "min_confidence": 0.95,
+  "n_triggers": 132065,
+  "thresholds": [
+    300,
+    500,
+    1000,
+    2000
+  ],
+  "overall": {
+    "n": 132065,
+    "snr_ge_300": {
+      "n": 14534,
+      "fraction": 0.11005186839813728
+    },
+    "snr_ge_500": {
+      "n": 12502,
+      "fraction": 0.09466550562223147
+    },
+    "snr_ge_1000": {
+      "n": 9797,
+      "fraction": 0.07418316737969939
+    },
+    "snr_ge_2000": {
+      "n": 6551,
+      "fraction": 0.04960436148866089
+    }
+  },
+  "top8_labels": [
+    "Scattered_Light",
+    "Low_Frequency_Burst",
+    "Extremely_Loud",
+    "Koi_Fish",
+    "Whistle",
+    "Blip",
+    "Blip_Low_Frequency",
+    "Tomte"
+  ],
+  "by_label": {
+    "Scattered_Light": {
+      "n": 64263,
+      "snr_ge_300": {
+        "n": 1,
+        "fraction": 1.5561053794562967e-05
+      },
+      "snr_ge_500": {
+        "n": 1,
+        "fraction": 1.5561053794562967e-05
+      },
+      "snr_ge_1000": {
+        "n": 0,
+        "fraction": 0.0
+      },
+      "snr_ge_2000": {
+        "n": 0,
+        "fraction": 0.0
+      }
+    },
+    "Low_Frequency_Burst": {
+      "n": 19343,
+      "snr_ge_300": {
+        "n": 6,
+        "fraction": 0.000310189732719847
+      },
+      "snr_ge_500": {
+        "n": 2,
+        "fraction": 0.00010339657757328233
+      },
+      "snr_ge_1000": {
+        "n": 0,
+        "fraction": 0.0
+      },
+      "snr_ge_2000": {
+        "n": 0,
+        "fraction": 0.0
+      }
+    },
+    "Extremely_Loud": {
+      "n": 14894,
+      "snr_ge_300": {
+        "n": 13225,
+        "fraction": 0.8879414529340675
+      },
+      "snr_ge_500": {
+        "n": 12112,
+        "fraction": 0.8132133745132268
+      },
+      "snr_ge_1000": {
+        "n": 9745,
+        "fraction": 0.6542903182489593
+      },
+      "snr_ge_2000": {
+        "n": 6537,
+        "fraction": 0.43890157110245737
+      }
+    },
+    "Koi_Fish": {
+      "n": 9683,
+      "snr_ge_300": {
+        "n": 1271,
+        "fraction": 0.13126097283899618
+      },
+      "snr_ge_500": {
+        "n": 384,
+        "fraction": 0.03965713105442528
+      },
+      "snr_ge_1000": {
+        "n": 50,
+        "fraction": 0.005163688939378292
+      },
+      "snr_ge_2000": {
+        "n": 13,
+        "fraction": 0.0013425591242383558
+      }
+    },
+    "Whistle": {
+      "n": 7124,
+      "snr_ge_300": {
+        "n": 0,
+        "fraction": 0.0
+      },
+      "snr_ge_500": {
+        "n": 0,
+        "fraction": 0.0
+      },
+      "snr_ge_1000": {
+        "n": 0,
+        "fraction": 0.0
+      },
+      "snr_ge_2000": {
+        "n": 0,
+        "fraction": 0.0
+      }
+    },
+    "Blip": {
+      "n": 6861,
+      "snr_ge_300": {
+        "n": 1,
+        "fraction": 0.00014575134819997084
+      },
+      "snr_ge_500": {
+        "n": 0,
+        "fraction": 0.0
+      },
+      "snr_ge_1000": {
+        "n": 0,
+        "fraction": 0.0
+      },
+      "snr_ge_2000": {
+        "n": 0,
+        "fraction": 0.0
+      }
+    },
+    "Blip_Low_Frequency": {
+      "n": 2823,
+      "snr_ge_300": {
+        "n": 0,
+        "fraction": 0.0
+      },
+      "snr_ge_500": {
+        "n": 0,
+        "fraction": 0.0
+      },
+      "snr_ge_1000": {
+        "n": 0,
+        "fraction": 0.0
+      },
+      "snr_ge_2000": {
+        "n": 0,
+        "fraction": 0.0
+      }
+    },
+    "Tomte": {
+      "n": 1888,
+      "snr_ge_300": {
+        "n": 0,
+        "fraction": 0.0
+      },
+      "snr_ge_500": {
+        "n": 0,
+        "fraction": 0.0
+      },
+      "snr_ge_1000": {
+        "n": 0,
+        "fraction": 0.0
+      },
+      "snr_ge_2000": {
+        "n": 0,
+        "fraction": 0.0
+      }
+    }
+  },
+  "snr_quantiles": {
+    "0.5": 13.0357503890991,
+    "0.9": 416.3627807617187,
+    "0.99": 5919.3603515625,
+    "0.999": 9608.99607812487
+  }
+}

@@ -93,6 +93,38 @@ def test_whitened_excerpt_recovers_injected_snr():
     assert exc0.denoised_energy_w < 0.1 * n_win
 
 
+def test_taper_aware_excess_uses_taper_energy_not_n_win():
+    """Excess must subtract sum(taper^2)*var, not n_win*var."""
+    from scipy.signal import windows
+
+    from adapt.gravity_spy_io import extract_glitch_excerpt
+
+    fs = 4096.0
+    rng = np.random.default_rng(1)
+    n = int(8 * fs)
+    noise = rng.normal(size=n)
+    exc = extract_glitch_excerpt(noise, sample_rate=fs, duration_s=0.25, denoise=False)
+    n_win = exc.waveform.size
+    taper = windows.tukey(n_win, alpha=0.1)
+    expect = float(np.sum(exc.waveform**2) - float(np.sum(taper**2)) * exc.background_rms_w**2)
+    old = float(np.sum(exc.waveform**2) - n_win * exc.background_rms_w**2)
+    assert exc.excess_energy_w == pytest.approx(expect, rel=1e-12, abs=1e-9)
+    assert exc.excess_energy_w > old
+    assert (exc.excess_energy_w - old) == pytest.approx((n_win - float(np.sum(taper**2))) * exc.background_rms_w**2)
+
+
+def test_native_energy_falls_back_to_denoised_when_excess_negative():
+    from adapt.gravity_spy_io import GlitchExcerpt
+
+    e = GlitchExcerpt(
+        waveform=np.ones(8), denoised=np.array([3.0, 0, 0, 0, 0, 0, 0, 0]),
+        window_s=1.0, excess_energy_w=-12.0, background_rms_w=1.0, sample_rate=4096.0,
+        denoised_energy_w=9.0,
+    )
+    assert e.native_energy_w() == 9.0
+    assert np.allclose(e.injection_waveform(), e.denoised)
+
+
 def test_place_series_and_colour_shapes():
     from adapt.gravity_spy_io import colour_with_asd, place_series
 

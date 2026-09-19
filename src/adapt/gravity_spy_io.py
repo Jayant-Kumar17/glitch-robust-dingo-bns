@@ -536,6 +536,11 @@ def fetch_h1_excerpt(
         x = np.asarray(ts.value, dtype=np.float64)
     if not np.all(np.isfinite(x)):
         raise ValueError("non-finite samples in fetched strain (data gap)")
+    zero_frac = float(np.mean(np.abs(x) < 1e-30))
+    if zero_frac > 0.05:
+        raise ValueError(f"dead strain: {zero_frac:.0%} samples ~0 (data gap)")
+    if float(np.std(x)) < 1e-25:
+        raise ValueError("dead strain: RMS too low (data gap)")
     if abs(x.size - n_expect) > 2:
         raise ValueError(f"fetched {x.size} samples, expected {n_expect}")
     return x[:n_expect] if x.size >= n_expect else np.pad(x, (0, n_expect - x.size))
@@ -577,11 +582,28 @@ class GlitchExcerpt:
     excess_rms_inband: float = 0.0
     background_rms_inband: float = 0.0
 
+    def native_energy_w(self) -> float:
+        """Whitened energy used for native-loudness scaling.
+
+        Prefer the taper-aware window excess; if that is non-positive (quiet
+        window or a glitch that the off-window PSD partly absorbed) fall back
+        to the STFT-thresholded estimate, which is still a real glitch when
+        ``denoised_energy_w > 0``.
+        """
+        return float(max(self.excess_energy_w, self.denoised_energy_w, 0.0))
+
+    def injection_waveform(self) -> np.ndarray:
+        """Prefer the denoised estimate; fall back to the tapered window."""
+        den = np.asarray(self.denoised, dtype=np.float64)
+        if float(np.sum(den**2)) > 1e-12:
+            return den
+        return np.asarray(self.waveform, dtype=np.float64)
+
     def to_meta(self) -> Dict[str, float]:
         return {
             "excerpt_window_s": float(self.window_s),
             "excerpt_excess_energy_w": float(self.excess_energy_w),
-            "excerpt_native_snr": float(np.sqrt(max(self.excess_energy_w, 0.0))),
+            "excerpt_native_snr": float(np.sqrt(self.native_energy_w())),
             "excerpt_denoised_energy_w": float(self.denoised_energy_w),
             "excerpt_background_rms_w": float(self.background_rms_w),
         }
@@ -689,7 +711,8 @@ def extract_glitch_excerpt(
     off-window part (unit-variance background); (2) cut the window and apply a
     Tukey taper; (3) STFT-threshold the window to obtain a glitch-only
     estimate; (4) record the whitened excess energy in the window
-    (``sum(w^2) - n_win``), an estimate of the glitch's SNR squared.
+    (``sum((w*taper)^2) - sum(taper^2)``, an estimate of the glitch's SNR
+    squared after Tukey-aware noise subtraction).
 
     Working in the whitened domain is essential: in raw strain the 20–40 Hz
     seismic wall dominates the in-band RMS and Gravity Spy glitches of
@@ -703,12 +726,17 @@ def extract_glitch_excerpt(
     i0 = max(0, centre - half_n)
     i1 = min(n, centre + half_n)
     w = whiten_with_own_background(x, sample_rate, i0=i0, i1=i1, f_lo=max(20.0, f_min), f_hi=min(1500.0, f_max))
+    taper = sp_signal.windows.tukey(i1 - i0, alpha=float(tukey_alpha))
     taper_full = np.zeros(n)
-    taper_full[i0:i1] = sp_signal.windows.tukey(i1 - i0, alpha=float(tukey_alpha))
+    taper_full[i0:i1] = taper
     win_w = (w * taper_full)[i0:i1]
     bg_w = np.concatenate([w[:i0], w[i1:]])
     bg_rms = float(np.std(bg_w)) if bg_w.size > 64 else 1.0
-    excess_energy = float(np.sum(win_w**2) - (i1 - i0) * bg_rms**2)
+    # Tukey-aware noise subtraction: the window is tapered, so the expected
+    # noise energy is ``sum(taper^2) * var``, not ``n_win * var``. Using the
+    # untapered length made excess_energy systematically negative for quiet
+    # but valid excerpts (rho_w was then forced to 0 at native scale).
+    excess_energy = float(np.sum(win_w**2) - float(np.sum(taper**2)) * bg_rms**2)
     if denoise:
         # Retain pixels only within the trigger's own duration (+ margin), so
         # that the scaled estimate has compact support like the trigger itself.

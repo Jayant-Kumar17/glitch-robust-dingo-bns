@@ -126,7 +126,7 @@ def resynthesize_archived(ctx, df: pd.DataFrame) -> List[Dict[str, Any]]:
             "poison_collapsed": bool(r["poison_collapsed"]) if str(r["poison_collapsed"]) != "nan" else None,
             "gated_recovers": bool(r["gated_recovers"]) if str(r["gated_recovers"]) != "nan" else None,
             "oracle_recovers": bool(r["oracle_recovers"]) if str(r["oracle_recovers"]) != "nan" else None,
-            "gs_label": "", "gs_snr": float("nan"),
+            "gs_label": "", "gs_snr": float("nan"), "rho_w_over_gs_snr": float("nan"),
         })
     return rows
 
@@ -152,7 +152,7 @@ def control_sine_gaussian(ctx) -> Dict[str, Any]:
         "source": "official_control", "cell_id": -1, "family": "sine_gaussian", "held_out": False,
         "severity": 8.0, "asd_policy": "welch", "seed": 0, "detector": det, "t_rel": -1.0,
         "rho_w": _rho(ctx, g, det), "poison_collapsed": collapsed, "gated_recovers": True if collapsed else None,
-        "oracle_recovers": None, "gs_label": "", "gs_snr": float("nan"),
+        "oracle_recovers": None, "gs_label": "", "gs_snr": float("nan"), "rho_w_over_gs_snr": float("nan"),
     }
 
 
@@ -161,7 +161,7 @@ def control_sine_gaussian(ctx) -> Dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
-def real_native(ctx, selected: pd.DataFrame, outdir: Path) -> List[Dict[str, Any]]:
+def real_native(ctx, selected: pd.DataFrame, outdir: Path) -> tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     from adapt import gravity_spy_io as gs
     from adapt.glitch_excision import analysis_crop_bounds
     from stress_real_glitches import Transplanter, fetch_excerpts
@@ -173,22 +173,66 @@ def real_native(ctx, selected: pd.DataFrame, outdir: Path) -> List[Dict[str, Any
         rms_inband_h1=ctx["rms_inband"]["H1"],
     )
     ex = fetch_excerpts(selected, sample_rate=ctx["sample_rate"], f_min=ctx["f_min"], f_max=ctx["f_max"], outdir=outdir)
-    rows = []
+    rows: List[Dict[str, Any]] = []
+    dropped: List[Dict[str, Any]] = []
     n = ctx["td_clean"]["H1"].size
     t_peak = (ctx["duration"] - ctx["time_buffer"]) - 1.0
+    fetched_ids = set()
     for i, item in sorted(ex.items()):
         r, e = item["row"], item["excerpt"]
-        g0 = tp.colour(e.denoised)
-        k = tp.scale_native(g0, e.excess_energy_w)
+        fetched_ids.add(str(r.get("gravityspy_id", "")))
+        energy = e.native_energy_w()
+        rec = {
+            "gravityspy_id": str(r.get("gravityspy_id", "")),
+            "gs_label": str(r["ml_label"]),
+            "gs_event_time": float(r["event_time"]),
+            "gs_snr": float(r.get("snr", float("nan"))),
+        }
+        if energy <= 0:
+            rec["reason"] = (
+                f"no measurable whitened energy after taper-aware excess "
+                f"(excess={e.excess_energy_w:.3f}, denoised={e.denoised_energy_w:.3f})"
+            )
+            dropped.append(rec)
+            continue
+        g0 = tp.colour(e.injection_waveform())
+        k = tp.scale_native(g0, energy)
         g = gs.place_series(g0 * k, n_samples=n, sample_rate=ctx["sample_rate"], t_peak=t_peak)
+        rho = _rho(ctx, g, "H1")
+        if not np.isfinite(rho) or rho <= 0:
+            rec["reason"] = f"rho_w={rho} after native scaling (energy={energy:.3f})"
+            dropped.append(rec)
+            continue
+        gs_snr = float(r.get("snr", float("nan")))
         rows.append({
             "source": "real_native", "cell_id": int(i), "family": str(r["ml_label"]), "held_out": True,
             "severity": float("nan"), "asd_policy": "stationary", "seed": 0, "detector": "H1", "t_rel": -1.0,
-            "rho_w": _rho(ctx, g, "H1"), "poison_collapsed": None, "gated_recovers": None, "oracle_recovers": None,
-            "gs_label": str(r["ml_label"]), "gs_snr": float(r.get("snr", float("nan"))),
-            "gs_event_time": float(r["event_time"]), "native_snr_w": float(np.sqrt(max(e.excess_energy_w, 0.0))),
+            "rho_w": rho, "poison_collapsed": None, "gated_recovers": None, "oracle_recovers": None,
+            "gs_label": str(r["ml_label"]), "gs_snr": gs_snr,
+            "gs_event_time": float(r["event_time"]), "native_snr_w": float(np.sqrt(energy)),
+            "rho_w_over_gs_snr": (rho / gs_snr) if (np.isfinite(gs_snr) and gs_snr > 0) else float("nan"),
         })
-    return rows
+    fail_path = outdir / "fetch_failures.csv"
+    if fail_path.is_file():
+        fails = pd.read_csv(fail_path)
+        if len(fails):
+            for _, fr in fails.iterrows():
+                dropped.append({
+                    "gravityspy_id": str(fr.get("gravityspy_id", "")),
+                    "gs_label": str(fr.get("ml_label", "")),
+                    "gs_event_time": float(fr["event_time"]) if "event_time" in fr and pd.notna(fr["event_time"]) else None,
+                    "gs_snr": float(fr["snr"]) if "snr" in fr and pd.notna(fr["snr"]) else None,
+                    "reason": str(fr.get("error", "fetch failed")),
+                })
+    for _, r in selected.reset_index(drop=True).iterrows():
+        gid = str(r.get("gravityspy_id", ""))
+        if gid and gid not in fetched_ids and not any(d.get("gravityspy_id") == gid for d in dropped):
+            dropped.append({
+                "gravityspy_id": gid, "gs_label": str(r["ml_label"]),
+                "gs_event_time": float(r["event_time"]), "gs_snr": float(r.get("snr", float("nan"))),
+                "reason": "not in fetch_excerpts output (skipped or failed without a row)",
+            })
+    return rows, dropped
 
 
 # ---------------------------------------------------------------------------
@@ -299,31 +343,69 @@ def population_only(args: argparse.Namespace) -> None:
                 pop["converted_omicron_axis"]["fraction_above"] if ratio else None)
 
 
-def run(args: argparse.Namespace) -> None:
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
-    outdir = Path(args.outdir); outdir.mkdir(parents=True, exist_ok=True)
-    ctx = _setup_event(args)
+def _annotate_ratio(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+    if "rho_w_over_gs_snr" not in df.columns:
+        df["rho_w_over_gs_snr"] = np.nan
+    real = (df["source"] == "real_native") & (df["rho_w"] > 0) & df["gs_snr"].notna() & (df["gs_snr"] > 0)
+    df.loc[real, "rho_w_over_gs_snr"] = df.loc[real, "rho_w"] / df.loc[real, "gs_snr"]
+    return df
 
-    arch = pd.read_csv(args.archive)
-    arch = arch[arch["error"].fillna("") == ""]
-    if args.smoke:
-        arch = arch.head(6)
-    rows = resynthesize_archived(ctx, arch)
-    logger.info("re-synthesised %d archived cells", len(rows))
-    rows.append(control_sine_gaussian(ctx))
-    logger.info("official-control SG rho_w = %.1f", rows[-1]["rho_w"])
 
-    if not args.skip_real:
-        from adapt import gravity_spy_io as gs
+def _ratio_by_label(real: pd.DataFrame) -> Dict[str, Any]:
+    out: Dict[str, Any] = {}
+    ok = real[(real["rho_w"] > 0) & real["gs_snr"].notna() & (real["gs_snr"] > 0)].copy()
+    if "rho_w_over_gs_snr" not in ok.columns:
+        ok["rho_w_over_gs_snr"] = ok["rho_w"] / ok["gs_snr"]
+    for lab, sub in ok.groupby("gs_label"):
+        out[str(lab)] = {
+            "n": int(len(sub)),
+            "median_rho_w_over_gs_snr": float(sub["rho_w_over_gs_snr"].median()),
+        }
+    return out
 
-        selected = gs.load_selected_catalogue(Path(args.selected_csv))
-        if args.smoke:
-            selected = selected.head(2)
-        rows.extend(real_native(ctx, selected, outdir))
 
-    df = pd.DataFrame(rows)
+def write_o3_snr_tail(raw_paths: Sequence[Path], dest: Path, *, min_conf: float = 0.95) -> Dict[str, Any]:
+    """Task 5D: fraction/count of H1 O3 triggers with gs_snr above high thresholds."""
+    from adapt import gravity_spy_io as gs
+
+    frames = [gs.read_gravity_spy_csv(Path(p)) for p in raw_paths]
+    df = pd.concat(frames, ignore_index=True)
+    df = df[(df["ifo"].astype(str).str.upper() == "H1") & (df["ml_confidence"].astype(float) >= min_conf)]
+    df = df[~df["ml_label"].astype(str).isin(["No_Glitch", "None_of_the_Above"])]
+    snr = df["snr"].astype(float)
+    thresholds = (300, 500, 1000, 2000)
+    top8 = df["ml_label"].value_counts().head(8).index.tolist()
+
+    def _block(mask_df: pd.DataFrame) -> Dict[str, Any]:
+        s = mask_df["snr"].astype(float)
+        rec: Dict[str, Any] = {"n": int(len(mask_df))}
+        for thr in thresholds:
+            n_above = int((s >= thr).sum())
+            rec[f"snr_ge_{thr}"] = {
+                "n": n_above,
+                "fraction": float(n_above / len(mask_df)) if len(mask_df) else None,
+            }
+        return rec
+
+    out: Dict[str, Any] = {
+        "min_confidence": float(min_conf),
+        "n_triggers": int(len(df)),
+        "thresholds": list(thresholds),
+        "overall": _block(df),
+        "top8_labels": top8,
+        "by_label": {str(lab): _block(df[df["ml_label"] == lab]) for lab in top8},
+        "snr_quantiles": {str(q): float(np.quantile(snr, q)) for q in (0.5, 0.9, 0.99, 0.999)} if len(snr) else {},
+    }
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_text(json.dumps(out, indent=2, default=str))
+    logger.info("wrote %s (n=%d H1 triggers, ml_confidence>=%.2f)", dest, out["n_triggers"], min_conf)
+    return out
+
+
+def _write_audit_outputs(df: pd.DataFrame, dropped: List[Dict[str, Any]], args: argparse.Namespace, outdir: Path) -> Dict[str, Any]:
+    df = _annotate_ratio(df)
     df.to_csv(outdir / "loudness.csv", index=False)
-
     syn = df[(df["source"] == "synthetic_archive") & df["poison_collapsed"].notna()]
     by_sev = {}
     for sev, sub in syn.groupby("severity"):
@@ -338,25 +420,31 @@ def run(args: argparse.Namespace) -> None:
         by_fam[str(fam)] = {"n": int(len(sub)), "rho_w_min": float(sub["rho_w"].min()),
                             "rho_w_median": float(sub["rho_w"].median()), "rho_w_max": float(sub["rho_w"].max())}
     real = df[df["source"] == "real_native"]
-    ratio = None
-    if len(real):
-        ok = real[(real["rho_w"] > 0) & real["gs_snr"].notna() & (real["gs_snr"] > 0)]
-        if len(ok):
-            ratio = float(np.median(ok["rho_w"] / ok["gs_snr"]))
+    ok = real[(real["rho_w"] > 0) & real["gs_snr"].notna() & (real["gs_snr"] > 0)]
+    ratio = float(np.median(ok["rho_w_over_gs_snr"])) if len(ok) else None
+    by_label = _ratio_by_label(real)
     summary: Dict[str, Any] = {
         "definition": "rho_w = sqrt(4 sum |g(f)|^2 / ASD(f)^2 df) over [f_min, f_max], GW170817 analysis ASD of the injected IFO",
         "n_synthetic": int(len(syn)),
         "synthetic_by_severity": by_sev,
         "synthetic_by_family": by_fam,
-        "official_control_sg_rho_w": float(df[df["source"] == "official_control"]["rho_w"].iloc[0]),
+        "official_control_sg_rho_w": float(df[df["source"] == "official_control"]["rho_w"].iloc[0]) if (df["source"] == "official_control").any() else None,
         "real_native": {
             "n": int(len(real)),
             "rho_w_min": float(real["rho_w"].min()) if len(real) else None,
             "rho_w_median": float(real["rho_w"].median()) if len(real) else None,
             "rho_w_max": float(real["rho_w"].max()) if len(real) else None,
             "median_ratio_rho_w_over_omicron_snr": ratio,
+            "median_rho_w_over_gs_snr_by_label": by_label,
             "n_zero_rho_w": int((real["rho_w"] <= 0).sum()) if len(real) else 0,
         },
+        "dropped_rows": dropped,
+        "extraction_fix": (
+            "Four real_native rows previously had rho_w=0 because extract_glitch_excerpt "
+            "subtracted n_win * var from a Tukey-tapered window (systematically negative "
+            "excess). Excess is now taper-aware; native scale falls back to denoised_energy_w "
+            "when excess<=0. Rows that still cannot be recovered are listed in dropped_rows."
+        ),
     }
     if args.threshold_rho is not None:
         raw_paths = [Path(args.raw_dir) / n for n in ("H1_O3a.csv", "H1_O3b.csv") if (Path(args.raw_dir) / n).is_file()]
@@ -372,7 +460,13 @@ def run(args: argparse.Namespace) -> None:
                 "real excerpts at native loudness."
             ),
         }
+        if args.threshold_rho_grid is not None:
+            pop["grid_threshold_rho_w"] = float(args.threshold_rho_grid)
+            pop["direct_omicron_axis_grid"] = population_fraction(raw_paths, thr_omicron=float(args.threshold_rho_grid))
         summary["population_above_threshold"] = pop
+    raw_paths = [Path(args.raw_dir) / n for n in ("H1_O3a.csv", "H1_O3b.csv") if (Path(args.raw_dir) / n).is_file()]
+    if raw_paths:
+        summary["o3_snr_tail"] = write_o3_snr_tail(raw_paths, outdir / "o3_snr_tail.json")
     (outdir / "summary.json").write_text(json.dumps(summary, indent=2, default=str))
     make_figure(df, Path(args.figdir), outdir)
     (outdir / "REPRODUCE.md").write_text(f"""# Reproduce the loudness audit
@@ -380,14 +474,69 @@ def run(args: argparse.Namespace) -> None:
 ```bash
 export PYTHONPATH=DINGO-BNS/dingo:src:examples KMP_DUPLICATE_LIB_OK=TRUE
 python examples/loudness_audit.py --outdir {outdir} [--threshold-rho <rho_w from collapse_threshold_v1>]
+python examples/loudness_audit.py --repair-real --outdir {outdir}
+python examples/loudness_audit.py --snr-tail-only --outdir {outdir}
 ```
 
 Re-synthesises every archived cell of `results/stress_test_excision_v1/results.csv`
 from `params_json` + `seed` (identical RNG consumption to `stress_gw170817.inject_spec_into_event`),
 the official-control sine-Gaussian, and the cached real Gravity Spy excerpts at native loudness,
 and reports the whitened optimal SNR `rho_w` of each injected glitch. No posterior sampling is run.
+
+`--repair-real` keeps synthetic/control rows and re-extracts only the real Gravity Spy
+excerpts (taper-aware excess + denoised fallback). Unrecoverable catalogue rows are
+recorded in `summary.json` under `dropped_rows`.
 """)
-    logger.info("summary: %s", json.dumps({k: summary[k] for k in ("synthetic_by_severity", "official_control_sg_rho_w", "real_native")}, indent=1, default=str))
+    logger.info("summary: %s", json.dumps({k: summary[k] for k in ("official_control_sg_rho_w", "real_native", "dropped_rows") if k in summary}, indent=1, default=str))
+    return summary
+
+
+def run(args: argparse.Namespace) -> None:
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
+    outdir = Path(args.outdir); outdir.mkdir(parents=True, exist_ok=True)
+    ctx = _setup_event(args)
+
+    arch = pd.read_csv(args.archive)
+    arch = arch[arch["error"].fillna("") == ""]
+    if args.smoke:
+        arch = arch.head(6)
+    rows = resynthesize_archived(ctx, arch)
+    logger.info("re-synthesised %d archived cells", len(rows))
+    rows.append(control_sine_gaussian(ctx))
+    logger.info("official-control SG rho_w = %.1f", rows[-1]["rho_w"])
+
+    dropped: List[Dict[str, Any]] = []
+    if not args.skip_real:
+        from adapt import gravity_spy_io as gs
+
+        selected = gs.load_selected_catalogue(Path(args.selected_csv))
+        if args.smoke:
+            selected = selected.head(2)
+        real_rows, dropped = real_native(ctx, selected, outdir)
+        rows.extend(real_rows)
+
+    _write_audit_outputs(pd.DataFrame(rows), dropped, args, outdir)
+
+
+def repair_real(args: argparse.Namespace) -> None:
+    """Re-extract real_native rows; keep synthetic/control from existing loudness.csv."""
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
+    from adapt import gravity_spy_io as gs
+
+    outdir = Path(args.outdir)
+    csv_path = outdir / "loudness.csv"
+    if not csv_path.is_file():
+        raise FileNotFoundError(csv_path)
+    prev = pd.read_csv(csv_path)
+    kept = prev[prev["source"] != "real_native"].copy()
+    ctx = _setup_event(args)
+    selected = gs.load_selected_catalogue(Path(args.selected_csv))
+    if args.smoke:
+        selected = selected.head(2)
+    real_rows, dropped = real_native(ctx, selected, outdir)
+    df = pd.concat([kept, pd.DataFrame(real_rows)], ignore_index=True)
+    logger.info("repair-real: kept %d non-real rows, recovered %d real, dropped %d", len(kept), len(real_rows), len(dropped))
+    _write_audit_outputs(df, dropped, args, outdir)
 
 
 def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
@@ -401,6 +550,8 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     p.add_argument("--threshold-rho", type=float, default=None, help="Task 5D: report population fraction above this rho_w")
     p.add_argument("--threshold-rho-grid", type=float, default=None, help="optional second (grid-point) threshold")
     p.add_argument("--population-only", action="store_true", help="Task 5D only, from existing loudness.csv")
+    p.add_argument("--repair-real", action="store_true", help="re-extract real_native rows only")
+    p.add_argument("--snr-tail-only", action="store_true", help="write o3_snr_tail.json from cached H1 O3 tables")
     p.add_argument("--skip-real", action="store_true")
     p.add_argument("--smoke", action="store_true")
     return p.parse_args(argv)
@@ -408,7 +559,13 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
 
 if __name__ == "__main__":
     _a = parse_args()
-    if _a.population_only:
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
+    if _a.snr_tail_only:
+        raw_paths = [Path(_a.raw_dir) / n for n in ("H1_O3a.csv", "H1_O3b.csv") if (Path(_a.raw_dir) / n).is_file()]
+        write_o3_snr_tail(raw_paths, Path(_a.outdir) / "o3_snr_tail.json")
+    elif _a.population_only:
         population_only(_a)
+    elif _a.repair_real:
+        repair_real(_a)
     else:
         run(_a)

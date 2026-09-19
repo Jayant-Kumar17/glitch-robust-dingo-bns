@@ -32,7 +32,7 @@
   "detector_sha256": "e1abd4e40ce173de17c7c915b43ac138c1cabb8f6f61e1ef983be9b1589762b5",
   "baseline_ckpt": "/Users/jayantkumar/Desktop/ADAPT-Project/.worktrees/task5/DINGO-BNS/dingo/binary-neutron-star-demo/GW170817/downloads/dingo-bns-model_GW170817.pt",
   "baseline_sha256": "aebe9cade3943342b6dfe758eb9922410bbc01db6a346a647559bed383d14f10",
-  "git_commit": "90da193a724f234cb8f476fb66ce77f7bcded64b",
+  "git_commit": "1ec342ed60d2eba101300f756c1e20575d483a3e",
   "python": "3.11.14 | packaged by conda-forge | (main, Oct 13 2025, 14:29:50) [Clang 19.1.7 ]",
   "platform": "macOS-26.6.2-arm64-arm-64bit",
   "rho_w_definition": "sqrt(4 sum |g(f)|^2/ASD_H1(f)^2 df) over [f_min,f_max] on the packaged grid",
