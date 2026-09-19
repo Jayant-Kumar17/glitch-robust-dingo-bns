@@ -1,0 +1,409 @@
+{
+  "n_rows": 215,
+  "n_ok": 215,
+  "n_errors": 0,
+  "n_glitch_cells": 210,
+  "n_ladder_cells": 0,
+  "n_native_cells": 183,
+  "n_noise_control_cells": 5,
+  "clean_reference_d_L": {
+    "lo": 19.081661796569826,
+    "med": 33.69267272949219,
+    "hi": 45.384322547912596,
+    "n": 512
+  },
+  "panel": "wide_snr_native",
+  "overall_refers_to": "native",
+  "overall": {
+    "n": 183,
+    "gated_recovery_rate": 0.9890710382513661,
+    "oracle_recovery_rate": 0.9016393442622951,
+    "poison_collapse_rate": 0.09289617486338798,
+    "detector_fire_rate": 0.8743169398907104,
+    "mean_abs_delta_med_d_L_successes": 1.0190816373456248,
+    "median_injected_snr_w": 80.27602232848174
+  },
+  "by_held_out": {
+    "true": 0.9890710382513661
+  },
+  "by_family": [
+    {
+      "family": "Blip",
+      "n": 45,
+      "gated_recovery": 1.0,
+      "oracle_recovery": 0.9333333333333333,
+      "poison_collapse": 0.0,
+      "detector_fire_rate": 0.9333333333333333,
+      "median_injected_snr_w": 54.8036765029583
+    },
+    {
+      "family": "Koi_Fish",
+      "n": 60,
+      "gated_recovery": 1.0,
+      "oracle_recovery": 0.9166666666666666,
+      "poison_collapse": 0.2833333333333333,
+      "detector_fire_rate": 0.9833333333333333,
+      "median_injected_snr_w": 129.6164748937178
+    },
+    {
+      "family": "Scattered_Light",
+      "n": 27,
+      "gated_recovery": 0.9259259259259259,
+      "oracle_recovery": 0.8148148148148148,
+      "poison_collapse": 0.0,
+      "detector_fire_rate": 0.7037037037037037,
+      "median_injected_snr_w": 66.38202391373855
+    },
+    {
+      "family": "Tomte",
+      "n": 21,
+      "gated_recovery": 1.0,
+      "oracle_recovery": 0.9047619047619048,
+      "poison_collapse": 0.0,
+      "detector_fire_rate": 0.9047619047619048,
+      "median_injected_snr_w": 36.265118285243176
+    },
+    {
+      "family": "Whistle",
+      "n": 30,
+      "gated_recovery": 1.0,
+      "oracle_recovery": 0.9,
+      "poison_collapse": 0.0,
+      "detector_fire_rate": 0.7,
+      "median_injected_snr_w": 106.85305610720644
+    }
+  ],
+  "by_label": [
+    {
+      "family": "Blip",
+      "n": 45,
+      "gated_recovery": 1.0,
+      "oracle_recovery": 0.9333333333333333,
+      "poison_collapse": 0.0,
+      "detector_fire_rate": 0.9333333333333333,
+      "median_injected_snr_w": 54.8036765029583
+    },
+    {
+      "family": "Koi_Fish",
+      "n": 60,
+      "gated_recovery": 1.0,
+      "oracle_recovery": 0.9166666666666666,
+      "poison_collapse": 0.2833333333333333,
+      "detector_fire_rate": 0.9833333333333333,
+      "median_injected_snr_w": 129.6164748937178
+    },
+    {
+      "family": "Scattered_Light",
+      "n": 27,
+      "gated_recovery": 0.9259259259259259,
+      "oracle_recovery": 0.8148148148148148,
+      "poison_collapse": 0.0,
+      "detector_fire_rate": 0.7037037037037037,
+      "median_injected_snr_w": 66.38202391373855
+    },
+    {
+      "family": "Tomte",
+      "n": 21,
+      "gated_recovery": 1.0,
+      "oracle_recovery": 0.9047619047619048,
+      "poison_collapse": 0.0,
+      "detector_fire_rate": 0.9047619047619048,
+      "median_injected_snr_w": 36.265118285243176
+    },
+    {
+      "family": "Whistle",
+      "n": 30,
+      "gated_recovery": 1.0,
+      "oracle_recovery": 0.9,
+      "poison_collapse": 0.0,
+      "detector_fire_rate": 0.7,
+      "median_injected_snr_w": 106.85305610720644
+    }
+  ],
+  "by_snr_bin": [
+    {
+      "snr_bin": "[8,30)",
+      "n": 54,
+      "n_glitches": 18,
+      "gated_recovery": 1.0,
+      "oracle_recovery": 0.9259259259259259,
+      "poison_collapse": 0.0,
+      "detector_fire_rate": 0.8518518518518519,
+      "median_omicron_snr": 26.805495262146003,
+      "median_injected_rho_w": 42.357886735781506
+    },
+    {
+      "snr_bin": "[30,100)",
+      "n": 69,
+      "n_glitches": 23,
+      "gated_recovery": 0.9710144927536232,
+      "oracle_recovery": 0.8985507246376812,
+      "poison_collapse": 0.0,
+      "detector_fire_rate": 0.8405797101449275,
+      "median_omicron_snr": 60.1538200378418,
+      "median_injected_rho_w": 71.0783275491486
+    },
+    {
+      "snr_bin": "[100,300)",
+      "n": 45,
+      "n_glitches": 15,
+      "gated_recovery": 1.0,
+      "oracle_recovery": 0.9333333333333333,
+      "poison_collapse": 0.17777777777777778,
+      "detector_fire_rate": 0.9111111111111111,
+      "median_omicron_snr": 124.512229919434,
+      "median_injected_rho_w": 186.41348264205843
+    },
+    {
+      "snr_bin": "[300,inf)",
+      "n": 15,
+      "n_glitches": 5,
+      "gated_recovery": 1.0,
+      "oracle_recovery": 0.7333333333333333,
+      "poison_collapse": 0.6,
+      "detector_fire_rate": 1.0,
+      "median_omicron_snr": 323.875701904297,
+      "median_injected_rho_w": 560.1532352056926
+    }
+  ],
+  "by_label_and_snr_bin": [
+    {
+      "label": "Blip",
+      "snr_bin": "[100,300)",
+      "n": 15,
+      "poison_collapse": 0.0,
+      "gated_recovery": 1.0,
+      "oracle_recovery": 1.0,
+      "detector_fire_rate": 1.0,
+      "median_injected_rho_w": 188.29224100565517
+    },
+    {
+      "label": "Blip",
+      "snr_bin": "[30,100)",
+      "n": 15,
+      "poison_collapse": 0.0,
+      "gated_recovery": 1.0,
+      "oracle_recovery": 0.8,
+      "detector_fire_rate": 1.0,
+      "median_injected_rho_w": 59.09450161278484
+    },
+    {
+      "label": "Blip",
+      "snr_bin": "[8,30)",
+      "n": 15,
+      "poison_collapse": 0.0,
+      "gated_recovery": 1.0,
+      "oracle_recovery": 1.0,
+      "detector_fire_rate": 0.8,
+      "median_injected_rho_w": 29.51568931312247
+    },
+    {
+      "label": "Koi_Fish",
+      "snr_bin": "[100,300)",
+      "n": 15,
+      "poison_collapse": 0.5333333333333333,
+      "gated_recovery": 1.0,
+      "oracle_recovery": 0.9333333333333333,
+      "detector_fire_rate": 1.0,
+      "median_injected_rho_w": 194.99604082767056
+    },
+    {
+      "label": "Koi_Fish",
+      "snr_bin": "[30,100)",
+      "n": 15,
+      "poison_collapse": 0.0,
+      "gated_recovery": 1.0,
+      "oracle_recovery": 1.0,
+      "detector_fire_rate": 1.0,
+      "median_injected_rho_w": 87.04086864609245
+    },
+    {
+      "label": "Koi_Fish",
+      "snr_bin": "[300,inf)",
+      "n": 15,
+      "poison_collapse": 0.6,
+      "gated_recovery": 1.0,
+      "oracle_recovery": 0.7333333333333333,
+      "detector_fire_rate": 1.0,
+      "median_injected_rho_w": 560.1532352056926
+    },
+    {
+      "label": "Koi_Fish",
+      "snr_bin": "[8,30)",
+      "n": 15,
+      "poison_collapse": 0.0,
+      "gated_recovery": 1.0,
+      "oracle_recovery": 1.0,
+      "detector_fire_rate": 0.9333333333333333,
+      "median_injected_rho_w": 48.78647892772013
+    },
+    {
+      "label": "Scattered_Light",
+      "snr_bin": "[100,300)",
+      "n": 15,
+      "poison_collapse": 0.0,
+      "gated_recovery": 1.0,
+      "oracle_recovery": 0.8666666666666667,
+      "detector_fire_rate": 0.7333333333333333,
+      "median_injected_rho_w": 99.20298102658046
+    },
+    {
+      "label": "Scattered_Light",
+      "snr_bin": "[30,100)",
+      "n": 9,
+      "poison_collapse": 0.0,
+      "gated_recovery": 0.7777777777777778,
+      "oracle_recovery": 0.7777777777777778,
+      "detector_fire_rate": 0.8888888888888888,
+      "median_injected_rho_w": 71.55073792784886
+    },
+    {
+      "label": "Scattered_Light",
+      "snr_bin": "[8,30)",
+      "n": 3,
+      "poison_collapse": 0.0,
+      "gated_recovery": 1.0,
+      "oracle_recovery": 0.6666666666666666,
+      "detector_fire_rate": 0.0,
+      "median_injected_rho_w": 33.44121093762688
+    },
+    {
+      "label": "Tomte",
+      "snr_bin": "[30,100)",
+      "n": 15,
+      "poison_collapse": 0.0,
+      "gated_recovery": 1.0,
+      "oracle_recovery": 0.8666666666666667,
+      "detector_fire_rate": 0.9333333333333333,
+      "median_injected_rho_w": 44.96418903249163
+    },
+    {
+      "label": "Tomte",
+      "snr_bin": "[8,30)",
+      "n": 6,
+      "poison_collapse": 0.0,
+      "gated_recovery": 1.0,
+      "oracle_recovery": 1.0,
+      "detector_fire_rate": 0.8333333333333334,
+      "median_injected_rho_w": 30.354925082569437
+    },
+    {
+      "label": "Whistle",
+      "snr_bin": "[30,100)",
+      "n": 15,
+      "poison_collapse": 0.0,
+      "gated_recovery": 1.0,
+      "oracle_recovery": 1.0,
+      "detector_fire_rate": 0.4,
+      "median_injected_rho_w": 198.8256843802171
+    },
+    {
+      "label": "Whistle",
+      "snr_bin": "[8,30)",
+      "n": 15,
+      "poison_collapse": 0.0,
+      "gated_recovery": 1.0,
+      "oracle_recovery": 0.8,
+      "detector_fire_rate": 1.0,
+      "median_injected_rho_w": 110.25665949701038
+    }
+  ],
+  "by_severity": {},
+  "by_severity_poison_collapse": {},
+  "by_asd_policy": {
+    "poison_collapse": {
+      "stationary": 0.09289617486338798
+    },
+    "gated_recovery": {
+      "stationary": 0.9890710382513661
+    }
+  },
+  "injected_rho_w": {
+    "native_min": 13.568766560740473,
+    "native_median": 86.32649470922622,
+    "native_max": 707.0209079691524
+  },
+  "native": {
+    "n": 183,
+    "gated_recovery_rate": 0.9890710382513661,
+    "oracle_recovery_rate": 0.9016393442622951,
+    "poison_collapse_rate": 0.09289617486338798,
+    "detector_fire_rate": 0.8743169398907104,
+    "mean_abs_delta_med_d_L_successes": 1.0190816373456248,
+    "median_injected_snr_w": 80.27602232848174,
+    "by_family": [
+      {
+        "family": "Blip",
+        "n": 45,
+        "gated_recovery": 1.0,
+        "oracle_recovery": 0.9333333333333333,
+        "poison_collapse": 0.0,
+        "detector_fire_rate": 0.9333333333333333,
+        "median_injected_snr_w": 54.8036765029583
+      },
+      {
+        "family": "Koi_Fish",
+        "n": 60,
+        "gated_recovery": 1.0,
+        "oracle_recovery": 0.9166666666666666,
+        "poison_collapse": 0.2833333333333333,
+        "detector_fire_rate": 0.9833333333333333,
+        "median_injected_snr_w": 129.6164748937178
+      },
+      {
+        "family": "Scattered_Light",
+        "n": 27,
+        "gated_recovery": 0.9259259259259259,
+        "oracle_recovery": 0.8148148148148148,
+        "poison_collapse": 0.0,
+        "detector_fire_rate": 0.7037037037037037,
+        "median_injected_snr_w": 66.38202391373855
+      },
+      {
+        "family": "Tomte",
+        "n": 21,
+        "gated_recovery": 1.0,
+        "oracle_recovery": 0.9047619047619048,
+        "poison_collapse": 0.0,
+        "detector_fire_rate": 0.9047619047619048,
+        "median_injected_snr_w": 36.265118285243176
+      },
+      {
+        "family": "Whistle",
+        "n": 30,
+        "gated_recovery": 1.0,
+        "oracle_recovery": 0.9,
+        "poison_collapse": 0.0,
+        "detector_fire_rate": 0.7,
+        "median_injected_snr_w": 106.85305610720644
+      }
+    ],
+    "n_undetectable_excluded": 27,
+    "undetectable_labels": [
+      "Blip",
+      "Scattered_Light",
+      "Tomte"
+    ],
+    "note": "Real glitches transplanted at their observed O3 whitened energy (same SNR as in the Gravity Spy data). Cells whose excerpt had no measurable whitened excess over its own background (injected SNR <= 1) inject nothing and are excluded here."
+  },
+  "noise_control": {
+    "n": 5,
+    "by_mode": [
+      {
+        "severity_mode": "noise_native",
+        "n": 5,
+        "poison_collapse": 0.0,
+        "gated_recovery": 1.0,
+        "oracle_recovery": 1.0,
+        "detector_fire_rate": 1.0,
+        "median_injected_snr_w": 64.0
+      }
+    ],
+    "poison_collapse_rate": 0.0,
+    "gated_recovery_rate": 1.0,
+    "note": "Trigger-free O3 H1 windows (no Gravity Spy trigger within +/-10 s), whitened/windowed identically (not thresholded), coloured with the GW170817 ASD. 'noise_native' adds unit-variance O3 noise over the window; 'noise_matched_<sev>' matches the median injected whitened energy of the ladder cells."
+  },
+  "n_failures": 2,
+  "data_note": "Excerpt scaling is done in the whitened domain (see stress_config.json:excerpt_recipe). The synthetic severity ladder corresponds to whitened SNRs far above typical Gravity Spy glitches; the 'native' block reports the realistic regime.",
+  "config_ref": "stress_config.json"
+}

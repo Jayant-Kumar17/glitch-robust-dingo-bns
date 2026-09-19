@@ -6,7 +6,7 @@
       "n": 80,
       "rho_w_min": 149.4044156998207,
       "rho_w_median": 4194.171607614269,
-      "rho_w_max": 19914.075290307042,
+      "rho_w_max": 19914.07529030704,
       "poison_collapse_rate": 0.4375
     },
     "6.0": {
@@ -29,7 +29,7 @@
       "n": 30,
       "rho_w_min": 220.1462183400228,
       "rho_w_median": 5929.594604389476,
-      "rho_w_max": 15377.492408140437
+      "rho_w_max": 15377.492408140435
     },
     "double_blip": {
       "n": 30,
@@ -46,14 +46,14 @@
     "narrowband_tone": {
       "n": 30,
       "rho_w_min": 585.679469110567,
-      "rho_w_median": 19810.16433860324,
+      "rho_w_median": 19810.164338603237,
       "rho_w_max": 64177.97525516757
     },
     "ringing": {
       "n": 30,
       "rho_w_min": 287.5096868502867,
       "rho_w_median": 7397.1165036789225,
-      "rho_w_max": 22998.873378679342
+      "rho_w_max": 22998.873378679345
     },
     "scattered_light": {
       "n": 30,
@@ -77,12 +77,40 @@
   "official_control_sg_rho_w": 4348.578831049381,
   "real_native": {
     "n": 24,
-    "rho_w_min": 0.0,
-    "rho_w_median": 33.99909854971055,
-    "rho_w_max": 139.36513811520155,
-    "median_ratio_rho_w_over_omicron_snr": 1.938909805756286,
-    "n_zero_rho_w": 4
+    "rho_w_min": 18.16358117413373,
+    "rho_w_median": 40.08078312928568,
+    "rho_w_max": 141.60516546308403,
+    "median_ratio_rho_w_over_omicron_snr": 2.106648411722493,
+    "median_rho_w_over_gs_snr_by_label": {
+      "Blip": {
+        "n": 10,
+        "median_rho_w_over_gs_snr": 1.7936414767651203
+      },
+      "Koi_Fish": {
+        "n": 5,
+        "median_rho_w_over_gs_snr": 2.1645265112215415
+      },
+      "Scattered_Light": {
+        "n": 4,
+        "median_rho_w_over_gs_snr": 2.5822643610865237
+      },
+      "Whistle": {
+        "n": 5,
+        "median_rho_w_over_gs_snr": 3.7493730349546444
+      }
+    },
+    "n_zero_rho_w": 0
   },
+  "dropped_rows": [
+    {
+      "gravityspy_id": "LSZdUOEshZ",
+      "gs_label": "Scattered_Light",
+      "gs_event_time": 1262790978.0625,
+      "gs_snr": 22.2807502746582,
+      "reason": "ValueError: non-finite samples in fetched strain (data gap)"
+    }
+  ],
+  "extraction_fix": "Four real_native rows previously had rho_w=0 because extract_glitch_excerpt subtracted n_win * var from a Tukey-tapered window (systematically negative excess). Excess is now taper-aware; native scale falls back to denoised_energy_w when excess<=0. Rows that still cannot be recovered are listed in dropped_rows.",
   "population_above_threshold": {
     "threshold_rho_w": 2682.7,
     "direct_omicron_axis": {
@@ -213,9 +241,9 @@
     "converted_omicron_axis": {
       "n_triggers": 132065,
       "min_confidence": 0.95,
-      "omicron_snr_threshold": 1383.6125806551343,
-      "fraction_above": 0.0628781281944497,
-      "n_above": 8304,
+      "omicron_snr_threshold": 1273.444579110617,
+      "fraction_above": 0.0658917957066596,
+      "n_above": 8702,
       "snr_quantiles": {
         "0.5": 13.0357503890991,
         "0.9": 416.3627807617187,
@@ -255,7 +283,7 @@
         },
         {
           "ml_label": "Extremely_Loud",
-          "fraction_above": 0.5557942795756681,
+          "fraction_above": 0.5823150261850409,
           "n": 14894
         },
         {
@@ -270,7 +298,7 @@
         },
         {
           "ml_label": "Koi_Fish",
-          "fraction_above": 0.002581844469689146,
+          "fraction_above": 0.0028916658060518436,
           "n": 9683
         },
         {
@@ -335,7 +363,6 @@
         }
       ]
     },
-    "median_ratio_rho_w_over_omicron_snr": 1.938909805756286,
     "conversion_note": "rho_w (whitened optimal SNR against the GW170817 H1 ASD) and Omicron SNR are different statistics; the 'converted' entry divides the rho_w threshold by the median rho_w/Omicron-SNR ratio measured on the real excerpts at native loudness.",
     "grid_threshold_rho_w": 3727.6,
     "direct_omicron_axis_grid": {
@@ -462,6 +489,205 @@
           "n": 7124
         }
       ]
+    }
+  },
+  "o3_snr_tail": {
+    "min_confidence": 0.95,
+    "n_triggers": 132065,
+    "thresholds": [
+      300,
+      500,
+      1000,
+      2000
+    ],
+    "overall": {
+      "n": 132065,
+      "snr_ge_300": {
+        "n": 14534,
+        "fraction": 0.11005186839813728
+      },
+      "snr_ge_500": {
+        "n": 12502,
+        "fraction": 0.09466550562223147
+      },
+      "snr_ge_1000": {
+        "n": 9797,
+        "fraction": 0.07418316737969939
+      },
+      "snr_ge_2000": {
+        "n": 6551,
+        "fraction": 0.04960436148866089
+      }
+    },
+    "top8_labels": [
+      "Scattered_Light",
+      "Low_Frequency_Burst",
+      "Extremely_Loud",
+      "Koi_Fish",
+      "Whistle",
+      "Blip",
+      "Blip_Low_Frequency",
+      "Tomte"
+    ],
+    "by_label": {
+      "Scattered_Light": {
+        "n": 64263,
+        "snr_ge_300": {
+          "n": 1,
+          "fraction": 1.5561053794562967e-05
+        },
+        "snr_ge_500": {
+          "n": 1,
+          "fraction": 1.5561053794562967e-05
+        },
+        "snr_ge_1000": {
+          "n": 0,
+          "fraction": 0.0
+        },
+        "snr_ge_2000": {
+          "n": 0,
+          "fraction": 0.0
+        }
+      },
+      "Low_Frequency_Burst": {
+        "n": 19343,
+        "snr_ge_300": {
+          "n": 6,
+          "fraction": 0.000310189732719847
+        },
+        "snr_ge_500": {
+          "n": 2,
+          "fraction": 0.00010339657757328233
+        },
+        "snr_ge_1000": {
+          "n": 0,
+          "fraction": 0.0
+        },
+        "snr_ge_2000": {
+          "n": 0,
+          "fraction": 0.0
+        }
+      },
+      "Extremely_Loud": {
+        "n": 14894,
+        "snr_ge_300": {
+          "n": 13225,
+          "fraction": 0.8879414529340675
+        },
+        "snr_ge_500": {
+          "n": 12112,
+          "fraction": 0.8132133745132268
+        },
+        "snr_ge_1000": {
+          "n": 9745,
+          "fraction": 0.6542903182489593
+        },
+        "snr_ge_2000": {
+          "n": 6537,
+          "fraction": 0.43890157110245737
+        }
+      },
+      "Koi_Fish": {
+        "n": 9683,
+        "snr_ge_300": {
+          "n": 1271,
+          "fraction": 0.13126097283899618
+        },
+        "snr_ge_500": {
+          "n": 384,
+          "fraction": 0.03965713105442528
+        },
+        "snr_ge_1000": {
+          "n": 50,
+          "fraction": 0.005163688939378292
+        },
+        "snr_ge_2000": {
+          "n": 13,
+          "fraction": 0.0013425591242383558
+        }
+      },
+      "Whistle": {
+        "n": 7124,
+        "snr_ge_300": {
+          "n": 0,
+          "fraction": 0.0
+        },
+        "snr_ge_500": {
+          "n": 0,
+          "fraction": 0.0
+        },
+        "snr_ge_1000": {
+          "n": 0,
+          "fraction": 0.0
+        },
+        "snr_ge_2000": {
+          "n": 0,
+          "fraction": 0.0
+        }
+      },
+      "Blip": {
+        "n": 6861,
+        "snr_ge_300": {
+          "n": 1,
+          "fraction": 0.00014575134819997084
+        },
+        "snr_ge_500": {
+          "n": 0,
+          "fraction": 0.0
+        },
+        "snr_ge_1000": {
+          "n": 0,
+          "fraction": 0.0
+        },
+        "snr_ge_2000": {
+          "n": 0,
+          "fraction": 0.0
+        }
+      },
+      "Blip_Low_Frequency": {
+        "n": 2823,
+        "snr_ge_300": {
+          "n": 0,
+          "fraction": 0.0
+        },
+        "snr_ge_500": {
+          "n": 0,
+          "fraction": 0.0
+        },
+        "snr_ge_1000": {
+          "n": 0,
+          "fraction": 0.0
+        },
+        "snr_ge_2000": {
+          "n": 0,
+          "fraction": 0.0
+        }
+      },
+      "Tomte": {
+        "n": 1888,
+        "snr_ge_300": {
+          "n": 0,
+          "fraction": 0.0
+        },
+        "snr_ge_500": {
+          "n": 0,
+          "fraction": 0.0
+        },
+        "snr_ge_1000": {
+          "n": 0,
+          "fraction": 0.0
+        },
+        "snr_ge_2000": {
+          "n": 0,
+          "fraction": 0.0
+        }
+      }
+    },
+    "snr_quantiles": {
+      "0.5": 13.0357503890991,
+      "0.9": 416.3627807617187,
+      "0.99": 5919.3603515625,
+      "0.999": 9608.99607812487
     }
   }
 }
