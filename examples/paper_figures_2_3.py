@@ -28,9 +28,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
-import sys
 from pathlib import Path
-from types import SimpleNamespace
 from typing import Any, Dict, Optional, Sequence, Tuple
 
 import matplotlib
@@ -38,15 +36,7 @@ matplotlib.use("Agg")
 import numpy as np
 import pandas as pd
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-for _p in (
-    REPO_ROOT / "examples",
-    REPO_ROOT / "src",
-    REPO_ROOT / "DINGO-BNS" / "dingo",
-    REPO_ROOT,
-):
-    if _p.is_dir() and str(_p) not in sys.path:
-        sys.path.insert(0, str(_p))
+from _repo import REPO_ROOT, resolve_under_repo
 
 from official_control import (  # noqa: E402
     DEFAULT_DETECTOR,
@@ -66,7 +56,6 @@ from paper.figure_style import (  # noqa: E402
     panel_letter,
     restyle_axes,
     save as _style_save,
-    takeaway,
 )
 
 logger = logging.getLogger("paper_figures_2_3")
@@ -211,23 +200,9 @@ def fig3_posteriors(runs, js: Dict[str, float], outdir: Path) -> None:
         fontsize=7, color=C_POISON, va="top", ha="center", clip_on=False,
     )
     if "poisoned" in runs and "luminosity_distance" in runs["poisoned"][0].columns:
-        x = runs["poisoned"][0]["luminosity_distance"].to_numpy()
-        w = runs["poisoned"][1]
-        m = np.isfinite(x)
-        if w is None:
-            lo, hi = np.percentile(x[m], [5, 95])
-        else:
-            ww = w[m]
-            order = np.argsort(x[m])
-            cdf = np.cumsum(ww[order])
-            cdf /= cdf[-1]
-            xs = x[m][order]
-            lo = xs[np.searchsorted(cdf, 0.05)]
-            hi = xs[np.searchsorted(cdf, 0.95)]
-        width = float(hi - lo)
         ax_dl.text(
             0.97, 0.97,
-            f"poisoned: collapses to prior floor\n90 % CI width 0.65 Mpc",
+            "poisoned: collapses to prior floor\n90 % CI width 0.65 Mpc",
             transform=ax_dl.transAxes, ha="right", va="top", fontsize=7, color=C_POISON,
         )
     js_dl = js.get("luminosity_distance", 0.00656)
@@ -257,7 +232,6 @@ def fig3_corner_poster(runs, outdir: Path) -> None:
     except ImportError:
         logger.info("corner not installed; skipping fig3_corner_poster")
         return
-    import matplotlib.pyplot as plt
 
     keys = ["luminosity_distance", "chirp_mass", "mass_ratio", "theta_jn"]
     labs = [r"$d_L$ [Mpc]", r"$\mathcal{M}$", r"$q$", r"$\theta_{JN}$"]
@@ -387,7 +361,6 @@ def fig2_injection_gate(d: Dict[str, Any], outdir: Path) -> None:
     t_bins = np.linspace(t[0], t[-1], n_time + 1)
     f_lo, f_hi = float(d["f_lo"]), float(d["f_hi"])
     f_bins = np.linspace(f_lo, f_hi, n_freq + 1)
-    f_cent = 0.5 * (f_bins[:-1] + f_bins[1:])
 
     fig = plt.figure(figsize=mm(90, 112))
     gs = fig.add_gridspec(
@@ -468,9 +441,9 @@ def fig2_injection_gate(d: Dict[str, Any], outdir: Path) -> None:
 
 def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--outdir", type=Path, default=REPO_ROOT / "paper" / "figures")
-    p.add_argument("--control-dir", type=Path, default=CONTROL_DIR)
-    p.add_argument("--control-hdf5", type=Path, default=DEMO_RESULT)
+    p.add_argument("--outdir", type=resolve_under_repo, default=REPO_ROOT / "paper" / "figures")
+    p.add_argument("--control-dir", type=resolve_under_repo, default=CONTROL_DIR)
+    p.add_argument("--control-hdf5", type=resolve_under_repo, default=DEMO_RESULT)
     p.add_argument("--baseline-ckpt", type=Path, default=None)
     p.add_argument("--detector-ckpt", type=Path, default=None)
     p.add_argument("--device", type=str, default="cpu")
@@ -493,14 +466,10 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
 
     control_dir = Path(args.control_dir)
     if not (control_dir / "poison_nn_samples.hdf5").is_file():
-        for cand in (
-            REPO_ROOT / "results" / "dingo_official_control",
-            Path("/Users/jayantkumar/Desktop/ADAPT-Project/results/dingo_official_control"),
-        ):
-            if (cand / "poison_nn_samples.hdf5").is_file():
-                control_dir = cand
-                logger.info("using control dir %s", control_dir)
-                break
+        cand = REPO_ROOT / "results" / "dingo_official_control"
+        if (cand / "poison_nn_samples.hdf5").is_file():
+            control_dir = cand
+            logger.info("using control dir %s", control_dir)
 
     if args.only in (None, "fig3"):
         report = control_dir / "comparison_report.json"

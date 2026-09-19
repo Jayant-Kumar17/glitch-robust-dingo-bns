@@ -7,7 +7,7 @@ around frozen DINGO — not to modify the NSF context.
 
 from __future__ import annotations
 
-from typing import Dict, Optional, Sequence, Tuple
+from typing import Dict, Optional
 
 import torch
 import torch.nn as nn

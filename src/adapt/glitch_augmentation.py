@@ -14,7 +14,6 @@ import numpy as np
 from scipy import signal as sp_signal
 
 from adapt.stft_context import (
-    SPECTROGRAM_ANALYSIS_SECONDS,
     crop_td_to_analysis_window,
     sine_gaussian_glitch,
 )

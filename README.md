@@ -71,14 +71,27 @@ strain frames are not redistributed. Regeneration of numerical results requires:
    Optional retraining is provided by `examples/train_glitch_detector.py`.
    File hashes for the paper runs are recorded under `results/stress_test_*/`.
 
-3. A Python environment consistent with `requirements.txt` (including
-   `dingo-gw`, PyTorch, GWpy, Bilby, and related dependencies).
+3. A Python environment consistent with `environment.yml` / `requirements.txt`
+   (pinned `numpy`, `scipy`, `torch`, `gwpy`, and `dingo-gw`).
+
+The STFT detector weights are 566 KB and are tracked at
+`checkpoints/glitch_detector_v1/best_glitch_detector.pt`. The same file is
+attached to GitHub Release
+[v1.1.0](https://github.com/Jayant-Kumar17/glitch-robust-dingo-bns/releases/tag/v1.1.0).
+
+JSON/CSV summaries cited in the paper live under `results/` (see
+[Results at a glance](#results-at-a-glance)). They are enough to regenerate
+Tables 1–5 and Figures 1–3 and 6–9 via `paper/make_figures.py` without rerunning
+the GPU/CPU inference grid. Figures 4–5 additionally need the official-control
+HDF5 posterior dumps (gitignored; regenerate with `examples/official_control.py`).
 
 ## Installation
 
 ```bash
+git clone https://github.com/Jayant-Kumar17/glitch-robust-dingo-bns.git
+cd glitch-robust-dingo-bns
+conda env create -f environment.yml   # or: conda activate adapt_env
 conda activate adapt_env
-cd /path/to/glitch-robust-dingo-bns
 pip install -e .
 pip install -r requirements.txt
 export PYTHONPATH=src:examples
@@ -87,6 +100,79 @@ export KMP_DUPLICATE_LIB_OK=TRUE
 
 If DINGO is installed from a local source tree, prepend that path:
 `export PYTHONPATH=/path/to/dingo:src:examples`.
+Pinned versions of the critical stack (`numpy==1.26.4`, `scipy==1.13.1`,
+`torch==2.13.0`, `gwpy==4.0.1`, `dingo-gw @ fede5c01`) are in
+`pyproject.toml`, `requirements.txt`, and `environment.yml`.
+
+## Quick-start / Reproducibility (Appendix C)
+
+These are the commands from Appendix C of the paper. A user who has the
+official DINGO-BNS demonstration assets and the released detector checkpoint
+can clone, install, and reproduce Tables 1–5 with:
+
+```bash
+conda activate adapt_env
+pip install -e .
+export PYTHONPATH=src:examples
+export KMP_DUPLICATE_LIB_OK=TRUE
+
+python -u examples/official_control.py \
+  --outdir results/dingo_official_control
+python -u examples/honest_excision.py \
+  --outdir results/excision_honest
+python -u examples/stress_gw170817.py \
+  --seed 0 --n-seeds-per-cell 5 \
+  --num-samples 512 --outdir results/stress_test_excision_v1
+python -u examples/stress_synthetic_bns.py \
+  --outdir results/stress_test_synthetic_bns_v1
+python -u examples/method_hardening.py \
+  --num-samples 512 --outdir results/journal_method_hardening_v1
+python -u examples/clean_gate_control.py \
+  --outdir results/clean_gate_control_v1
+python -u examples/collapse_threshold.py --seed 0 \
+  --num-samples 512 --n-seeds 5 \
+  --outdir results/collapse_threshold_v1
+python -u examples/collapse_threshold.py --extend-low-rho \
+  --outdir results/collapse_threshold_v1
+python -u examples/stress_real_glitches.py --seed 0 \
+  --num-samples 512 --outdir results/stress_real_glitches_v2
+python -u examples/loudness_audit.py \
+  --outdir results/loudness_audit_v1
+```
+
+Archived summaries under `results/*/` are the numerical source for Tables 1–5;
+re-running the drivers is only required if you want to regenerate posterior
+samples. Then:
+
+```bash
+python paper/make_figures.py --repo .            # fig1, fig4–fig9, S1–S4
+python paper/make_figures_t5.py --repo .         # same suite (Appendix C alias)
+python -u examples/paper_figures_2_3.py          # paper Figs 4–5 (filenames fig2, fig3)
+```
+
+All drivers resolve input and output paths from the repository root via
+`pathlib.Path` (`Path(__file__).resolve().parents[1]`), so they run from any
+working directory. Equivalent notes: [`paper/REPRODUCE.md`](paper/REPRODUCE.md),
+[`examples/README.md`](examples/README.md).
+
+## Paper-to-code mapping
+
+| Paper item | Driver | Archive / figure script |
+|---|---|---|
+| Figure 1 (pipeline) | — | `paper/make_figures.py` → `fig1_*` |
+| Figure 2 (threshold) | `examples/collapse_threshold.py` | `results/collapse_threshold_v1/` → `fig9_*` |
+| Figure 3 (real glitches) | `examples/stress_real_glitches.py` | `results/stress_real_glitches_v2/` → `fig8_*` |
+| Figure 4 (injection) | `examples/official_control.py` | `examples/paper_figures_2_3.py` → `fig2_*` |
+| Figure 5 (posteriors) | `examples/official_control.py` | `examples/paper_figures_2_3.py` → `fig3_*` |
+| Figure 6 (heatmap) | `examples/stress_gw170817.py` | `results/stress_test_excision_v1/` → `fig4_*` |
+| Figure 7 (synthetic) | `examples/stress_synthetic_bns.py` | `results/stress_test_synthetic_bns_v1/` → `fig5_*` |
+| Figure 8 (ablation) | `examples/method_hardening.py` | `results/journal_method_hardening_v1/` → `fig6_*` |
+| Figure 9 (oracle) | `examples/method_hardening.py` | `results/journal_method_hardening_v1/` → `fig7_*` |
+| Table 1 (real Gravity Spy) | `examples/stress_real_glitches.py` | `results/stress_real_glitches_v2/` |
+| Table 2 (JS divergences) | `examples/official_control.py` | `results/dingo_official_control/` |
+| Table 3 (GW170817 grid) | `examples/stress_gw170817.py` | `results/stress_test_excision_v1/` |
+| Table 4 (synthetic BNS) | `examples/stress_synthetic_bns.py` | `results/stress_test_synthetic_bns_v1/` |
+| Table 5 (ablation) | `examples/method_hardening.py` | `results/journal_method_hardening_v1/` |
 
 ## Glitch-detector training (optional)
 
@@ -100,73 +186,6 @@ python -u examples/train_glitch_detector.py \
 
 This writes `best_glitch_detector.pt` and `train_summary.json`.
 
-## Reproduction of paper experiments
-
-The following commands regenerate the canonical artefact directories. On CPU with
-`N=512` posterior samples, the full suite typically requires of order one to two
-hours. Resume behaviour may be overridden with `--overwrite`.
-
-### 1. Official control (clean, poisoned, and gated)
-
-```bash
-python -u examples/official_control.py \
-  --outdir results/dingo_official_control
-```
-
-### 2. Honest excision diagnostics
-
-```bash
-python -u examples/honest_excision.py \
-  --outdir results/excision_honest
-```
-
-### 3. GW170817 stress grid (240 cells)
-
-```bash
-python -u examples/stress_gw170817.py \
-  --seed 0 --n-seeds-per-cell 5 \
-  --num-samples 512 --hf-samples 2000 \
-  --batch-size 256 --device cpu \
-  --outdir results/stress_test_excision_v1
-```
-
-### 4. Synthetic BNS stress panel (160 cells)
-
-```bash
-python -u examples/stress_synthetic_bns.py \
-  --outdir results/stress_test_synthetic_bns_v1
-```
-
-Additional flags for an exact match to the archived run are recorded in
-`results/stress_test_synthetic_bns_v1/synth_config.json`.
-
-### 5. Method hardening (ablation, oracle gap, and runtime)
-
-```bash
-python -u examples/method_hardening.py \
-  --num-samples 512 --batch-size 256 --device cpu \
-  --outdir results/journal_method_hardening_v1
-```
-
-### 6. Clean-gate cost control (25 forced placements)
-
-```bash
-python -u examples/clean_gate_control.py \
-  --seed 0 --num-samples 512 --device cpu \
-  --outdir results/clean_gate_control_v1
-```
-
-### 7. Real Gravity Spy glitch panel
-
-```bash
-python -u examples/stress_real_glitches.py \
-  --seed 0 --num-samples 512 --device cpu \
-  --outdir results/stress_real_glitches_v1
-```
-
-Downloads the Gravity Spy H1 O3 tables (Zenodo 5649212, ~190 MB) into
-`data/gravity_spy/raw/` and fetches 8 s H1 excerpts from GWOSC on first run.
-
 ### Restricted smoke runs (development / CI only)
 
 The newer drivers (`clean_gate_control.py`, `stress_real_glitches.py`,
@@ -179,9 +198,6 @@ python -u examples/method_hardening.py \
   --outdir results/journal_method_hardening_v1_smoke
 python -u examples/clean_gate_control.py --smoke --outdir results/clean_gate_control_smoke
 ```
-
-Equivalent instructions appear in [`paper/REPRODUCE.md`](paper/REPRODUCE.md) and
-[`examples/README.md`](examples/README.md).
 
 ## Results at a glance
 

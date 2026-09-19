@@ -31,10 +31,7 @@ import numpy as np
 import pandas as pd
 import torch
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-for _p in (REPO_ROOT / "examples", REPO_ROOT / "src", REPO_ROOT / "DINGO-BNS" / "dingo", REPO_ROOT):
-    if _p.is_dir() and str(_p) not in sys.path:
-        sys.path.insert(0, str(_p))
+from _repo import REPO_ROOT, resolve_under_repo
 
 from stress_gw170817 import (  # noqa: E402
     DEFAULT_DETECTOR,
@@ -419,7 +416,7 @@ Each seed fixes t_rel and the waveform realisation; only the amplitude is rescal
 
 def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--outdir", type=Path, default=DEFAULT_OUTDIR)
+    p.add_argument("--outdir", type=resolve_under_repo, default=DEFAULT_OUTDIR)
     p.add_argument("--figdir", type=Path, default=DEFAULT_FIGDIR)
     p.add_argument("--baseline-ckpt", type=Path, default=None)
     p.add_argument("--detector-ckpt", type=Path, default=None)

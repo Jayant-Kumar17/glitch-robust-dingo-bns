@@ -6,7 +6,7 @@ that changes the exported size and therefore the on-page font.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Iterable, Optional, Sequence, Tuple, Union
+from typing import Tuple, Union
 
 import numpy as np
 

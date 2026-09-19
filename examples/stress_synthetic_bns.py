@@ -33,15 +33,7 @@ import numpy as np
 import pandas as pd
 import torch
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-for _p in (
-    REPO_ROOT / "examples",
-    REPO_ROOT / "src",
-    REPO_ROOT / "DINGO-BNS" / "dingo",
-    REPO_ROOT,
-):
-    if _p.is_dir() and str(_p) not in sys.path:
-        sys.path.insert(0, str(_p))
+from _repo import REPO_ROOT, resolve_under_repo
 
 DEFAULT_OUTDIR = REPO_ROOT / "results" / "stress_test_synthetic_bns_v1"
 DEFAULT_DETECTOR = (
@@ -1055,7 +1047,7 @@ def run(args: argparse.Namespace) -> None:
 
 def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--outdir", type=str, default=str(DEFAULT_OUTDIR))
+    p.add_argument("--outdir", type=resolve_under_repo, default=str(DEFAULT_OUTDIR))
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--n-events", type=int, default=20)
     p.add_argument("--num-samples", type=int, default=512)

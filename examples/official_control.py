@@ -21,10 +21,8 @@ Usage::
 from __future__ import annotations
 
 import argparse
-import copy
 import json
 import logging
-import sys
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, Dict, List, Optional, Sequence, Tuple
@@ -33,15 +31,7 @@ import numpy as np
 import pandas as pd
 import torch
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-for _p in (
-    REPO_ROOT / "examples",
-    REPO_ROOT / "src",
-    REPO_ROOT / "DINGO-BNS" / "dingo",
-    REPO_ROOT,
-):
-    if _p.is_dir() and str(_p) not in sys.path:
-        sys.path.insert(0, str(_p))
+from _repo import REPO_ROOT, resolve_under_repo
 
 DEMO_RESULT = (
     REPO_ROOT
@@ -1040,8 +1030,8 @@ def run(args: argparse.Namespace) -> None:
 
 def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--outdir", type=Path, default=DEFAULT_OUTDIR)
-    p.add_argument("--control-hdf5", type=Path, default=DEMO_RESULT)
+    p.add_argument("--outdir", type=resolve_under_repo, default=DEFAULT_OUTDIR)
+    p.add_argument("--control-hdf5", type=resolve_under_repo, default=DEMO_RESULT)
     p.add_argument("--baseline-ckpt", type=Path, default=None)
     p.add_argument("--detector-ckpt", type=Path, default=None)
     p.add_argument("--device", type=str, default=None)

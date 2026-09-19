@@ -1,67 +1,43 @@
 # Reproduction commands
 
-Commands identical to those in the root [`README.md`](../README.md) are collected
-here for convenience. Required external assets are the DINGO-BNS GW170817
-demonstration packaging and the glitch-detector checkpoint described in the
-README.
+Commands identical to Appendix C of the paper and the root [`README.md`](../README.md).
+Required external assets are the DINGO-BNS GW170817 demonstration packaging and
+the glitch-detector checkpoint described in the README. Drivers resolve paths
+from the repository root (`pathlib.Path`), independent of the working directory.
 
 ```bash
 conda activate adapt_env
-cd /path/to/glitch-robust-dingo-bns
 pip install -e .
-pip install -r requirements.txt
 export PYTHONPATH=src:examples
 export KMP_DUPLICATE_LIB_OK=TRUE
-```
 
-## Full experimental suite
-
-```bash
 python -u examples/official_control.py \
   --outdir results/dingo_official_control
-
 python -u examples/honest_excision.py \
   --outdir results/excision_honest
-
 python -u examples/stress_gw170817.py \
   --seed 0 --n-seeds-per-cell 5 \
-  --num-samples 512 --hf-samples 2000 \
-  --batch-size 256 --device cpu \
-  --outdir results/stress_test_excision_v1
-
+  --num-samples 512 --outdir results/stress_test_excision_v1
 python -u examples/stress_synthetic_bns.py \
   --outdir results/stress_test_synthetic_bns_v1
-
 python -u examples/method_hardening.py \
-  --num-samples 512 --batch-size 256 --device cpu \
-  --outdir results/journal_method_hardening_v1
-
+  --num-samples 512 --outdir results/journal_method_hardening_v1
 python -u examples/clean_gate_control.py \
-  --seed 0 --num-samples 512 --device cpu \
   --outdir results/clean_gate_control_v1
-
-# Real Gravity Spy glitches (downloads Zenodo 5649212 H1 O3 tables to data/gravity_spy/raw/
-# and fetches 8 s H1 excerpts from GWOSC on first run)
-python -u examples/stress_real_glitches.py \
-  --seed 0 --num-samples 512 --device cpu \
-  --outdir results/stress_real_glitches_v1
-
-# Wide-SNR native-loudness real panel (5 glitches per label x Omicron-SNR bin, 3 t_rel each)
-python -u examples/stress_real_glitches.py \
-  --seed 0 --num-samples 512 --device cpu \
-  --wide-snr-panel --native-only --n-trel 3 --n-noise-cells 10 \
-  --selected-csv data/gravity_spy/selected_h1_o3_wide.csv \
-  --outdir results/stress_real_glitches_v2
-
-# Loudness audit (no PE) and collapse-threshold sweep
-python -u examples/loudness_audit.py --outdir results/loudness_audit_v1
-python -u examples/collapse_threshold.py \
-  --seed 0 --n-seeds 5 --num-samples 512 --device cpu \
+python -u examples/collapse_threshold.py --seed 0 \
+  --num-samples 512 --n-seeds 5 \
   --outdir results/collapse_threshold_v1
-python -u examples/loudness_audit.py --population-only \
-  --threshold-rho <interpolated_rho_w_at_50pct from collapse_threshold_v1/summary.json> \
+python -u examples/collapse_threshold.py --extend-low-rho \
+  --outdir results/collapse_threshold_v1
+python -u examples/stress_real_glitches.py --seed 0 \
+  --num-samples 512 --outdir results/stress_real_glitches_v2
+python -u examples/loudness_audit.py \
   --outdir results/loudness_audit_v1
 ```
+
+Archived summaries under `results/*/` are the numerical source for Tables 1–5.
+Optional extra flags (`--device cpu`, `--batch-size`, `--hf-samples`,
+`--wide-snr-panel`) are recorded in each run's `*config.json` / `REPRODUCE.md`.
 
 ## Restricted smoke configuration
 
@@ -76,15 +52,22 @@ python -u examples/method_hardening.py \
 
 ## Paper figures
 
-Figures 2 and 3 need the raw GW170817 strain and the posterior-sample HDF5
-dumps written by `examples/official_control.py` (`poison_nn_samples.hdf5`,
-`gated_nn_samples.hdf5` / `gated_is_samples.hdf5` in
+Figures 1–3 and 6–9 regenerate from archived JSON/CSV under `results/` (no PE):
+
+```bash
+python paper/make_figures.py --repo . --out paper/figures
+python paper/make_figures_t5.py --repo . --out paper/figures   # alias
+```
+
+Paper Figures 4–5 (filenames `fig2`, `fig3`) need the raw GW170817 strain and
+the posterior-sample HDF5 dumps written by `examples/official_control.py`
+(`poison_nn_samples.hdf5`, `gated_nn_samples.hdf5` / `gated_is_samples.hdf5` in
 `results/dingo_official_control/`, plus the official importance-sampling
 result of the DINGO-BNS demo). Once those exist:
 
 ```bash
 python -u examples/paper_figures_2_3.py --outdir paper/figures --device cpu
-# Fig 3 only (no strain/detector assets needed):
+# Fig 3 / paper Figure 5 only (no strain/detector assets needed):
 python -u examples/paper_figures_2_3.py --only fig3 --outdir paper/figures
 ```
 
@@ -93,7 +76,7 @@ Writes `paper/figures/fig2_injection_gate.{pdf,png}` and
 output are regenerated deterministically with the archived control flags
 (`--seed 0 --f0 100 --q 5 --t-rel -1.0 --snr-amp-scale 8.0`). RA/Dec are
 fixed context in the GW170817 demo network and are therefore replaced in
-Fig. 3 by geocentric time and $\Lambda_1$.
+paper Figure 5 by geocentric time and $\Lambda_1$.
 
 ## Success criteria (as coded)
 

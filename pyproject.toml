@@ -4,27 +4,37 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "adapt"
-version = "0.2.0"
+version = "1.1.0"
 authors = [
   { name = "Jayant Kumar", email = "j.kumar16224@kgs.edu.pk" },
 ]
 description = "Glitch-aware front-end for frozen DINGO-BNS parameter estimation"
 readme = "README.md"
 license = { text = "MIT" }
-requires-python = ">=3.9"
+requires-python = ">=3.9,<3.13"
 dependencies = [
-  "numpy",
-  "scipy",
-  "torch",
-  "gwpy",
-  "matplotlib",
-  "pandas",
+  "numpy==1.26.4",
+  "scipy==1.13.1",
+  "torch==2.13.0",
+  "gwpy==4.0.1",
+  "matplotlib==3.10.9",
+  "pandas==1.5.3",
 ]
 
 classifiers = [
   "Programming Language :: Python :: 3",
   "License :: OSI Approved :: MIT License",
   "Topic :: Scientific/Engineering :: Astronomy",
+]
+
+[project.optional-dependencies]
+pe = [
+  "dingo-gw @ git+https://github.com/dingo-gw/dingo.git@fede5c01524f3e205acf5750c0a0f101ff17e331",
+]
+dev = [
+  "black==26.5.1",
+  "ruff>=0.8",
+  "pytest>=8.0",
 ]
 
 [project.urls]
@@ -37,3 +47,23 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src", "examples"]
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+extend-exclude = "DINGO-BNS"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "examples", "paper", "tests"]
+extend-exclude = ["DINGO-BNS"]
+
+[tool.ruff.lint]
+select = ["F"]
+ignore = ["E402"]
+
+[tool.ruff.lint.per-file-ignores]
+"examples/*.py" = ["E402"]
+"paper/*.py" = ["E402"]
+"tests/*.py" = ["F841"]

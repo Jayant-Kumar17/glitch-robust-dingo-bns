@@ -24,24 +24,15 @@ import copy
 import csv
 import json
 import logging
-import sys
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Sequence
 
 import numpy as np
 import pandas as pd
 import torch
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-for _p in (
-    REPO_ROOT / "examples",
-    REPO_ROOT / "src",
-    REPO_ROOT / "DINGO-BNS" / "dingo",
-    REPO_ROOT,
-):
-    if _p.is_dir() and str(_p) not in sys.path:
-        sys.path.insert(0, str(_p))
+from _repo import REPO_ROOT, resolve_under_repo
 
 DEFAULT_OUTDIR = REPO_ROOT / "results" / "journal_method_hardening_v1"
 DEFAULT_DETECTOR = (
@@ -304,10 +295,8 @@ def run(args: argparse.Namespace) -> None:
     from stress_gw170817 import (
         _build_spec_stack,
         _detector_gates,
-        _dl_ci,
         _gated_recovers,
         _load_detector,
-        _oracle_gates,
         _poison_collapsed,
         _sample_dl,
         inject_spec_into_event,
@@ -1021,7 +1010,7 @@ def run_synthetic_oracle_gap(
 
 def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--outdir", type=str, default=str(DEFAULT_OUTDIR))
+    p.add_argument("--outdir", type=resolve_under_repo, default=str(DEFAULT_OUTDIR))
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--num-samples", type=int, default=512)
     p.add_argument("--batch-size", type=int, default=256)
@@ -1030,11 +1019,11 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     p.add_argument("--detector-ckpt", type=str, default=None)
     p.add_argument("--max-cells", type=int, default=None)
     p.add_argument("--overwrite", action="store_true")
-    p.add_argument("--real-results-csv", type=str, default=str(DEFAULT_REAL_RESULTS))
+    p.add_argument("--real-results-csv", type=resolve_under_repo, default=str(DEFAULT_REAL_RESULTS))
     p.add_argument(
-        "--synth-failures-csv", type=str, default=str(DEFAULT_SYNTH_FAILURES)
+        "--synth-failures-csv", type=resolve_under_repo, default=str(DEFAULT_SYNTH_FAILURES)
     )
-    p.add_argument("--synth-events-csv", type=str, default=str(DEFAULT_SYNTH_EVENTS))
+    p.add_argument("--synth-events-csv", type=resolve_under_repo, default=str(DEFAULT_SYNTH_EVENTS))
     p.add_argument(
         "--skip-synth-oracle",
         action="store_true",

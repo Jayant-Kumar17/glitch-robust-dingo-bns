@@ -37,15 +37,7 @@ import numpy as np
 import pandas as pd
 import torch
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-for _p in (
-    REPO_ROOT / "examples",
-    REPO_ROOT / "src",
-    REPO_ROOT / "DINGO-BNS" / "dingo",
-    REPO_ROOT,
-):
-    if _p.is_dir() and str(_p) not in sys.path:
-        sys.path.insert(0, str(_p))
+from _repo import REPO_ROOT, resolve_under_repo
 
 from stress_gw170817 import (  # noqa: E402
     DEFAULT_DETECTOR,
@@ -902,7 +894,6 @@ def write_summary_and_figure(outdir: Path, df: pd.DataFrame, clean_ci, cfg, *, f
         "config_ref": "stress_config.json",
     }
     (outdir / "summary.json").write_text(json.dumps(summary, indent=2, default=str))
-    glitch = ladder  # for the figure
 
     # ---- Fig 8 ----
     try:
@@ -968,7 +959,6 @@ def write_summary_and_figure(outdir: Path, df: pd.DataFrame, clean_ci, cfg, *, f
         else:
             a2.set_axis_off()
         a2.legend(frameon=False, fontsize=6, loc="upper center", bbox_to_anchor=(0.5, -0.32), ncol=2)
-        ax = a2
         figdir.mkdir(parents=True, exist_ok=True)
         fig.savefig(figdir / "fig8_real_glitches.pdf"); fig.savefig(figdir / "fig8_real_glitches.png", dpi=300)
         fig.savefig(outdir / "fig8_real_glitches.pdf")
@@ -1025,10 +1015,10 @@ run; H1 strain is fetched from GWOSC with `gwpy` (8 s per glitch).
 
 def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--outdir", type=Path, default=DEFAULT_OUTDIR)
+    p.add_argument("--outdir", type=resolve_under_repo, default=DEFAULT_OUTDIR)
     p.add_argument("--figdir", type=Path, default=DEFAULT_FIGDIR)
-    p.add_argument("--raw-dir", type=Path, default=REPO_ROOT / "data" / "gravity_spy" / "raw")
-    p.add_argument("--selected-csv", type=Path, default=REPO_ROOT / "data" / "gravity_spy" / "selected_h1_o3.csv")
+    p.add_argument("--raw-dir", type=resolve_under_repo, default=REPO_ROOT / "data" / "gravity_spy" / "raw")
+    p.add_argument("--selected-csv", type=resolve_under_repo, default=REPO_ROOT / "data" / "gravity_spy" / "selected_h1_o3.csv")
     p.add_argument("--rebuild-catalogue", action="store_true")
     p.add_argument("--no-verify", action="store_true", help="skip Zenodo API verification")
     p.add_argument("--baseline-ckpt", type=Path, default=None)
