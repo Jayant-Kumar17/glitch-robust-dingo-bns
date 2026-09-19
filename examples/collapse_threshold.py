@@ -55,7 +55,10 @@ DEFAULT_OUTDIR = REPO_ROOT / "results" / "collapse_threshold_v1"
 DEFAULT_FIGDIR = REPO_ROOT / "paper" / "figures"
 FAMILIES = ("sine_gaussian", "broadband_burst")
 RHO_GRID = np.logspace(1.0, 4.0, 8)
+EXTEND_RHOS = (10.0, 30.0, 100.0)
 T_REL_RANGE = (-1.5, -0.3)
+ARCHIVE = REPO_ROOT / "results" / "stress_test_excision_v1" / "results.csv"
+LOUDNESS = REPO_ROOT / "results" / "loudness_audit_v1" / "loudness.csv"
 
 FIELDNAMES = [
     "cell_id", "family", "rho_w_target", "rho_w", "seed", "t_rel", "params_json", "amp_scale",
@@ -134,25 +137,46 @@ def run(args: argparse.Namespace) -> None:
     }
     (outdir / "config.json").write_text(json.dumps(cfg, indent=2))
 
+    csv_path = outdir / "results.csv"
     cells: List[Dict[str, Any]] = []
     cid = 0
-    for fam in FAMILIES:
-        for k in range(n_seeds):
-            seed = int(args.seed) + 1000 * k + (0 if fam == "sine_gaussian" else 500)
-            rng = np.random.default_rng(seed)
-            t_rel = float(rng.uniform(*T_REL_RANGE))
-            params = _sample_family_params(fam, rng)
-            for rho in rho_grid:
-                cells.append({"cell_id": cid, "family": fam, "rho_w_target": float(rho), "seed": seed,
-                              "t_rel": t_rel, "params": params})
-                cid += 1
+    if args.extend_low_rho:
+        if not csv_path.is_file():
+            raise FileNotFoundError(f"--extend-low-rho needs existing {csv_path}")
+        existing = pd.read_csv(csv_path)
+        have = set(zip(existing["family"].astype(str), existing["seed"].astype(int), existing["rho_w_target"].astype(float)))
+        cid = int(existing["cell_id"].max()) + 1
+        for fam in FAMILIES:
+            for k in range(10):
+                seed = int(args.seed) + k + (0 if fam == "sine_gaussian" else 0)
+                rng = np.random.default_rng(seed + (0 if fam == "sine_gaussian" else 17))
+                t_rel = float(rng.uniform(*T_REL_RANGE))
+                params = _sample_family_params(fam, rng)
+                for rho in EXTEND_RHOS:
+                    key = (fam, seed, float(rho))
+                    if key in have:
+                        logger.info("skip existing %s seed=%d rho_w=%s", fam, seed, rho)
+                        continue
+                    cells.append({"cell_id": cid, "family": fam, "rho_w_target": float(rho), "seed": seed,
+                                  "t_rel": t_rel, "params": params})
+                    cid += 1
+        logger.info("extend-low-rho: %d new cells (seeds 0-9 x {10,30,100})", len(cells))
+    else:
+        for fam in FAMILIES:
+            for k in range(n_seeds):
+                seed = int(args.seed) + 1000 * k + (0 if fam == "sine_gaussian" else 500)
+                rng = np.random.default_rng(seed)
+                t_rel = float(rng.uniform(*T_REL_RANGE))
+                params = _sample_family_params(fam, rng)
+                for rho in rho_grid:
+                    cells.append({"cell_id": cid, "family": fam, "rho_w_target": float(rho), "seed": seed,
+                                  "t_rel": t_rel, "params": params})
+                    cid += 1
+        if csv_path.is_file():
+            csv_path.unlink()
     if args.max_cells:
         cells = cells[: int(args.max_cells)]
     logger.info("planned cells: %d", len(cells))
-
-    csv_path = outdir / "results.csv"
-    if csv_path.is_file():
-        csv_path.unlink()
     t_all = time.time()
     t_trig = duration - time_buffer
     for i, cell in enumerate(cells):
@@ -199,7 +223,8 @@ def run(args: argparse.Namespace) -> None:
         logger.info("[%d/%d] %s rho_w=%.0f poison_col=%s gated_ok=%s fired=%s (%.1fs)", i + 1, len(cells), cell["family"],
                     cell["rho_w_target"], row.get("poison_collapsed"), row.get("gated_recovers"), row.get("detector_fired"), row["elapsed_s"])
     logger.info("done in %.1f min", (time.time() - t_all) / 60.0)
-    write_summary_and_figure(outdir, pd.read_csv(csv_path), clean_ci, cfg, figdir=Path(args.figdir))
+    write_summary_and_figure(outdir, pd.read_csv(csv_path), clean_ci, cfg, figdir=Path(args.figdir),
+                            loudness_csv=Path(args.loudness_csv), archive_csv=Path(args.archive_csv))
 
 
 def _first_crossing(x: np.ndarray, y: np.ndarray, level: float = 0.5) -> Optional[float]:
@@ -214,7 +239,96 @@ def _first_crossing(x: np.ndarray, y: np.ndarray, level: float = 0.5) -> Optiona
     return None
 
 
-def write_summary_and_figure(outdir: Path, df: pd.DataFrame, clean_ci, cfg, *, figdir: Path) -> None:
+def _two_prop_differs(n1: int, x1: int, n2: int, x2: int) -> Dict[str, Any]:
+    """Two-sided two-proportion z-test; ``differs`` is p < 0.05."""
+    out: Dict[str, Any] = {
+        "n_t_rel_gt_-1": int(n1), "n_collapsed_gt": int(x1),
+        "n_t_rel_lt_-1": int(n2), "n_collapsed_lt": int(x2),
+        "rate_t_rel_gt_-1": float(x1 / n1) if n1 else None,
+        "rate_t_rel_lt_-1": float(x2 / n2) if n2 else None,
+    }
+    if n1 == 0 or n2 == 0:
+        out.update({"differs": None, "p_value": None, "note": "insufficient n on one side"})
+        return out
+    p1, p2 = x1 / n1, x2 / n2
+    p = (x1 + x2) / (n1 + n2)
+    se = float(np.sqrt(p * (1 - p) * (1 / n1 + 1 / n2)))
+    z = (p1 - p2) / se if se > 0 else 0.0
+    from math import erfc
+    pval = float(erfc(abs(z) / np.sqrt(2.0)))
+    out.update({"z": float(z), "p_value": pval, "differs": bool(pval < 0.05)})
+    return out
+
+
+def _low_rho_gated(ok: pd.DataFrame, clean_ci: Dict[str, Any], rhos=EXTEND_RHOS) -> Dict[str, Any]:
+    clean_med = float(clean_ci["med"]) if clean_ci and "med" in clean_ci else None
+    out: Dict[str, Any] = {}
+    for rho in rhos:
+        sub = ok[np.isclose(ok["rho_w_target"].astype(float), float(rho), rtol=0.0, atol=1e-6)]
+        rec: Dict[str, Any] = {
+            "n": int(len(sub)),
+            "gated_recovery": float(sub["gated_recovers"].mean()) if len(sub) else None,
+        }
+        if len(sub) and clean_med is not None and "gated_med" in sub.columns:
+            rec["mean_abs_delta_d_L_median_gated"] = float(np.mean(np.abs(sub["gated_med"].astype(float) - clean_med)))
+        out[str(int(rho) if float(rho).is_integer() else rho)] = rec
+    return out
+
+
+def _collapse_vs_trel(ok_collapse: pd.DataFrame, loudness_csv: Path, archive_csv: Path) -> tuple[pd.DataFrame, Dict[str, Any]]:
+    """Combine sweep cells + synthetic archive (rho_w from loudness.csv)."""
+    parts = [ok_collapse[["t_rel", "rho_w", "poison_collapsed"]].copy().assign(origin="collapse_threshold")]
+    if loudness_csv.is_file():
+        loud = pd.read_csv(loudness_csv)
+        syn = loud[loud["source"] == "synthetic_archive"].copy()
+        if len(syn) and "t_rel" in syn.columns and "rho_w" in syn.columns:
+            syn = syn[syn["poison_collapsed"].notna()]
+            parts.append(syn[["t_rel", "rho_w", "poison_collapsed"]].assign(origin="synthetic_archive"))
+    elif archive_csv.is_file() and loudness_csv.is_file():
+        pass
+    comb = pd.concat(parts, ignore_index=True)
+    comb["poison_collapsed"] = comb["poison_collapsed"].astype(bool)
+    comb["t_rel"] = comb["t_rel"].astype(float)
+    comb["rho_w"] = comb["rho_w"].astype(float)
+    hi = comb[comb["rho_w"] > 3000]
+    gt = hi[hi["t_rel"] > -1.0]
+    lt = hi[hi["t_rel"] < -1.0]
+    stats = {
+        "rho_w_gt": 3000,
+        "n_combined": int(len(comb)),
+        "n_high_rho": int(len(hi)),
+        **_two_prop_differs(len(gt), int(gt["poison_collapsed"].sum()), len(lt), int(lt["poison_collapsed"].sum())),
+    }
+    return comb, stats
+
+
+def make_figS4(comb: pd.DataFrame, outdir: Path, figdir: Path) -> None:
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    plt.rcParams.update({"font.size": 8, "pdf.fonttype": 42, "savefig.bbox": "tight",
+                         "axes.spines.top": False, "axes.spines.right": False})
+    fig, ax = plt.subplots(figsize=(3.5, 2.6))
+    collapsed = comb[comb["poison_collapsed"]]
+    survived = comb[~comb["poison_collapsed"]]
+    ax.scatter(survived["t_rel"], survived["rho_w"], s=10, c="#2a9d8f", alpha=0.7, label="no collapse", zorder=3)
+    ax.scatter(collapsed["t_rel"], collapsed["rho_w"], s=10, c="#c0392b", alpha=0.75, label="collapsed", zorder=4)
+    ax.axvline(-1.0, color="#666", ls=":", lw=0.8)
+    ax.axhline(3000, color="#bbb", ls="--", lw=0.7)
+    ax.set_yscale("log")
+    ax.set_xlabel(r"$t_{\mathrm{rel}}$ (s)")
+    ax.set_ylabel(r"whitened optimal SNR $\rho_w$")
+    ax.legend(frameon=False, fontsize=6.5, loc="lower left")
+    figdir.mkdir(parents=True, exist_ok=True)
+    fig.savefig(figdir / "figS4_collapse_vs_trel.pdf")
+    fig.savefig(figdir / "figS4_collapse_vs_trel.png", dpi=300)
+    fig.savefig(outdir / "figS4_collapse_vs_trel.pdf")
+    plt.close(fig)
+
+
+def write_summary_and_figure(outdir: Path, df: pd.DataFrame, clean_ci, cfg, *, figdir: Path,
+                             loudness_csv: Optional[Path] = None, archive_csv: Optional[Path] = None) -> None:
     ok = df[df["error"].fillna("") == ""].copy()
     for c in ("poison_collapsed", "gated_recovers", "detector_fired"):
         ok[c] = ok[c].astype(bool)
@@ -236,15 +350,24 @@ def write_summary_and_figure(outdir: Path, df: pd.DataFrame, clean_ci, cfg, *, f
             "interpolated_rho_w_at_50pct": _first_crossing(x, y),
             "collapse_at_max_rho": float(y[-1]),
         }
+    loudness_csv = Path(loudness_csv) if loudness_csv else LOUDNESS
+    archive_csv = Path(archive_csv) if archive_csv else ARCHIVE
+    comb, trel_stats = _collapse_vs_trel(ok, loudness_csv, archive_csv)
     summary = {
         "n_rows": int(len(df)), "n_ok": int(len(ok)), "n_errors": int((df["error"].fillna("") != "").sum()),
-        "clean_reference_d_L": clean_ci, "rho_w_grid": cfg["rho_w_grid"], "n_seeds": cfg["n_seeds"],
+        "clean_reference_d_L": clean_ci, "rho_w_grid": cfg.get("rho_w_grid"), "n_seeds": cfg.get("n_seeds"),
         "curves": curves, "collapse_threshold": thresholds,
         "gated_recovery_overall": float(ok["gated_recovers"].mean()) if len(ok) else None,
         "gated_recovery_where_collapsed": float(ok.loc[ok["poison_collapsed"], "gated_recovers"].mean()) if ok["poison_collapsed"].any() else None,
+        "gated_recovery_low_rho": _low_rho_gated(ok, clean_ci or {}),
+        "collapse_vs_trel_high_rho": trel_stats,
         "config_ref": "config.json",
     }
     (outdir / "summary.json").write_text(json.dumps(summary, indent=2, default=str))
+    try:
+        make_figS4(comb, outdir, figdir)
+    except Exception as e:
+        logger.warning("figS4 failed: %s", e)
 
     try:
         import matplotlib
@@ -282,12 +405,15 @@ def write_summary_and_figure(outdir: Path, df: pd.DataFrame, clean_ci, cfg, *, f
 
 ```bash
 export PYTHONPATH=DINGO-BNS/dingo:src:examples KMP_DUPLICATE_LIB_OK=TRUE
-python examples/collapse_threshold.py --seed {cfg['seed']} --num-samples {cfg['num_samples']} --n-seeds {cfg['n_seeds']} --outdir {outdir}
+python examples/collapse_threshold.py --seed {cfg.get('seed', 0)} --num-samples {cfg.get('num_samples', 512)} --n-seeds {cfg.get('n_seeds', 5)} --outdir {outdir}
+python examples/collapse_threshold.py --extend-low-rho --outdir {outdir}
+python examples/collapse_threshold.py --figures-only --outdir {outdir}
 ```
 
-Families: {', '.join(cfg['families'])}; rho_w grid: {', '.join(f'{x:.0f}' for x in cfg['rho_w_grid'])};
-stationary ASD; arms poisoned + adapt_full (detector threshold {cfg['threshold_event']:.3f}).
+Families: {', '.join(cfg.get('families', FAMILIES))}; rho_w grid: {', '.join(f'{x:.0f}' for x in cfg.get('rho_w_grid', []))};
+stationary ASD; arms poisoned + adapt_full (detector threshold {cfg.get('threshold_event', float('nan')):.3f}).
 Each seed fixes t_rel and the waveform realisation; only the amplitude is rescaled to hit rho_w.
+`--extend-low-rho` appends 10 sine_gaussian + 10 broadband_burst cells (seeds 0-9) at rho_w in {{10, 30, 100}}.
 """)
 
 
@@ -305,11 +431,30 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     p.add_argument("--gate-half-s", type=float, default=0.4)
     p.add_argument("--threshold-event", type=float, default=None)
     p.add_argument("--max-cells", type=int, default=None)
+    p.add_argument("--extend-low-rho", action="store_true",
+                   help="append 10 SG + 10 BB cells (seeds 0-9) at rho_w in {10,30,100} to existing results.csv")
+    p.add_argument("--figures-only", action="store_true", help="regenerate summary.json / fig9 / figS4 from existing results")
+    p.add_argument("--loudness-csv", type=Path, default=LOUDNESS)
+    p.add_argument("--archive-csv", type=Path, default=ARCHIVE)
     p.add_argument("--smoke", action="store_true", help="2 rho values x 1 seed x 2 families, 64 samples")
     return p.parse_args(argv)
+
+
+def figures_only(args: argparse.Namespace) -> None:
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
+    outdir = Path(args.outdir)
+    df = pd.read_csv(outdir / "results.csv")
+    cfg = json.loads((outdir / "config.json").read_text()) if (outdir / "config.json").is_file() else {}
+    clean = json.loads((outdir / "clean_reference.json").read_text()) if (outdir / "clean_reference.json").is_file() else {}
+    write_summary_and_figure(outdir, df, clean, cfg, figdir=Path(args.figdir),
+                             loudness_csv=Path(args.loudness_csv), archive_csv=Path(args.archive_csv))
+    logger.info("figures-only: n=%d, wrote %s", len(df), outdir / "summary.json")
 
 
 if __name__ == "__main__":
     a = parse_args()
     torch.manual_seed(a.seed); np.random.seed(a.seed)
-    run(a)
+    if a.figures_only:
+        figures_only(a)
+    else:
+        run(a)

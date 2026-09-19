@@ -1,0 +1,45 @@
+{
+  "outdir": "results/stress_real_glitches_v2",
+  "master_seed": 0,
+  "num_samples": 512,
+  "batch_size": 256,
+  "gate_half_s": 0.4,
+  "severities": [
+    3.0,
+    6.0,
+    10.0
+  ],
+  "noise_severities": [
+    6.0,
+    10.0
+  ],
+  "asd_policy": "stationary",
+  "t_rel_range": [
+    -1.5,
+    -0.3
+  ],
+  "n_glitches_selected": 72,
+  "n_glitches_fetched": 70,
+  "n_noise_excerpts": 5,
+  "detector_ckpt": "/Users/jayantkumar/Desktop/ADAPT-Project/.worktrees/task5/checkpoints/glitch_detector_v1/best_glitch_detector.pt",
+  "detector_sha256": "e1abd4e40ce173de17c7c915b43ac138c1cabb8f6f61e1ef983be9b1589762b5",
+  "baseline_ckpt": "/Users/jayantkumar/Desktop/ADAPT-Project/.worktrees/task5/DINGO-BNS/dingo/binary-neutron-star-demo/GW170817/downloads/dingo-bns-model_GW170817.pt",
+  "baseline_sha256": "aebe9cade3943342b6dfe758eb9922410bbc01db6a346a647559bed383d14f10",
+  "threshold_base": 0.4647887647151947,
+  "threshold_event": 0.7283049106597901,
+  "git_commit": "1ec342ed60d2eba101300f756c1e20575d483a3e",
+  "python": "3.11.14 | packaged by conda-forge | (main, Oct 13 2025, 14:29:50) [Clang 19.1.7 ]",
+  "platform": "macOS-26.6.2-arm64-arm-64bit",
+  "zenodo_record": 5649212,
+  "severity_modes": [
+    "native"
+  ],
+  "panel": "wide_snr_native",
+  "n_trel_per_glitch": 3,
+  "excerpt_recipe": "8 s H1 open strain (GWOSC, chunk-level HTTP range read of the bulk HDF5) centred on the Gravity Spy event_time; whitened with a Welch PSD from its own off-window part (unit-variance background, 20-1500 Hz); cut to event_time +/- max(duration, 0.5 s) with Tukey(alpha=0.1) taper; STFT-thresholded (8x per-frequency median off-window power) within the trigger duration (+0.15 s) to a glitch-only estimate; coloured with the line-smoothed (2 Hz running median) GW170817 H1 analysis ASD (zero-padded, re-tapered) and injected additively into the H1 analysis segment. Scaling: 'native' = same whitened energy (SNR^2) as observed in O3; 'ladder' = raw in-band RMS of the injected window equals severity x inband_rms(clean H1), the synthetic-grid convention. Working in the whitened domain is required because Gravity Spy glitches of Omicron SNR 8-30 are not measurable as a raw in-band RMS excess over the 20-40 Hz noise wall.",
+  "noise_control_recipe": "Trigger-free O3 H1 windows (no Gravity Spy trigger within +/-10 s), whitened and windowed identically but NOT thresholded, coloured with the GW170817 ASD and scaled to (a) 'noise_native': whitened energy = window length (unit-variance O3 noise added over the window) and (b) 'noise_matched_<sev>': whitened energy equal to the median injected energy of the ladder glitch cells at that severity.",
+  "success_criteria": {
+    "poison_collapsed": "d_L hi<15 or lo>90",
+    "gated_recovers": "med in [20,50], CI overlaps clean, |med-clean_med|<=10"
+  }
+}
