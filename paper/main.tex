@@ -425,7 +425,7 @@ $\dL$ $\ast$              & 0.0066 & \checkmark &                      &        
 
 \begin{figure}[t]
 \centering
-\\includegraphics[width=0.6\linewidth]{figures/fig2_injection_gate.pdf}
+\includegraphics[width=0.6\linewidth]{figures/fig2_injection_gate.pdf}
 \caption{Example glitch injection, detection, and gating on the GW170817 H1 analysis crop.
 Top: whitened strain with the injected sine-Gaussian and the Tukey gate window (shaded).
 Middle: the whitened spectrogram seen by the detector.
@@ -435,7 +435,7 @@ Bottom: per-time-bin detector probability with the event-level threshold.}
 
 \begin{figure}[t]
 \centering
-\\includegraphics[width=\linewidth]{figures/fig3_posteriors.pdf}
+\includegraphics[width=\linewidth]{figures/fig3_posteriors.pdf}
 \caption{Posterior comparison for the official-control case study.
 One-dimensional marginals of $\dL$, $\Mc$, $q$, $\theta_{JN}$, $t_{\mathrm{c}}$, and $\Lambda_1$ for the clean (importance-sampled official result), poisoned, and gated runs.
 Poisoning drives $\dL$ into a spike at the $10\,\mathrm{Mpc}$ prior floor; the gated reconstruction restores the clean support on every parameter.}
@@ -687,7 +687,7 @@ The author declares that he has no known competing financial interests or person
 Open strain data are available from the Gravitational Wave Open Science Center~\cite{Abbott2021opendata,Abbott2023opendata}.
 The \DINGOBNS demonstration model is obtained from the upstream DINGO release~\cite{Dax2025bns}.
 Source code, the STFT detector checkpoint, and archived result summaries for this study are available at \url{https://github.com/Jayant-Kumar17/glitch-robust-dingo-bns} (release v1.1.0; Zenodo DOI to be added on acceptance).
-Every number in the tables is read from the archived JSON and CSV summaries under \texttt{results/}, and Figures~\ref{fig:pipeline}--\ref{fig:real} and \ref{fig:heatmap}--\ref{fig:oracle} are regenerated from them by \texttt{paper/make\_figures.py} and \texttt{paper/make\_figures\_t5.py}.
+Every number in the tables is read from the archived JSON and CSV summaries under \texttt{results/}, and Figures~\ref{fig:pipeline}--\ref{fig:oracle} are regenerated from them by \texttt{paper/make\_figures.py}, \texttt{paper/make\_figures\_t5.py}, and \texttt{examples/paper\_figures\_2\_3.py}.
 The Gravity Spy O3 classifications are from Zenodo record 5649212~\cite{Glanzer2023gravityspy}.
 
 \section*{Acknowledgements}
