@@ -8,19 +8,16 @@ This repository provides the software accompanying a methods study on restoring
 of short-duration transient glitches, without retraining the neural posterior
 estimator.
 
-**Summary.** Short transient glitches overlapping the analysis segment collapse
-the luminosity-distance posterior of the frozen official DINGO-BNS network in
-46% of a 240-cell GW170817 injection grid. A preprocessing front-end (STFT
-glitch detector, Tukey gates, matched-delta frequency-domain reconstruction,
-retention of the original analysis ASD) restores clean-like posteriors in 86%
-of those cells (96% for glitch families never seen by the detector) and in 92%
-of a 160-cell synthetic BNS panel, at a few seconds of overhead and with the
-DINGO-BNS weights untouched. Ablations show the reconstruction step is
-load-bearing: full FFT replacement recovers 0% of cells, and Welch ASDs
-recomputed on gated data recover 13%. A clean-gate control (spurious gate on
-glitch-free data) recovers 92% with no collapse, and a panel of real Gravity Spy
-O3 glitches transplanted into the GW170817 segment is provided as an
-out-of-distribution check (`results/stress_real_glitches_v1/`).
+**Summary.** The frozen official DINGO-BNS network is robust to ordinary
+glitches: **0% collapse below Omicron SNR 100**. Collapse reaches **60% for
+Koi Fish at SNR ≥ 300**, a regime that contains **11% of confident O3 H1
+Gravity Spy triggers**. A detect–gate–rebuild front-end restores clean-like
+posteriors in **99% of 183 real-glitch cells** (including every collapsed
+one) without retraining. A synthetic loudness sweep places 50% collapse at
+**ρ_w ≈ 2.7×10³**. On a 240-cell GW170817 grid and a 160-cell synthetic BNS
+panel, gated recovery is 86% and 92%. Ablations show the reconstruction
+step is load-bearing: full FFT replacement recovers 0%. Archived result
+directories are linked in [Results at a glance](#results-at-a-glance).
 
 When the analysis segment is contaminated by a transient, official DINGO-BNS
 posteriors can collapse (most conspicuously in luminosity distance). The
@@ -188,6 +185,11 @@ Equivalent instructions appear in [`paper/REPRODUCE.md`](paper/REPRODUCE.md) and
 
 ## Results at a glance
 
+Headline numbers (abstract / release v1.1.0): **0% collapse** below Omicron SNR 100;
+**60% collapse** for Koi Fish at SNR ≥ 300; **99% gated recovery** on 183 real
+cells; **50% collapse** at ρ_w ≈ 2.7×10³; **11%** of confident O3 H1 Gravity Spy
+triggers have SNR ≥ 300.
+
 | Experiment | Directory | Cells | Principal finding |
 |---|---|---|---|
 | Official control | [`results/dingo_official_control/`](results/dingo_official_control/) | 1 | clean vs poisoned vs gated; max 1-D JS (clean vs gated) 0.012 nat, verdict A |
@@ -197,9 +199,9 @@ Equivalent instructions appear in [`paper/REPRODUCE.md`](paper/REPRODUCE.md) and
 | Method hardening (ablation) | [`results/journal_method_hardening_v1/`](results/journal_method_hardening_v1/) | 16 × 5 arms | `adapt_full` 81%; `gate_welch` 13%; `fft_replace` **0%**; front-end overhead ≈ 3 s |
 | Clean-gate cost control | [`results/clean_gate_control_v1/`](results/clean_gate_control_v1/) | 25 | forced gate on clean data: recovery 92%, no collapse, mean \|Δ d_L\| 3.8 Mpc |
 | Real Gravity Spy glitches (capped SNR) | [`results/stress_real_glitches_v1/`](results/stress_real_glitches_v1/) | 24 glitches × (native + 3 severities) + noise-only controls | native loudness: 0/20 collapse, 95 % pass-through; synthetic severity ladder: 86 % collapse, 72 % gated recovery |
-| Real Gravity Spy glitches (wide SNR, native) | [`results/stress_real_glitches_v2/`](results/stress_real_glitches_v2/) | 72 glitches × 3 t_rel + 10 noise-only | collapse and recovery vs Omicron-SNR bin; see `summary.json` |
-| Loudness audit | [`results/loudness_audit_v1/`](results/loudness_audit_v1/) | 240 + 1 + 24 | whitened optimal SNR $\rho_w$ of every injected glitch; synthetic severities 3/6/10 span $\rho_w \approx 150$–$6\times10^4$ (medians 4.2k / 7.3k / 10.4k); real glitches at native loudness $\rho_w \le 140$ |
-| Collapse threshold | [`results/collapse_threshold_v1/`](results/collapse_threshold_v1/) | 2 families × 8 $\rho_w$ × 5 seeds | collapse first exceeds 50 % at $\rho_w \approx 2.7\times10^3$ (grid point 3.7k); gated recovery 95 % overall |
+| Real Gravity Spy glitches (wide SNR, native) | [`results/stress_real_glitches_v2/`](results/stress_real_glitches_v2/) | 183 native cells + noise-only | **0% collapse** below Omicron SNR 100; **60%** for Koi Fish ≥ 300; **99%** gated recovery; every collapse is a Koi Fish |
+| Loudness audit | [`results/loudness_audit_v1/`](results/loudness_audit_v1/) | 240 + 1 + 24 | ρ_w of every injected glitch; **11%** of confident O3 H1 triggers have SNR ≥ 300 (`o3_snr_tail.json`) |
+| Collapse threshold | [`results/collapse_threshold_v1/`](results/collapse_threshold_v1/) | 2 families × ρ_w ladder | 50% collapse at **ρ_w ≈ 2.7×10³**; gated recovery ≥ 97% at every loudness |
 
 Large HDF5 posterior sample files are omitted from version control; JSON, CSV,
 and PDF summaries are retained.
@@ -209,14 +211,12 @@ and PDF summaries are retained.
 All figures in `paper/figures/` regenerate from the archived `results/`:
 
 ```bash
-python paper/make_figures.py --repo .            # Figs 1, 4, 5, 6, 7, S1
-python -u examples/paper_figures_2_3.py          # Figs 2, 3 (needs DINGO-BNS demo assets + sample HDF5s)
-python -u examples/clean_gate_control.py         # Fig S2 (re-runs the control)
-python -u examples/stress_real_glitches.py --wide-snr-panel --native-only \
-  --selected-csv data/gravity_spy/selected_h1_o3_wide.csv --outdir results/stress_real_glitches_v2   # Fig 8
-python -u examples/loudness_audit.py             # Fig S3 (no PE)
-python -u examples/collapse_threshold.py         # Fig 9
+python paper/make_figures.py --repo .            # fig1, fig4–fig9, S1–S4
+python paper/make_figures_t5.py --repo .         # same suite (Appendix C alias)
+python -u examples/paper_figures_2_3.py          # paper Figs 4–5 (filenames fig2, fig3; needs DINGO-BNS demo + sample HDF5s)
 ```
+
+Print order in `paper/main.tex`: 1 pipeline, 2 threshold (`fig9`), 3 real glitches (`fig8`), 4 injection (`fig2`), 5 posteriors (`fig3`), 6 heatmap (`fig4`), 7 synthetic (`fig5`), 8 ablation (`fig6`), 9 oracle (`fig7`).
 
 ## Library interface
 
