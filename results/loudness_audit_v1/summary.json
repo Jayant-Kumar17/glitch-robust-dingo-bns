@@ -1,0 +1,467 @@
+{
+  "definition": "rho_w = sqrt(4 sum |g(f)|^2 / ASD(f)^2 df) over [f_min, f_max], GW170817 analysis ASD of the injected IFO",
+  "n_synthetic": 240,
+  "synthetic_by_severity": {
+    "3.0": {
+      "n": 80,
+      "rho_w_min": 149.4044156998207,
+      "rho_w_median": 4194.171607614269,
+      "rho_w_max": 19914.075290307042,
+      "poison_collapse_rate": 0.4375
+    },
+    "6.0": {
+      "n": 80,
+      "rho_w_min": 287.31999683087537,
+      "rho_w_median": 7283.320749506873,
+      "rho_w_max": 37853.87700958797,
+      "poison_collapse_rate": 0.375
+    },
+    "10.0": {
+      "n": 80,
+      "rho_w_min": 285.50400321680246,
+      "rho_w_median": 10352.967674836123,
+      "rho_w_max": 64177.97525516757,
+      "poison_collapse_rate": 0.575
+    }
+  },
+  "synthetic_by_family": {
+    "broadband_burst": {
+      "n": 30,
+      "rho_w_min": 220.1462183400228,
+      "rho_w_median": 5929.594604389476,
+      "rho_w_max": 15377.492408140437
+    },
+    "double_blip": {
+      "n": 30,
+      "rho_w_min": 149.4044156998207,
+      "rho_w_median": 3506.7665439382527,
+      "rho_w_max": 10988.70524792975
+    },
+    "glitch_train": {
+      "n": 30,
+      "rho_w_min": 246.05315334641168,
+      "rho_w_median": 4831.447809800255,
+      "rho_w_max": 16690.391855219055
+    },
+    "narrowband_tone": {
+      "n": 30,
+      "rho_w_min": 585.679469110567,
+      "rho_w_median": 19810.16433860324,
+      "rho_w_max": 64177.97525516757
+    },
+    "ringing": {
+      "n": 30,
+      "rho_w_min": 287.5096868502867,
+      "rho_w_median": 7397.1165036789225,
+      "rho_w_max": 22998.873378679342
+    },
+    "scattered_light": {
+      "n": 30,
+      "rho_w_min": 1226.2765330818263,
+      "rho_w_median": 11577.639205997164,
+      "rho_w_max": 42704.955510185864
+    },
+    "sine_gaussian": {
+      "n": 30,
+      "rho_w_min": 169.14581403493094,
+      "rho_w_median": 3007.5906020691364,
+      "rho_w_max": 8888.128600287508
+    },
+    "whistle": {
+      "n": 30,
+      "rho_w_min": 774.4017816205559,
+      "rho_w_median": 17766.830920639466,
+      "rho_w_max": 60246.66630602062
+    }
+  },
+  "official_control_sg_rho_w": 4348.578831049381,
+  "real_native": {
+    "n": 24,
+    "rho_w_min": 0.0,
+    "rho_w_median": 33.99909854971055,
+    "rho_w_max": 139.36513811520155,
+    "median_ratio_rho_w_over_omicron_snr": 1.938909805756286,
+    "n_zero_rho_w": 4
+  },
+  "population_above_threshold": {
+    "threshold_rho_w": 2682.7,
+    "direct_omicron_axis": {
+      "n_triggers": 132065,
+      "min_confidence": 0.95,
+      "omicron_snr_threshold": 2682.7,
+      "fraction_above": 0.03937455041078257,
+      "n_above": 5200,
+      "snr_quantiles": {
+        "0.5": 13.0357503890991,
+        "0.9": 416.3627807617187,
+        "0.99": 5919.3603515625,
+        "0.999": 9608.99607812487
+      },
+      "by_label_fraction_above": [
+        {
+          "ml_label": "1080Lines",
+          "fraction_above": 0.0,
+          "n": 40
+        },
+        {
+          "ml_label": "1400Ripples",
+          "fraction_above": 0.0,
+          "n": 64
+        },
+        {
+          "ml_label": "Air_Compressor",
+          "fraction_above": 0.0,
+          "n": 132
+        },
+        {
+          "ml_label": "Blip",
+          "fraction_above": 0.0,
+          "n": 6861
+        },
+        {
+          "ml_label": "Blip_Low_Frequency",
+          "fraction_above": 0.0,
+          "n": 2823
+        },
+        {
+          "ml_label": "Chirp",
+          "fraction_above": 0.0,
+          "n": 5
+        },
+        {
+          "ml_label": "Extremely_Loud",
+          "fraction_above": 0.348261044715993,
+          "n": 14894
+        },
+        {
+          "ml_label": "Fast_Scattering",
+          "fraction_above": 0.0,
+          "n": 1327
+        },
+        {
+          "ml_label": "Helix",
+          "fraction_above": 0.0,
+          "n": 10
+        },
+        {
+          "ml_label": "Koi_Fish",
+          "fraction_above": 0.0013425591242383558,
+          "n": 9683
+        },
+        {
+          "ml_label": "Light_Modulation",
+          "fraction_above": 0.0,
+          "n": 34
+        },
+        {
+          "ml_label": "Low_Frequency_Burst",
+          "fraction_above": 0.0,
+          "n": 19343
+        },
+        {
+          "ml_label": "Low_Frequency_Lines",
+          "fraction_above": 0.0,
+          "n": 1418
+        },
+        {
+          "ml_label": "Paired_Doves",
+          "fraction_above": 0.0,
+          "n": 16
+        },
+        {
+          "ml_label": "Power_Line",
+          "fraction_above": 0.0,
+          "n": 147
+        },
+        {
+          "ml_label": "Repeating_Blips",
+          "fraction_above": 0.0,
+          "n": 1190
+        },
+        {
+          "ml_label": "Scattered_Light",
+          "fraction_above": 0.0,
+          "n": 64263
+        },
+        {
+          "ml_label": "Scratchy",
+          "fraction_above": 0.0,
+          "n": 414
+        },
+        {
+          "ml_label": "Tomte",
+          "fraction_above": 0.0,
+          "n": 1888
+        },
+        {
+          "ml_label": "Violin_Mode",
+          "fraction_above": 0.0,
+          "n": 383
+        },
+        {
+          "ml_label": "Wandering_Line",
+          "fraction_above": 0.0,
+          "n": 6
+        },
+        {
+          "ml_label": "Whistle",
+          "fraction_above": 0.0,
+          "n": 7124
+        }
+      ]
+    },
+    "converted_omicron_axis": {
+      "n_triggers": 132065,
+      "min_confidence": 0.95,
+      "omicron_snr_threshold": 1383.6125806551343,
+      "fraction_above": 0.0628781281944497,
+      "n_above": 8304,
+      "snr_quantiles": {
+        "0.5": 13.0357503890991,
+        "0.9": 416.3627807617187,
+        "0.99": 5919.3603515625,
+        "0.999": 9608.99607812487
+      },
+      "by_label_fraction_above": [
+        {
+          "ml_label": "1080Lines",
+          "fraction_above": 0.0,
+          "n": 40
+        },
+        {
+          "ml_label": "1400Ripples",
+          "fraction_above": 0.0,
+          "n": 64
+        },
+        {
+          "ml_label": "Air_Compressor",
+          "fraction_above": 0.0,
+          "n": 132
+        },
+        {
+          "ml_label": "Blip",
+          "fraction_above": 0.0,
+          "n": 6861
+        },
+        {
+          "ml_label": "Blip_Low_Frequency",
+          "fraction_above": 0.0,
+          "n": 2823
+        },
+        {
+          "ml_label": "Chirp",
+          "fraction_above": 0.0,
+          "n": 5
+        },
+        {
+          "ml_label": "Extremely_Loud",
+          "fraction_above": 0.5557942795756681,
+          "n": 14894
+        },
+        {
+          "ml_label": "Fast_Scattering",
+          "fraction_above": 0.0,
+          "n": 1327
+        },
+        {
+          "ml_label": "Helix",
+          "fraction_above": 0.0,
+          "n": 10
+        },
+        {
+          "ml_label": "Koi_Fish",
+          "fraction_above": 0.002581844469689146,
+          "n": 9683
+        },
+        {
+          "ml_label": "Light_Modulation",
+          "fraction_above": 0.0,
+          "n": 34
+        },
+        {
+          "ml_label": "Low_Frequency_Burst",
+          "fraction_above": 0.0,
+          "n": 19343
+        },
+        {
+          "ml_label": "Low_Frequency_Lines",
+          "fraction_above": 0.0,
+          "n": 1418
+        },
+        {
+          "ml_label": "Paired_Doves",
+          "fraction_above": 0.0,
+          "n": 16
+        },
+        {
+          "ml_label": "Power_Line",
+          "fraction_above": 0.0,
+          "n": 147
+        },
+        {
+          "ml_label": "Repeating_Blips",
+          "fraction_above": 0.0,
+          "n": 1190
+        },
+        {
+          "ml_label": "Scattered_Light",
+          "fraction_above": 0.0,
+          "n": 64263
+        },
+        {
+          "ml_label": "Scratchy",
+          "fraction_above": 0.0024154589371980675,
+          "n": 414
+        },
+        {
+          "ml_label": "Tomte",
+          "fraction_above": 0.0,
+          "n": 1888
+        },
+        {
+          "ml_label": "Violin_Mode",
+          "fraction_above": 0.0,
+          "n": 383
+        },
+        {
+          "ml_label": "Wandering_Line",
+          "fraction_above": 0.0,
+          "n": 6
+        },
+        {
+          "ml_label": "Whistle",
+          "fraction_above": 0.0,
+          "n": 7124
+        }
+      ]
+    },
+    "median_ratio_rho_w_over_omicron_snr": 1.938909805756286,
+    "conversion_note": "rho_w (whitened optimal SNR against the GW170817 H1 ASD) and Omicron SNR are different statistics; the 'converted' entry divides the rho_w threshold by the median rho_w/Omicron-SNR ratio measured on the real excerpts at native loudness.",
+    "grid_threshold_rho_w": 3727.6,
+    "direct_omicron_axis_grid": {
+      "n_triggers": 132065,
+      "min_confidence": 0.95,
+      "omicron_snr_threshold": 3727.6,
+      "fraction_above": 0.02897058266762579,
+      "n_above": 3826,
+      "snr_quantiles": {
+        "0.5": 13.0357503890991,
+        "0.9": 416.3627807617187,
+        "0.99": 5919.3603515625,
+        "0.999": 9608.99607812487
+      },
+      "by_label_fraction_above": [
+        {
+          "ml_label": "1080Lines",
+          "fraction_above": 0.0,
+          "n": 40
+        },
+        {
+          "ml_label": "1400Ripples",
+          "fraction_above": 0.0,
+          "n": 64
+        },
+        {
+          "ml_label": "Air_Compressor",
+          "fraction_above": 0.0,
+          "n": 132
+        },
+        {
+          "ml_label": "Blip",
+          "fraction_above": 0.0,
+          "n": 6861
+        },
+        {
+          "ml_label": "Blip_Low_Frequency",
+          "fraction_above": 0.0,
+          "n": 2823
+        },
+        {
+          "ml_label": "Chirp",
+          "fraction_above": 0.0,
+          "n": 5
+        },
+        {
+          "ml_label": "Extremely_Loud",
+          "fraction_above": 0.2560762723244259,
+          "n": 14894
+        },
+        {
+          "ml_label": "Fast_Scattering",
+          "fraction_above": 0.0,
+          "n": 1327
+        },
+        {
+          "ml_label": "Helix",
+          "fraction_above": 0.0,
+          "n": 10
+        },
+        {
+          "ml_label": "Koi_Fish",
+          "fraction_above": 0.00123928534545079,
+          "n": 9683
+        },
+        {
+          "ml_label": "Light_Modulation",
+          "fraction_above": 0.0,
+          "n": 34
+        },
+        {
+          "ml_label": "Low_Frequency_Burst",
+          "fraction_above": 0.0,
+          "n": 19343
+        },
+        {
+          "ml_label": "Low_Frequency_Lines",
+          "fraction_above": 0.0,
+          "n": 1418
+        },
+        {
+          "ml_label": "Paired_Doves",
+          "fraction_above": 0.0,
+          "n": 16
+        },
+        {
+          "ml_label": "Power_Line",
+          "fraction_above": 0.0,
+          "n": 147
+        },
+        {
+          "ml_label": "Repeating_Blips",
+          "fraction_above": 0.0,
+          "n": 1190
+        },
+        {
+          "ml_label": "Scattered_Light",
+          "fraction_above": 0.0,
+          "n": 64263
+        },
+        {
+          "ml_label": "Scratchy",
+          "fraction_above": 0.0,
+          "n": 414
+        },
+        {
+          "ml_label": "Tomte",
+          "fraction_above": 0.0,
+          "n": 1888
+        },
+        {
+          "ml_label": "Violin_Mode",
+          "fraction_above": 0.0,
+          "n": 383
+        },
+        {
+          "ml_label": "Wandering_Line",
+          "fraction_above": 0.0,
+          "n": 6
+        },
+        {
+          "ml_label": "Whistle",
+          "fraction_above": 0.0,
+          "n": 7124
+        }
+      ]
+    }
+  }
+}

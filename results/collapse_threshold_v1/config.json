@@ -1,0 +1,43 @@
+{
+  "outdir": "results/collapse_threshold_v1",
+  "seed": 0,
+  "num_samples": 512,
+  "n_seeds": 5,
+  "families": [
+    "sine_gaussian",
+    "broadband_burst"
+  ],
+  "rho_w_grid": [
+    10.0,
+    26.826957952797258,
+    71.96856730011521,
+    193.06977288832496,
+    517.9474679231213,
+    1389.4954943731375,
+    3727.593720314938,
+    10000.0
+  ],
+  "asd_policy": "stationary",
+  "arms": [
+    "poisoned",
+    "adapt_full"
+  ],
+  "t_rel_range": [
+    -1.5,
+    -0.3
+  ],
+  "gate_half_s": 0.4,
+  "threshold_event": 0.7283049106597901,
+  "detector_ckpt": "/Users/jayantkumar/Desktop/ADAPT-Project/.worktrees/task5/checkpoints/glitch_detector_v1/best_glitch_detector.pt",
+  "detector_sha256": "e1abd4e40ce173de17c7c915b43ac138c1cabb8f6f61e1ef983be9b1589762b5",
+  "baseline_ckpt": "/Users/jayantkumar/Desktop/ADAPT-Project/.worktrees/task5/DINGO-BNS/dingo/binary-neutron-star-demo/GW170817/downloads/dingo-bns-model_GW170817.pt",
+  "baseline_sha256": "aebe9cade3943342b6dfe758eb9922410bbc01db6a346a647559bed383d14f10",
+  "git_commit": "90da193a724f234cb8f476fb66ce77f7bcded64b",
+  "python": "3.11.14 | packaged by conda-forge | (main, Oct 13 2025, 14:29:50) [Clang 19.1.7 ]",
+  "platform": "macOS-26.6.2-arm64-arm-64bit",
+  "rho_w_definition": "sqrt(4 sum |g(f)|^2/ASD_H1(f)^2 df) over [f_min,f_max] on the packaged grid",
+  "success_criteria": {
+    "poison_collapsed": "d_L hi<15 or lo>90",
+    "gated_recovers": "med in [20,50], CI overlaps clean, |med-clean_med|<=10"
+  }
+}
