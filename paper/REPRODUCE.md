@@ -35,7 +35,7 @@ python -u examples/loudness_audit.py \
   --outdir results/loudness_audit_v1
 ```
 
-Archived summaries under `results/*/` are the numerical source for Tables 1–5.
+Archived summaries under `results/*/` are the numerical source for Tables 2–6.
 Optional extra flags (`--device cpu`, `--batch-size`, `--hf-samples`,
 `--wide-snr-panel`) are recorded in each run's `*config.json` / `REPRODUCE.md`.
 
