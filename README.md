@@ -82,7 +82,7 @@ attached to GitHub Release
 
 JSON/CSV summaries cited in the paper live under `results/` (see
 [Results at a glance](#results-at-a-glance)). They are enough to regenerate
-Tables 1–5 and Figures 1–3 and 6–9 via `paper/make_figures.py` without rerunning
+Tables 2–6 and Figures 1–3 and 6–9 via `paper/make_figures.py` without rerunning
 the GPU/CPU inference grid. Figures 4–5 additionally need the official-control
 HDF5 posterior dumps (gitignored; regenerate with `examples/official_control.py`).
 
@@ -109,7 +109,7 @@ Pinned versions of the critical stack (`numpy==1.26.4`, `scipy==1.13.1`,
 
 These are the commands from Appendix C of the paper. A user who has the
 official DINGO-BNS demonstration assets and the released detector checkpoint
-can clone, install, and reproduce Tables 1–5 with:
+can clone, install, and reproduce Tables 2–6 with:
 
 ```bash
 conda activate adapt_env
@@ -141,7 +141,7 @@ python -u examples/loudness_audit.py \
   --outdir results/loudness_audit_v1
 ```
 
-Archived summaries under `results/*/` are the numerical source for Tables 1–5;
+Archived summaries under `results/*/` are the numerical source for Tables 2–6;
 re-running the drivers is only required if you want to regenerate posterior
 samples. Then:
 
@@ -168,12 +168,13 @@ working directory. Equivalent notes: [`paper/REPRODUCE.md`](paper/REPRODUCE.md),
 | Figure 6 (heatmap) | `examples/stress_gw170817.py` | `results/stress_test_excision_v1/` → `fig4_*` |
 | Figure 7 (synthetic) | `examples/stress_synthetic_bns.py` | `results/stress_test_synthetic_bns_v1/` → `fig5_*` |
 | Figure 8 (ablation) | `examples/method_hardening.py` | `results/journal_method_hardening_v1/` → `fig6_*` |
-| Figure 9 (oracle) | `examples/method_hardening.py` | `results/journal_method_hardening_v1/` → `fig7_*` |
-| Table 1 (real Gravity Spy) | `examples/stress_real_glitches.py` | `results/stress_real_glitches_v2/` |
-| Table 2 (JS divergences) | `examples/official_control.py` | `results/dingo_official_control/` |
-| Table 3 (GW170817 grid) | `examples/stress_gw170817.py` | `results/stress_test_excision_v1/` |
-| Table 4 (synthetic BNS) | `examples/stress_synthetic_bns.py` | `results/stress_test_synthetic_bns_v1/` |
-| Table 5 (ablation) | `examples/method_hardening.py` | `results/journal_method_hardening_v1/` |
+| Figure 9 (oracle)          | `examples/stress_gw170817.py`      | `results/stress_test_excision_v1/` → `fig7_*`      |
+| Table 1 (related work)     | —                                  | —                                                  |
+| Table 2 (real Gravity Spy) | `examples/stress_real_glitches.py` | `results/stress_real_glitches_v2/`                 |
+| Table 3 (JS divergences)   | `examples/official_control.py`     | `results/dingo_official_control/`                  |
+| Table 4 (GW170817 grid)    | `examples/stress_gw170817.py`      | `results/stress_test_excision_v1/`                 |
+| Table 5 (synthetic BNS)    | `examples/stress_synthetic_bns.py` | `results/stress_test_synthetic_bns_v1/`            |
+| Table 6 (ablation)         | `examples/method_hardening.py`     | `results/journal_method_hardening_v1/`             |
 
 ## Glitch-detector training (optional)
 
@@ -246,7 +247,7 @@ from adapt.dingo_bns_demo import discover_assets, run_baseline_sampling
 
 ## Citation
 
-Manuscript in preparation for *Astronomy and Computing* (Elsevier).
+Manuscript submitted to *Classical and Quantum Gravity* (IOP Publishing).
 
 Provisional title: *Transient-glitch resilience in neural gravitational-wave
 parameter estimation without network retraining*.
