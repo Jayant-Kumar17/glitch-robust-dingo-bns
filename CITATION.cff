@@ -17,8 +17,8 @@ authors:
     given-names: Jayant
     email: j.kumar16224@kgs.edu.pk
     affiliation: Karachi Grammar School, Karachi, Pakistan
-version: 1.1.1
-date-released: "2026-09-19"
+version: 1.1.2
+date-released: "2026-11-03"
 doi: 10.5281/zenodo.22844461
 identifiers:
   - type: doi
@@ -35,6 +35,16 @@ keywords:
   - glitch mitigation
   - signal gating
 references:
+  - type: article
+    title: >-
+      Transient-glitch resilience in neural gravitational-wave parameter
+      estimation without network retraining
+    authors:
+      - family-names: Kumar
+        given-names: Jayant
+    journal: Classical and Quantum Gravity
+    year: 2026
+    notes: submitted
   - type: article
     title: Real-time inference for binary neutron star mergers using machine learning
     authors:
