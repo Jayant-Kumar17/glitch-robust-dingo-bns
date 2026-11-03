@@ -542,7 +542,7 @@ def fig8(repo: Path, out: Path) -> None:
     a1.legend(loc="upper center", bbox_to_anchor=(1.08, -0.62), ncol=4, fontsize=7)
     fig.text(
         0.53, 0.02,
-        "Dashed line: collapse begins near SNR 100.  Every collapse is a Koi Fish (28 %).  Noise-only: 0/5 collapse.",
+        "Dashed line: collapse begins near SNR 100.  Every collapse is a Koi Fish (17/60 Koi-Fish cells).  Noise-only: 0/5 collapse.",
         ha="center", va="bottom", fontsize=7, color=NEUTRAL,
     )
     save(fig, out, "fig8_real_glitches")
@@ -588,7 +588,7 @@ def fig9(repo: Path, out: Path) -> None:
     ax.set_ylabel("fraction of cells")
     fig.text(
         0.16, 0.97,
-        r"Robust below $\rho_w \approx 100$; gated recovery $\geq 97$ % at every loudness",
+        r"No collapse below $\rho_w \approx 100$; gated recovery 135/139 overall",
         ha="left", va="top", fontsize=7, color=NEUTRAL,
     )
 

@@ -1,7 +1,7 @@
 # Scope of the study
 
-This repository is the software companion to a methods manuscript in preparation
-for *Astronomy and Computing*. The present file states the scientific claim and
+This repository is the software companion to a methods manuscript submitted
+to *Classical and Quantum Gravity*. The present file states the scientific claim and
 experimental boundaries.
 
 ## Objective
