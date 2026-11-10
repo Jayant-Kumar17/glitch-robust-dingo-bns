@@ -1,4 +1,4 @@
-%% Classical and Quantum Gravity manuscript (elsarticle preprint layout)
+%% Astronomy and Computing manuscript
 %% Transient-glitch resilience for frozen DINGO-BNS
 %% Single-file Overleaf upload: compile with pdfLaTeX (+ BibTeX if \usebibtextrue)
 \documentclass[preprint,12pt]{elsarticle}
@@ -17,8 +17,10 @@
 \usepackage{xspace}
 \usepackage{enumitem}
 \usepackage{natbib}
+\renewcommand{\textbullet}{\ensuremath{\bullet}}
+\emergencystretch=2em
 
-\journal{Classical and Quantum Gravity}
+\journal{Astronomy and Computing}
 
 \newcommand{\DINGOBNS}{DINGO-BNS\xspace}
 \newcommand{\adapt}{\textsc{Adapt}\xspace}
@@ -32,7 +34,7 @@
 
 \title{Transient-glitch resilience in neural gravitational-wave parameter estimation without network retraining}
 
-\author{Jayant Kumar\corref{cor1}}
+\author{Jayant Kumar Haresh\corref{cor1}}
 \ead{j.kumar16224@kgs.edu.pk}
 \cortext[cor1]{Corresponding author.}
 \affiliation{organization={Karachi Grammar School},
@@ -43,16 +45,24 @@
             country={Pakistan}}
 
 \begin{abstract}
-Neural posterior estimators such as \DINGOBNS return complete binary neutron star (BNS) posteriors in about one second, but they are trained on stationary Gaussian noise and cannot signal that an input lies outside that distribution.
+Neural posterior estimators such as \DINGOBNS return binary neutron star (BNS) posteriors in about one second, but they are trained on stationary Gaussian noise and cannot signal that an input lies outside that distribution.
 We characterize how the official, frozen \DINGOBNS checkpoint responds to transient glitches overlapping the analysis segment, and show that the failure can be mitigated by a preprocessing front-end that leaves the network weights untouched.
-Placing synthetic and real glitches on a common loudness scale, the whitened optimal signal-to-noise ratio $\rho_w$ of the glitch itself, we find no failure below $\rho_w\approx100$: 61 real O3 Gravity Spy glitches injected at native loudness leave the posterior intact below Omicron SNR 100.
+Placing synthetic and real glitches on a common loudness scale, the whitened optimal signal-to-noise ratio $\rho_w$ of the glitch, we find no failure below $\rho_w\approx100$: 61 real O3 Gravity Spy glitches injected at native loudness leave the posterior intact below Omicron SNR 100.
 Above that, the luminosity-distance posterior collapses to a boundary of the network's prior with a credible interval far too narrow to reveal the failure.
 The onset is morphology dependent: $60\%$ of real Koi-Fish glitches above Omicron SNR 300 ($\rho_w\approx500$) collapse the network, a loudness that $11\%$ of confidently classified O3 H1 triggers exceed, whereas synthetic sine-Gaussians and broadband bursts reach $50\%$ collapse only near $\rho_w\approx3\times10^{3}$.
-A detect--gate--rebuild front-end (STFT time-bin detection, Tukey gating, a matched-delta frequency-domain update, and retention of the original analysis ASDs) restores posteriors meeting a clean-reference criterion in $99\%$ of 183 real-glitch cells (including all 17 collapsed ones), $86\%$ of a 240-cell loud-glitch stress grid on GW170817, and $92\%$ of a 160-cell synthetic BNS panel, with agreement on all 15 sampled parameters in a controlled case study.
-Ablations show that the matched-delta update with the original ASDs is essential: overwriting the packaged strain with the FFT of the gated strain recovers nothing.
+A detect--gate--rebuild front-end (STFT detection, Tukey gating, a matched-delta frequency-domain update, and retention of the original analysis ASDs) restores clean-like posteriors in $99\%$ of 183 real-glitch cells (including all 17 collapsed ones), $86\%$ of a 240-cell stress grid on GW170817, and $92\%$ of a 160-cell synthetic BNS panel, with agreement on all 15 sampled parameters in a controlled case study.
+Ablations show the matched-delta update with the original ASDs is essential: overwriting the packaged strain with the FFT of the gated strain recovers nothing.
 A fixed-width oracle that knows the glitch time recovers fewer cells than the detector, so residual failures are limited by gate extent rather than localization.
 Software, the detector checkpoint, and archived results are released.
 \end{abstract}
+
+\begin{highlights}
+\item Frozen \DINGOBNS is robust to ordinary glitches; distance collapses only above a measured loudness.
+\item 11\% of confident O3 H1 Gravity Spy triggers exceed the loudness at which collapse begins.
+\item A detect--gate--rebuild front-end restores posteriors without retraining: 99\% on real glitches.
+\item Matched-delta reconstruction with the original ASD is essential; FFT replacement recovers nothing.
+\item Software, detector checkpoint, and archived results are released for reproduction.
+\end{highlights}
 
 \begin{keyword}
 gravitational waves \sep binary neutron stars \sep neural posterior estimation \sep DINGO \sep signal gating \sep detector glitches
@@ -139,7 +149,8 @@ The domain settings are echoed into every archived \texttt{results/*/} configura
 \subsection{Transient noise in ground-based detectors}
 \label{sec:bg-glitches}
 
-Glitches arise from instrumental and environmental couplings and exhibit diverse time--frequency morphologies~\cite{Abbott2016noise,Nuttall2018transient,Davis2021detchar}.
+Glitches arise from instrumental and environmental couplings and exhibit diverse time--frequency morphologies~\cite{Abbott2016noise,Nuttall2018transient,Davis2021detchar}; they remained a dominant data-quality issue in the first half of the fourth observing run~\cite{Soni2025o4}.
+Excess-power trigger generators such as Omicron~\cite{Robinet2020omicron} identify and parametrize them in the strain channel, and auxiliary-channel classifiers such as iDQ~\cite{Essick2021idq} estimate in low latency the probability that a glitch is present.
 Citizen-science and machine-learning catalogues such as Gravity Spy provide morphological taxonomies used throughout detector characterization~\cite{Zevin2017gravityspy,Bahaadini2018,Glanzer2023gravityspy}.
 Blip-like short bursts and scattered-light arches are particularly relevant to compact-binary analyses~\cite{Cabero2019blip,Soni2021scattered}.
 During O3, of order 20\% of candidates required some form of glitch mitigation~\cite{Davis2022subtract}, and nearby glitches can bias low-latency sky maps~\cite{Macas2022localization}.
@@ -147,7 +158,7 @@ During O3, of order 20\% of candidates required some form of glitch mitigation~\
 \subsection{Mitigation for likelihood-based parameter estimation}
 \label{sec:bg-mitigation}
 
-Likelihood-based pipelines mitigate glitches by gating~\cite{Zackay2021nongaussian,Usman2016pycbc}, by joint wavelet modelling of signal and glitch (BayesWave)~\cite{Cornish2015bayeswave,Pankow2018mitigation,Hourihane2022overlap,Davis2022subtract,Ghonge2024efficacy}, by parametric or data-driven glitch bases~\cite{Merritt2021glitschen,Malz2025joint}, or by modifying the noise model itself~\cite{Ashton2023gp}.
+Likelihood-based pipelines mitigate glitches by gating, which is also the standard treatment of loud transients in low-latency searches~\cite{Zackay2021nongaussian,Usman2016pycbc,Ewing2024gstlal}, by joint wavelet modelling of signal and glitch (BayesWave)~\cite{Cornish2015bayeswave,Cornish2021bayeswave,Pankow2018mitigation,Hourihane2022overlap,Davis2022subtract,Ghonge2024efficacy}, by parametric or data-driven glitch models~\cite{Merritt2021glitschen,Udall2023scattered,Malz2025joint}, or by modifying the noise model itself~\cite{Ashton2023gp}.
 These methods are powerful but typically assume an evaluable likelihood and often incur minutes-to-hours of additional compute; acceptable offline, less so when the downstream estimator is an amortized network whose value proposition is second-scale sampling.
 
 \subsection{Glitches and neural parameter estimation}
@@ -155,7 +166,15 @@ These methods are powerful but typically assume an evaluable likelihood and ofte
 
 Two recent lines of work train normalizing flows to remain accurate under glitch contamination, either by time--spectral fusion architectures~\cite{Sun2024ttsf} or by studying robustness to sine-Gaussian contaminants without explicit deglitching~\cite{Xiong2025robust}.
 Malz and Veitch~\cite{Malz2025joint} instead learn a Gravity Spy-informed glitch prior and sample signal and glitch jointly inside Bilby.
+Legin et al.~\cite{Legin2025score} take a third route and learn the non-Gaussian noise distribution itself with a score-based model, so that the likelihood rather than the posterior network absorbs the glitches.
+Low-latency neural pipelines designed for online deployment, such as AMPLFI~\cite{Chatterjee2024amplfi}, face the same exposure to real detector noise.
+
+A separate body of work applies machine learning to the data rather than to the estimator; Cuoco et al.~\cite{Cuoco2025review} give a recent review.
+DeepClean~\cite{Ormiston2020deepclean} regresses noise out of the strain using auxiliary witness channels.
+DeepExtractor~\cite{Dooney2025deepextractor} reconstructs glitches in the time domain so that they can be subtracted.
+Closest in spirit to the present work, NNETFIX~\cite{Mogushi2021nnetfix} uses a neural network to estimate the portion of a signal lost when glitch-contaminated data are gated.
 Convolutional classifiers for glitch morphology~\cite{Razzano2018cnn,George2018dnn} address detection and categorization rather than posterior recovery.
+None of these studies asks the question posed here: given a data-domain repair, what must be true of the way it is written back into the input of a frozen amortized estimator for that estimator to accept it?
 Our setting is complementary and deliberately constrained: the \DINGOBNS production weights are frozen; only a lightweight detector is trained; and mitigation is a data-domain front-end that restores inputs compatible with the existing network.
 Table~\ref{tab:related} positions the front-end against these approaches along the four axes that matter operationally: whether the parameter-estimation network must be retrained, whether a likelihood must be evaluated, how much latency is added at event time, and whether glitch labels are needed.
 
@@ -166,7 +185,7 @@ Table~\ref{tab:related} positions the front-end against these approaches along t
 Latency is the additional time at event time beyond the base sampler, as reported by the respective authors.}
 \label{tab:related}
 \scriptsize
-\setlength{\tabcolsep}{3pt}
+\setlength{\tabcolsep}{2pt}
 \begin{tabular}{@{}lcccc@{}}
 \toprule
 Approach & PE retraining & Likelihood & Added latency & Labels \\
@@ -208,7 +227,7 @@ Here $\tilde g(f)$ is the Fourier transform of the injected time-domain glitch a
 For synthetic families $g$ is the generated waveform; for real Gravity Spy excerpts it is the re-coloured, glitch-only estimate described in Section~\ref{sec:realglitches} after it has been placed in the segment, so $\rho_w$ measures the loudness of what was actually injected.
 This is the matched-filter SNR the glitch would have if it were the template, and it is the quantity the whitened network input actually sees.
 
-Gravity Spy reports an Omicron SNR for each trigger~\cite{Zevin2017gravityspy,Glanzer2023gravityspy}, and the two scales are related only approximately, because Omicron matches a sine-Gaussian basis to the trigger while $\rho_w$ integrates whatever power the excerpt contains across the analysis band.
+Gravity Spy reports an Omicron SNR~\cite{Robinet2020omicron} for each trigger~\cite{Zevin2017gravityspy,Glanzer2023gravityspy}, and the two scales are related only approximately, because Omicron matches a sine-Gaussian basis to the trigger while $\rho_w$ integrates whatever power the excerpt contains across the analysis band.
 Over the 61 real glitches of the native-loudness panel (Section~\ref{sec:realglitches}), each of which carries both quantities, the ratio $\rho_w/\mathrm{SNR}_{\mathrm{Omicron}}$ has median $1.6$ with a 16--84\% range of $1.0$--$2.3$ and extremes of $0.4$ and $5.4$, and it depends on morphology: median $1.6$ (16--84\% range $1.2$--$1.8$, $n=15$) for blips, $1.4$ ($1.3$--$1.8$, $n=20$) for Koi Fish, $1.3$ ($0.8$--$1.6$, $n=7$) for tomtes, $1.1$ ($0.6$--$2.3$, $n=9$) for scattered light, and $3.0$ ($1.9$--$4.4$, $n=10$) for whistles.
 Omicron-SNR bins should therefore be read as approximate loudness bins, accurate to a factor of two or so; wherever real glitches are reported by Omicron-SNR bin (Table~\ref{tab:real}) we also give the median injected $\rho_w$ of that bin, and the catalogue-tail fractions of Section~\ref{sec:results-real} are quoted on the Omicron scale on which the catalogue is defined.
 At the Koi-Fish ratio, Omicron SNR 300 corresponds to $\rho_w\approx4\times10^{2}$ and Omicron SNR $2\times10^{3}$ to $\rho_w\approx3\times10^{3}$.
@@ -524,6 +543,7 @@ Gated recovery is the fraction of cells whose post-front-end posterior matches t
 Oracle recovery uses a single $\pm0.4\,\mathrm{s}$ gate centred on the true injection time (perfect localization, fixed extent).
 Held-out families ($\dagger$) were not seen by the detector in training.}
 \label{tab:gw170817}
+\small
 \begin{tabular}{@{}lcccc@{}}
 \toprule
 Family & $N$ & Poison collapse & Gated recovery & Oracle recovery \\
@@ -706,6 +726,8 @@ A per-family or per-duration gate policy is the natural resolution.
 BayesWave-style joint modelling remains the gold standard when a likelihood is available and latency is secondary~\cite{Davis2022subtract,Ghonge2024efficacy}.
 Retraining or glitch-augmenting the density estimator~\cite{Sun2024ttsf,Xiong2025robust} improves intrinsic robustness but requires control of the training stack and careful monitoring of clean-data calibration.
 The front-end here is complementary: it protects a frozen production checkpoint at modest overhead and can sit in front of either neural or conventional samplers.
+It is also modular.
+The gate could be replaced by a learned subtraction or signal-reconstruction stage~\cite{Dooney2025deepextractor,Mogushi2021nnetfix}, which would address the gate-extent failures of Section~\ref{sec:failures}; the matched-delta rewrite and the retention of the original ASDs would still be required, because they concern how any repaired strain is presented to the network and not how the repair is obtained.
 Where glitches are long, coherent across detectors, or morphologically unknown, likelihood-based subtraction or joint signal--glitch inference~\cite{Malz2025joint} remains preferable.
 
 \subsection{Limitations}
@@ -743,13 +765,16 @@ A fixed-width oracle with perfect knowledge of the glitch time recovers fewer ce
 The accompanying software and archived results make every number reproducible and the front-end available for integration into low-latency neural inference stacks.
 
 
+\section*{CRediT authorship contribution statement}
+\textbf{Jayant Kumar:} Conceptualization, Methodology, Software, Validation, Formal analysis, Investigation, Data curation, Writing (original draft), Writing (review \& editing), Visualization.
+
 \section*{Declaration of competing interest}
 The author declares that he has no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper.
 
 \section*{Data availability}
 Open strain data are available from the Gravitational Wave Open Science Center~\cite{Abbott2021opendata,Abbott2023opendata}.
 The \DINGOBNS demonstration model is obtained from the upstream DINGO release~\cite{Dax2025bns}.
-Source code, the STFT detector checkpoint, and archived result summaries for this study are openly available at \url{https://github.com/Jayant-Kumar17/glitch-robust-dingo-bns} and archived at Zenodo, release v1.1.1: \url{https://doi.org/10.5281/zenodo.22844461} (concept DOI for all versions: \url{https://doi.org/10.5281/zenodo.22844460}).
+Source code, the STFT detector checkpoint, and archived result summaries for this study are openly available at \url{https://github.com/Jayant-Kumar17/glitch-robust-dingo-bns} and archived at Zenodo, release v1.1.2: \url{https://doi.org/10.5281/zenodo.23912594} (concept DOI for all versions: \url{https://doi.org/10.5281/zenodo.22844460}).
 Every number in the tables is read from the archived JSON and CSV summaries under \texttt{results/}, and Figs.~\ref{fig:pipeline}--\ref{fig:oracle} are regenerated from them by \texttt{paper/make\_figures.py}, \texttt{paper/make\_figures\_t5.py}, and \texttt{examples/paper\_figures\_2\_3.py}.
 The Gravity Spy O3 classifications are from Zenodo record 5649212~\cite{Glanzer2023gravityspy}.
 
@@ -802,7 +827,8 @@ python -u examples/stress_gw170817.py \
 python -u examples/stress_synthetic_bns.py \
   --outdir results/stress_test_synthetic_bns_v1
 python -u examples/method_hardening.py \
-  --num-samples 512 --outdir results/journal_method_hardening_v1
+  --num-samples 512 \
+  --outdir results/journal_method_hardening_v1
 python -u examples/clean_gate_control.py \
   --outdir results/clean_gate_control_v1
 python -u examples/collapse_threshold.py --seed 0 \
