@@ -42,7 +42,7 @@ references:
     authors:
       - family-names: Kumar
         given-names: Jayant
-  journal: Astronomy and Computing
+    journal: Astronomy and Computing
     year: 2026
     notes: submitted
   - type: article
