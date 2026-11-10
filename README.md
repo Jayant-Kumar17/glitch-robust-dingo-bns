@@ -247,7 +247,7 @@ from adapt.dingo_bns_demo import discover_assets, run_baseline_sampling
 
 ## Citation
 
-Manuscript submitted to *Classical and Quantum Gravity* (IOP Publishing).
+Manuscript submitted to *Astronomy and Computing* (Elsevier).
 
 Provisional title: *Transient-glitch resilience in neural gravitational-wave
 parameter estimation without network retraining*.
