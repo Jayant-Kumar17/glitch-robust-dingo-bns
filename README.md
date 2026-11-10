@@ -1,6 +1,6 @@
 # Glitch mitigation for neural BNS parameter estimation with frozen DINGO-BNS
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22844461.svg)](https://doi.org/10.5281/zenodo.22844461)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22844460.svg)](https://doi.org/10.5281/zenodo.22844460)
 [![CITATION.cff](https://img.shields.io/badge/cite-CITATION.cff-blue)](CITATION.cff)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -254,7 +254,7 @@ parameter estimation without network retraining*.
 
 Software citation metadata is in [`CITATION.cff`](CITATION.cff) (GitHub renders
 a "Cite this repository" button from it). The archived snapshot is
-[doi:10.5281/zenodo.22844461](https://doi.org/10.5281/zenodo.22844461)
+[doi:10.5281/zenodo.22844460](https://doi.org/10.5281/zenodo.22844460)
 (concept DOI [10.5281/zenodo.22844460](https://doi.org/10.5281/zenodo.22844460)).
 Tagged releases are listed under
 [Releases](https://github.com/Jayant-Kumar17/glitch-robust-dingo-bns/releases).
