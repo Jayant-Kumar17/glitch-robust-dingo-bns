@@ -86,6 +86,8 @@ results/*
 !results/loudness_audit_v1/**
 !results/collapse_threshold_v1/
 !results/collapse_threshold_v1/**
+!results/latency_fp_audit_v1/
+!results/latency_fp_audit_v1/**
 
 # Re-ignore heavy artifacts even inside canonical dirs
 *.hdf5
