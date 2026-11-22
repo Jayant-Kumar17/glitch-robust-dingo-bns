@@ -309,94 +309,71 @@ def fig5(repo: Path, out: Path) -> None:
 def fig6(repo: Path, out: Path) -> None:
     import matplotlib.pyplot as plt
 
-    S = _load_json(repo / "results/journal_method_hardening_v1/ablation_summary.json")
-    cells = pd.read_csv(repo / "results/journal_method_hardening_v1/ablation_results.csv")
+    S = _load_json(repo / "results/journal_method_hardening_v2/ablation_summary.json")
+    cells = pd.read_csv(repo / "results/journal_method_hardening_v2/ablation_results.csv")
     clean = S["clean_reference_d_L"]
-    arms = ["poison_welch", "glitch_orig_asd", "gate_welch", "fft_replace", "adapt_full"]
+    arms = [
+        "adapt_full",
+        "dingo_repackage",
+        "dingo_repackage_aligned",
+        "inpaint_repackage",
+        "inpaint_repackage_aligned",
+        "fft_replace",
+        "gate_welch",
+        "glitch_orig_asd",
+        "poison_welch",
+    ]
     labels = [
-        "no gate\nWelch ASD",
-        "no gate\noriginal ASD",
+        "matched-δ\noriginal ASD",
+        "DINGO\nshift +2 s",
+        "DINGO\nno shift",
+        "inpaint\nshift +2 s",
+        "inpaint\nno shift",
+        "FFT\nreplace",
         "gate\nWelch ASD",
-        "gate, FFT\nreplace",
-        "gate, matched-$\\delta$\noriginal ASD",
+        "no gate\noriginal ASD",
+        "no gate\nWelch ASD",
     ]
     rec = [S["by_arm"][k]["recovers_like_clean"] for k in arms]
-    ingredients = [
-        # gate, matched-delta, original ASD
-        (False, False, False),
-        (False, False, True),
-        (True, False, False),
-        (True, False, True),
-        (True, True, True),
-    ]
     rng = np.random.default_rng(0)
+    cols = [GATED, POISON, "#E09F3E", POISON, "#E09F3E", POISON, ORACLE, ORACLE, ORACLE]
 
-    fig = plt.figure(figsize=mm(190, 80))
+    fig = plt.figure(figsize=mm(190, 88))
     gs = fig.add_gridspec(
-        2, 2, height_ratios=[3.5, 1.8], width_ratios=[1.15, 1.0],
-        left=0.08, right=0.98, top=0.90, bottom=0.10, wspace=0.28, hspace=0.22,
+        1, 2, width_ratios=[1.05, 1.15],
+        left=0.08, right=0.98, top=0.90, bottom=0.30, wspace=0.28,
     )
     a1 = fig.add_subplot(gs[0, 0])
-    a_tab = fig.add_subplot(gs[1, 0])
-    a2 = fig.add_subplot(gs[:, 1])
+    a2 = fig.add_subplot(gs[0, 1])
     restyle_axes(a1)
     restyle_axes(a2)
-    panel_letter(a1, "a", dx=-0.08, dy=1.04)
-    panel_letter(a2, "b", dx=-0.10, dy=1.02)
-
-    cols = [ORACLE, ORACLE, ORACLE, ORACLE, GATED]
-    bars = a1.bar(np.arange(5), rec, color=cols, width=0.72, zorder=3)
-    bars[3].set_edgecolor(POISON)
-    bars[3].set_linewidth(1.4)
+    panel_letter(a1, "a", dx=-0.12, dy=1.04)
+    panel_letter(a2, "b", dx=-0.12, dy=1.04)
+    y = np.arange(len(arms))
+    a1.barh(y, rec, color=cols, height=0.72, zorder=3)
     for i, v in enumerate(rec):
-        lab = f"{v:.0%}"
-        a1.text(i, v + 0.03, lab, ha="center", va="bottom", fontsize=8,
-                fontweight="bold" if i in (3, 4) else "normal",
-                color=POISON if i == 3 else "k")
-    a1.set_xticks(np.arange(5))
-    a1.set_xticklabels([])
-    fraction_axis(a1)
-    a1.set_ylabel("clean-like recovery")
-    a1.set_title("Which ingredients matter?", fontsize=9)
-    a1.set_ylim(0.0, 1.12)
-    fig.text(
-        0.30, 0.015,
-        "same detector, same gates, same ASD — only the frequency-domain rewrite differs",
-        ha="center", va="bottom", fontsize=7, color=NEUTRAL,
-    )
+        a1.text(v + 0.02, i, f"{v:.0%}", va="center", ha="left", fontsize=7)
+    a1.set_yticks(y)
+    a1.set_yticklabels(labels, fontsize=6.5)
+    a1.set_xlim(0, 1.18)
+    a1.set_xlabel("clean-like recovery")
+    a1.set_title("Same gates, different rewrite", fontsize=9)
+    a1.invert_yaxis()
 
-    a_tab.set_xlim(-0.5, 4.5)
-    a_tab.set_ylim(-1.8, 3.2)
-    a_tab.set_axis_off()
-    row_labs = ["gate", r"matched-$\delta$", "original ASD"]
-    for r, name in enumerate(row_labs):
-        a_tab.text(-0.55, 2 - r, name, ha="right", va="center", fontsize=7, color=NEUTRAL)
-        for c, trip in enumerate(ingredients):
-            mark = "Y" if trip[r] else "N"
-            a_tab.text(
-                c, 2 - r, mark, ha="center", va="center", fontsize=8,
-                color=GATED if trip[r] else "#AAAAAA",
-                fontweight="bold",
-            )
-    for c, lab in enumerate(labels):
-        a_tab.text(c, -0.65, lab, ha="center", va="top", fontsize=6.5, color="k", linespacing=1.15)
-
-    a2.axhspan(clean["lo"], clean["hi"], color=CLEAN, alpha=0.15, zorder=0, label="clean 90 % CI")
-    a2.axhline(clean["med"], color=CLEAN, lw=1.1, zorder=1, label="clean median")
-    a2.axhline(10.0, color=POISON, ls="--", lw=0.7)
-    a2.text(4.45, 11.2, "prior floor", fontsize=7, color=POISON, ha="right", va="bottom")
+    a2.axhspan(clean["lo"], clean["hi"], color=CLEAN, alpha=0.15, zorder=0)
+    a2.axhline(clean["med"], color=CLEAN, lw=1.0, zorder=1)
+    a2.axhline(10.0, color=POISON, ls="--", lw=0.6)
+    a2.axhline(100.0, color=POISON, ls=":", lw=0.6)
     for i, arm in enumerate(arms):
-        y = cells[cells.arm == arm]["med"].to_numpy(float)
-        j = rng.uniform(-0.12, 0.12, size=len(y))
-        a2.scatter(np.full(len(y), i) + j, y, s=11, color=cols[i],
-                   alpha=0.75, zorder=3, linewidths=0)
-        a2.plot([i - 0.22, i + 0.22], [np.median(y), np.median(y)], color="k", lw=1.6, zorder=4)
-    a2.set_xticks(np.arange(5))
-    a2.set_xticklabels(labels, fontsize=6.5)
+        vals = cells[cells.arm == arm]["med"].to_numpy(float)
+        j = rng.uniform(-0.15, 0.15, size=len(vals))
+        a2.scatter(np.full(len(vals), i) + j, vals, s=10, color=cols[i], alpha=0.8, linewidths=0, zorder=3)
+        a2.plot([i - 0.28, i + 0.28], [np.median(vals)] * 2, color="k", lw=1.3, zorder=4)
+    a2.set_xticks(np.arange(len(arms)))
+    a2.set_xticklabels(labels, fontsize=6, rotation=30, ha="right")
     a2.set_ylabel(r"$d_L$ median [Mpc]")
-    a2.set_ylim(0, 52)
-    a2.set_title(r"Where does $d_L$ land?", fontsize=9)
-    a2.legend(loc="upper left", fontsize=7)
+    a2.set_ylim(0, 115)
+    a2.set_title(r"Where $d_L$ lands", fontsize=9)
     save(fig, out, "fig6_ablation")
 
 
@@ -791,6 +768,55 @@ def figS4(repo: Path, out: Path) -> None:
     save(fig, out, "figS4_collapse_vs_trel")
 
 
+def fig10(repo: Path, out: Path) -> None:
+    """15-parameter JS and synthetic coverage from the multi-event validation."""
+    import matplotlib.pyplot as plt
+
+    S = _load_json(repo / "results/multi_param_validation_v1/summary.json")
+    names = [
+        "delta_chirp_mass", "mass_ratio", "a_1", "a_2", "tilt_1", "tilt_2",
+        "phi_12", "phi_jl", "theta_jn", "luminosity_distance", "geocent_time",
+        "psi", "lambda_1", "lambda_2", "chirp_mass",
+    ]
+    pretty = [
+        r"$\Delta\mathcal{M}$", r"$q$", r"$a_1$", r"$a_2$", r"$\theta_1$", r"$\theta_2$",
+        r"$\phi_{12}$", r"$\phi_{JL}$", r"$\theta_{JN}$", r"$d_L$", r"$t_c$",
+        r"$\psi$", r"$\Lambda_1$", r"$\Lambda_2$", r"$\mathcal{M}$",
+    ]
+    real = [S["real_koi_fish"]["per_parameter_js"][n]["median"] for n in names]
+    synth = [S["synthetic"]["per_parameter_js"][n]["median"] for n in names]
+    cov90_c = [S["synthetic_coverage_clean"][n]["coverage_90"] for n in names]
+    cov90_g = [S["synthetic_coverage_gated"][n]["coverage_90"] for n in names]
+
+    fig = plt.figure(figsize=mm(190, 78))
+    gs = fig.add_gridspec(1, 2, left=0.08, right=0.98, top=0.88, bottom=0.28, wspace=0.28)
+    a1 = fig.add_subplot(gs[0, 0])
+    a2 = fig.add_subplot(gs[0, 1])
+    restyle_axes(a1)
+    restyle_axes(a2)
+    panel_letter(a1, "a", dx=-0.10, dy=1.06)
+    panel_letter(a2, "b", dx=-0.10, dy=1.06)
+    x = np.arange(len(names))
+    w = 0.38
+    a1.bar(x - w / 2, real, w, color=GATED, label="17 real Koi Fish")
+    a1.bar(x + w / 2, synth, w, color=CLEAN, label="19 synthetic")
+    a1.set_xticks(x)
+    a1.set_xticklabels(pretty, rotation=60, ha="right", fontsize=6.5)
+    a1.set_ylabel("median 1D JS [nat]")
+    a1.set_title("Clean versus adapt_full", fontsize=9)
+    a1.legend(fontsize=6.5)
+    a2.plot(x, cov90_c, "o", color=CLEAN, ms=4, label="clean 90%")
+    a2.plot(x, cov90_g, "s", color=GATED, ms=4, label="gated 90%")
+    a2.axhline(0.90, color=NEUTRAL, ls=":", lw=0.7)
+    a2.set_xticks(x)
+    a2.set_xticklabels(pretty, rotation=60, ha="right", fontsize=6.5)
+    a2.set_ylim(0.5, 1.05)
+    a2.set_ylabel("empirical coverage")
+    a2.set_title("Injected-parameter coverage", fontsize=9)
+    a2.legend(fontsize=6.5)
+    save(fig, out, "fig10_multiparam")
+
+
 FIGURES = {
     "fig1": fig1,
     "fig4": fig4,
@@ -799,6 +825,7 @@ FIGURES = {
     "fig7": fig7,
     "fig8": fig8,
     "fig9": fig9,
+    "fig10": fig10,
     "figS1": figS1,
     "figS2": figS2,
     "figS3": figS3,

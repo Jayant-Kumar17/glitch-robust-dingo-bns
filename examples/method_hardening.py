@@ -58,6 +58,17 @@ ARMS = (
     "adapt_full",
     "fft_replace",
 )
+ARMS_V2 = (
+    "adapt_full",
+    "dingo_repackage_aligned",
+    "inpaint_repackage_aligned",
+    "dingo_repackage",
+    "inpaint_repackage",
+    "fft_replace",
+    "gate_welch",
+    "glitch_orig_asd",
+    "poison_welch",
+)
 
 logger = logging.getLogger("journal_method_hardening")
 
@@ -194,7 +205,7 @@ def write_report(
     with PdfPages(pdf_path) as pdf:
         # Ablation recovery by arm
         fig, ax = plt.subplots(figsize=(8, 4.5))
-        arms = list(ARMS)
+        arms = list(ablation_summary.get("arms") or ARMS)
         rates = [
             ablation_summary["by_arm"].get(a, {}).get("recovers_like_clean", 0.0) or 0.0
             for a in arms
@@ -282,6 +293,51 @@ def write_report(
     logger.info("Wrote %s", pdf_path)
 
 
+def _write_residual_summary(outdir: Path, rows: List[Dict[str, Any]]) -> None:
+    """Scalar packaging residual plus the whitened-power spectrum of ε(f)."""
+    (outdir / "packaging_residual.json").write_text(
+        json.dumps(rows, indent=2, default=str)
+    )
+    flat = []
+    for row in rows:
+        flat.append(
+            {
+                "cell_id": row.get("cell_id"),
+                "family": row.get("family"),
+                "severity": row.get("severity"),
+                "arm": row.get("arm"),
+                "n_gates": row.get("n_gates"),
+                "rel_l2": row.get("H1_rel_l2"),
+                "rel_l2_unwindowed": row.get("H1_rel_l2_unwindowed"),
+                "amplitude_ratio_F_over_X": row.get("H1_amplitude_ratio_F_over_X"),
+                "rho_eps": row.get("H1_rho_eps"),
+                "max_phase_mismatch_rad": row.get("H1_max_phase_mismatch_rad"),
+                "median_abs_phase_mismatch_rad": row.get("H1_median_abs_phase_mismatch_rad"),
+                "shift_aligned_rel_l2": row.get("H1_shift_aligned_rel_l2"),
+                "shift_aligned_max_phase_rad": row.get("H1_shift_aligned_max_phase_rad"),
+            }
+        )
+    pd.DataFrame(flat).to_csv(outdir / "packaging_residual.csv", index=False)
+    summary: Dict[str, Any] = {}
+    frame = pd.DataFrame(flat)
+    for arm, sub in frame.groupby("arm"):
+        summary[str(arm)] = {
+            "n": int(len(sub)),
+            "rel_l2_median": float(sub["rel_l2"].median()),
+            "rel_l2_mean": float(sub["rel_l2"].mean()),
+            "rho_eps_median": float(sub["rho_eps"].median()),
+            "rho_eps_mean": float(sub["rho_eps"].mean()),
+            "max_phase_mismatch_rad_median": float(sub["max_phase_mismatch_rad"].median()),
+            "shift_aligned_rel_l2_median": float(sub["shift_aligned_rel_l2"].median()),
+            "shift_aligned_max_phase_rad_median": float(
+                sub["shift_aligned_max_phase_rad"].median()
+            ),
+        }
+    (outdir / "packaging_residual_summary.json").write_text(
+        json.dumps(summary, indent=2)
+    )
+
+
 def run(args: argparse.Namespace) -> None:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     from adapt.glitch_excision import rebuild_event_from_gated_td
@@ -347,17 +403,35 @@ def run(args: argparse.Namespace) -> None:
     norm_stats = det_raw.get("norm_stats")
     stft_kwargs = dict(det_raw.get("stft_kwargs") or {})
 
+    arms = list(ARMS_V2 if args.profile == "v2" else ARMS)
+    pe_session = None
+    if args.profile == "v2":
+        from pe_session import PESession
+
+        pe_session = PESession(Path(assets["baseline_ckpt"]), device=str(device))
+
+    def _distance_ci(data):
+        if pe_session is not None:
+            return pe_session.luminosity_distance_ci(
+                data,
+                settings,
+                fixed,
+                num_samples=args.num_samples,
+                batch_size=args.batch_size,
+            )
+        return _sample_dl(
+            assets,
+            data,
+            settings,
+            fixed,
+            device=device,
+            n=args.num_samples,
+            bs=args.batch_size,
+        )
+
     # Clean reference + threshold calibrate
     t_clean0 = time.time()
-    clean_ci = _sample_dl(
-        assets,
-        event.data,
-        settings,
-        fixed,
-        device=device,
-        n=args.num_samples,
-        bs=args.batch_size,
-    )
+    clean_ci = _distance_ci(event.data)
     t_clean = time.time() - t_clean0
     logger.info("Clean d_L %s (%.2fs)", clean_ci, t_clean)
 
@@ -430,6 +504,7 @@ def run(args: argparse.Namespace) -> None:
 
     timing_rows: List[Dict[str, float]] = []
     abl_rows: List[Dict[str, Any]] = []
+    residual_rows: List[Dict[str, Any]] = []
 
     for cell in cells:
         logger.info(
@@ -516,7 +591,48 @@ def run(args: argparse.Namespace) -> None:
                 "adapt_full": adapt.data,
                 "fft_replace": replaced.data,
             }
+            if args.profile == "v2":
+                from dingo_conditioning import (
+                    base_frequency_domain,
+                    repackage_event,
+                    residual_record,
+                )
 
+                domain = base_frequency_domain(base_domain)
+                for mode in (
+                    "dingo_repackage",
+                    "inpaint_repackage",
+                    "dingo_repackage_aligned",
+                    "inpaint_repackage_aligned",
+                ):
+                    if args.arms and mode not in args.arms:
+                        continue
+                    packaged, td_used = repackage_event(
+                        poison,
+                        meta["td_full"],
+                        gates,
+                        asds_clean,
+                        domain,
+                        mode=mode,
+                        sample_rate=sample_rate,
+                    )
+                    arm_data[mode] = packaged
+                    h1 = residual_record(
+                        td_used, packaged, asds_clean, detectors=["H1"]
+                    ).get("H1", {})
+                    residual_rows.append(
+                        {
+                            "cell_id": cell["cell_id"],
+                            "family": cell["family"],
+                            "severity": cell["severity"],
+                            "arm": mode,
+                            "n_gates": len(gates),
+                            **{f"H1_{k}": v for k, v in h1.items()},
+                        }
+                    )
+
+            if args.arms:
+                arm_data = {name: data for name, data in arm_data.items() if name in args.arms}
             cell_timing = {
                 "t_inject_detect_s": t_inject_detect,
                 "t_rebuild_s": t_rebuild,
@@ -525,15 +641,7 @@ def run(args: argparse.Namespace) -> None:
                 t_pe0 = time.time()
                 err = ""
                 try:
-                    ci = _sample_dl(
-                        assets,
-                        data,
-                        settings,
-                        fixed,
-                        device=device,
-                        n=args.num_samples,
-                        bs=args.batch_size,
-                    )
+                    ci = _distance_ci(data)
                     recovers = _gated_recovers(ci, clean_ci)
                     collapsed = _poison_collapsed(ci)
                 except Exception as exc:
@@ -582,7 +690,7 @@ def run(args: argparse.Namespace) -> None:
             timing_rows.append(cell_timing)
         except Exception as exc:
             logger.exception("Cell %d failed entirely", cell["cell_id"])
-            for arm in ARMS:
+            for arm in arms:
                 append_csv_row(
                     abl_path,
                     {
@@ -614,11 +722,19 @@ def run(args: argparse.Namespace) -> None:
         "t_clean_pe_s": t_clean,
         "thr_event": thr_event,
         "by_arm": by_arm,
-        "arms": list(ARMS),
+        "arms": list(arms),
     }
     (outdir / "ablation_summary.json").write_text(
         json.dumps(ablation_summary, indent=2, default=str)
     )
+    if args.profile == "v2" and residual_rows:
+        residual_path = outdir / "packaging_residual.json"
+        if residual_path.is_file() and not args.overwrite:
+            previous = json.loads(residual_path.read_text())
+            fresh = {row.get("arm") for row in residual_rows}
+            previous = [row for row in previous if row.get("arm") not in fresh]
+            residual_rows = previous + residual_rows
+        _write_residual_summary(outdir, residual_rows)
 
     # Runtime summary
     def _mean_std(vals: List[float]) -> Dict[str, float]:
@@ -663,12 +779,16 @@ def run(args: argparse.Namespace) -> None:
     (outdir / "runtime_summary.json").write_text(json.dumps(runtime, indent=2))
 
     # ---- Synthetic oracle gap re-runs ----
-    oracle_synth = run_synthetic_oracle_gap(
-        args=args,
-        device=device,
-        gate_half_s=gate_half_s,
-        outdir=outdir,
-    )
+    if args.profile == "v2":
+        oracle_synth = {"skipped": True, "reason": "v2 ablation does not re-run the synthetic oracle gap"}
+        (outdir / "oracle_gap_synthetic.json").write_text(json.dumps(oracle_synth, indent=2))
+    else:
+        oracle_synth = run_synthetic_oracle_gap(
+            args=args,
+            device=device,
+            gate_half_s=gate_half_s,
+            outdir=outdir,
+        )
 
     write_report(
         outdir,
@@ -1011,6 +1131,12 @@ def run_synthetic_oracle_gap(
 def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--outdir", type=resolve_under_repo, default=str(DEFAULT_OUTDIR))
+    p.add_argument(
+        "--profile",
+        choices=("v1", "v2"),
+        default="v1",
+        help="v2 adds dingo_repackage and inpaint_repackage and writes the packaging residual",
+    )
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--num-samples", type=int, default=512)
     p.add_argument("--batch-size", type=int, default=256)
@@ -1018,6 +1144,12 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     p.add_argument("--device", type=str, default=None)
     p.add_argument("--detector-ckpt", type=str, default=None)
     p.add_argument("--max-cells", type=int, default=None)
+    p.add_argument(
+        "--arms",
+        nargs="*",
+        default=None,
+        help="If set, only these ablation arms are sampled and appended",
+    )
     p.add_argument("--overwrite", action="store_true")
     p.add_argument("--real-results-csv", type=resolve_under_repo, default=str(DEFAULT_REAL_RESULTS))
     p.add_argument(

@@ -523,10 +523,23 @@ def fetch_h1_excerpt(
     n_expect = int(round(2.0 * half_span_s * sample_rate))
     x: Optional[np.ndarray] = None
     if prefer_ranged:
-        try:
-            x = fetch_h1_excerpt_ranged(event_time, half_span_s=half_span_s, sample_rate=sample_rate)
-        except Exception as exc:
-            logger.warning("ranged GWOSC fetch failed (%s); falling back to gwpy", exc)
+        import time
+
+        last_exc: Optional[Exception] = None
+        for attempt in range(5):
+            try:
+                x = fetch_h1_excerpt_ranged(
+                    event_time, half_span_s=half_span_s, sample_rate=sample_rate
+                )
+                break
+            except Exception as exc:
+                last_exc = exc
+                logger.warning(
+                    "ranged GWOSC fetch failed (%s); attempt %d/5", exc, attempt + 1
+                )
+                time.sleep(2.0 * (attempt + 1))
+        else:
+            logger.warning("ranged GWOSC fetch failed (%s); falling back to gwpy", last_exc)
     if x is None:
         from gwpy.timeseries import TimeSeries
 

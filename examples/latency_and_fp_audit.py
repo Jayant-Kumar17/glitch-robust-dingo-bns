@@ -2,10 +2,13 @@
 """Clean false-positive audit and component-isolated front-end timings.
 
 False-positive audit (no parameter estimation):
-  * 500 stationary Gaussian draws coloured by the GW170817 H1/L1/V1 analysis ASDs
+  * 1000 stationary Gaussian draws coloured by the GW170817 H1/L1/V1 analysis ASDs
+    (the first 500 use seed 0, the same sequence as the original audit; the
+    second 500 use seed 1)
   * 500 off-source 4 s crops from the local GWOSC frames (the same open-data
     files the demonstration package was built from), excluding the 128 s
-    on-source analysis window
+    on-source analysis window. These are reported separately: the frames are
+    not a vetted glitch-free sample
   * STFT detector at the validation threshold 0.46 and the event threshold 0.73
 
 Latency (CPU, and MPS for the front-end when available):
@@ -34,7 +37,7 @@ import torch
 from _repo import REPO_ROOT, resolve_under_repo
 
 THRESHOLDS = (0.46, 0.73)
-N_GAUSS = 500
+N_GAUSS = 1000
 N_OFF = 500
 N_WARM = 10
 N_ITER = 200
@@ -177,6 +180,40 @@ def _offsource_crops(assets: dict, n_crops: int) -> list[dict]:
     return crops
 
 
+def _gaussian_draws(asds: dict, n_crop: int, noise_std: float, n: int) -> list[dict]:
+    """ASD-coloured crops. Draws 0–499 use seed 0; draws 500+ use seed 1."""
+    n = int(n)
+    n_first = min(500, n)
+    draws = []
+    rng0 = np.random.default_rng(0)
+    for _ in range(n_first):
+        draws.append(
+            {det: _color_gaussian(asds[det], n_crop, rng0, noise_std) for det in DETECTORS}
+        )
+    if n > 500:
+        rng1 = np.random.default_rng(1)
+        for _ in range(n - 500):
+            draws.append(
+                {det: _color_gaussian(asds[det], n_crop, rng1, noise_std) for det in DETECTORS}
+            )
+    return draws
+
+
+def _score_population(model, draws, asds, stft_kwargs, norm_stats, noise_std, device) -> dict:
+    specs = []
+    for td in draws:
+        spec, _energy = _spectrogram(td, asds, stft_kwargs, norm_stats, noise_std)
+        spec_t = torch.from_numpy(np.asarray(spec, dtype=np.float32)).unsqueeze(0)
+        with torch.inference_mode():
+            probs = model.predict_probs(spec_t.to(device)).detach().cpu().numpy()[0]
+        specs.append(probs)
+    out = {}
+    for thr in THRESHOLDS:
+        fires = sum(_fires(p, thr) for p in specs)
+        out[str(thr)] = _rates(fires, len(specs))
+    return out
+
+
 def _spectrogram(td_map: dict, asds: dict, stft_kwargs: dict, norm_stats: dict, noise_std: float):
     from adapt.dingo_bns_demo import build_event_spectrogram_stack
 
@@ -313,6 +350,8 @@ def main(argv=None) -> None:
     parser.add_argument("--outdir", type=resolve_under_repo, default="results/latency_fp_audit_v1")
     parser.add_argument("--pe-20000-repeats", type=int, default=10)
     parser.add_argument("--skip-pe", action="store_true")
+    parser.add_argument("--skip-timing", action="store_true")
+    parser.add_argument("--skip-offsource", action="store_true")
     parser.add_argument("--n-gauss", type=int, default=N_GAUSS)
     parser.add_argument("--n-off", type=int, default=N_OFF)
     args = parser.parse_args(argv)
@@ -339,34 +378,62 @@ def main(argv=None) -> None:
     rng = np.random.default_rng(0)
 
     print(f"noise_std={noise_std:.6f}", flush=True)
-    print("building off-source crops", flush=True)
-    offsource = _offsource_crops(assets, int(args.n_off))
-    gaussian = []
-    for _ in range(int(args.n_gauss)):
-        gaussian.append(
-            {det: _color_gaussian(asds[det], n_crop, rng, noise_std) for det in DETECTORS}
+    del rng
+    prior_summary = {}
+    prior_path = outdir / "summary.json"
+    if prior_path.is_file():
+        prior_summary = json.loads(prior_path.read_text())
+
+    gaussian = _gaussian_draws(asds, n_crop, noise_std, int(args.n_gauss))
+    if int(args.n_gauss) > 500:
+        seed0 = _score_population(
+            model, gaussian[:500], asds, stft_kwargs, norm_stats, noise_std, device
         )
-
-    populations = {"gaussian_asd": gaussian, "offsource_gwosc": offsource}
-    fp = {}
-    for name, draws in populations.items():
-        specs = []
-        for td in draws:
-            spec, _energy = _spectrogram(td, asds, stft_kwargs, norm_stats, noise_std)
-            spec_t = torch.from_numpy(np.asarray(spec, dtype=np.float32)).unsqueeze(0)
-            with torch.inference_mode():
-                probs = model.predict_probs(spec_t.to(device)).detach().cpu().numpy()[0]
-            specs.append(probs)
-        fp[name] = {}
+        seed1 = _score_population(
+            model, gaussian[500:], asds, stft_kwargs, norm_stats, noise_std, device
+        )
+        gaussian_rates = {}
         for thr in THRESHOLDS:
-            fires = sum(_fires(p, thr) for p in specs)
-            fp[name][str(thr)] = _rates(fires, len(specs))
-        print(name, {k: v["k"] for k, v in fp[name].items()}, flush=True)
+            k = seed0[str(thr)]["k"] + seed1[str(thr)]["k"]
+            gaussian_rates[str(thr)] = _rates(k, int(args.n_gauss))
+    else:
+        seed0 = _score_population(
+            model, gaussian, asds, stft_kwargs, norm_stats, noise_std, device
+        )
+        seed1 = None
+        gaussian_rates = seed0
+    fp = {"gaussian_asd": gaussian_rates}
+    if seed0 is not None:
+        fp["gaussian_asd_seed0"] = seed0
+    if seed1 is not None:
+        fp["gaussian_asd_seed1"] = seed1
+    print(
+        "gaussian_asd",
+        {k: v["k"] for k, v in gaussian_rates.items()},
+        flush=True,
+    )
 
-    combined = {}
-    for thr in THRESHOLDS:
-        k = sum(fp[name][str(thr)]["k"] for name in populations)
-        combined[str(thr)] = _rates(k, int(args.n_gauss) + int(args.n_off))
+    if args.skip_offsource:
+        stored = (prior_summary.get("false_positive") or {}).get("populations") or {}
+        if "offsource_gwosc" not in stored:
+            raise RuntimeError("summary.json has no off-source block to preserve")
+        fp["offsource_gwosc"] = stored["offsource_gwosc"]
+        print(
+            "offsource_gwosc preserved",
+            {k: v["k"] for k, v in fp["offsource_gwosc"].items()},
+            flush=True,
+        )
+    else:
+        print("building off-source crops", flush=True)
+        offsource = _offsource_crops(assets, int(args.n_off))
+        fp["offsource_gwosc"] = _score_population(
+            model, offsource, asds, stft_kwargs, norm_stats, noise_std, device
+        )
+        print(
+            "offsource_gwosc",
+            {k: v["k"] for k, v in fp["offsource_gwosc"].items()},
+            flush=True,
+        )
 
     # Representative 4 s on-source crop and 128 s segment for timings.
     from gwpy.timeseries import TimeSeries
@@ -397,46 +464,55 @@ def main(argv=None) -> None:
     def rebuild_call():
         return _rebuild(event_data, td_full, asds)
 
-    print("timing front-end", flush=True)
-    timings = {
-        "t_stft": _time_loop(stft_call, N_WARM, N_ITER),
-        "t_cnn": _time_loop(cnn_call, N_WARM, N_ITER),
-        "t_rebuild": _time_loop(rebuild_call, N_WARM, N_ITER),
-    }
-    total = [a + b + c for a, b, c in zip(timings["t_stft"], timings["t_cnn"], timings["t_rebuild"])]
-    timings["t_frontend_total"] = total
-    timings["t_driver_overhead"] = _driver_overhead(td_crop["H1"], N_WARM, N_ITER, outdir)
-
+    timings: dict = {}
     mps_summary = None
-    if torch.backends.mps.is_available():
-        mps = torch.device("mps")
-        model_mps, _ = _load_detector(ckpt, mps)
-
-        def stft_mps():
-            return _spectrogram(td_crop, asds, stft_kwargs, norm_stats, noise_std)
-
-        def cnn_mps():
-            return _cnn_gates(model_mps, spec0, 0.73, mps)
-
-        print("timing MPS front-end", flush=True)
-        mps_summary = {
-            "t_stft": _summary(_time_loop(stft_mps, N_WARM, N_ITER)),
-            "t_cnn": _summary(_time_loop(cnn_mps, N_WARM, N_ITER)),
-        }
-
     pe = {}
-    if not args.skip_pe:
-        print("timing PE n=512 x", N_ITER, flush=True)
-        timings["t_pe_512"] = _pe_times(event, assets["fixed_context"], assets["baseline_ckpt"], 512, 2, N_ITER)
-        n20 = int(args.pe_20000_repeats)
-        print("timing PE n=20000 x", n20, flush=True)
-        timings["t_pe_20000"] = _pe_times(event, assets["fixed_context"], assets["baseline_ckpt"], 20000, 1, n20)
-        pe["t_pe_20000_note"] = (
-            f"Measured {n20} iterations after 1 warm-up, not 200. "
-            "A single 20_000-sample GWSamplerGNPE draw is tens of seconds on this CPU; "
-            "200 repeats would be several hours and were not run."
-        )
+    if args.skip_timing:
+        print("timing preserved from existing summary", flush=True)
+        latency_cpu = prior_summary.get("latency_cpu") or {}
+        mps_summary = prior_summary.get("latency_mps")
+        pe = prior_summary.get("pe_notes") or {}
+    else:
+        print("timing front-end", flush=True)
+        timings = {
+            "t_stft": _time_loop(stft_call, N_WARM, N_ITER),
+            "t_cnn": _time_loop(cnn_call, N_WARM, N_ITER),
+            "t_rebuild": _time_loop(rebuild_call, N_WARM, N_ITER),
+        }
+        total = [a + b + c for a, b, c in zip(timings["t_stft"], timings["t_cnn"], timings["t_rebuild"])]
+        timings["t_frontend_total"] = total
+        timings["t_driver_overhead"] = _driver_overhead(td_crop["H1"], N_WARM, N_ITER, outdir)
 
+        if torch.backends.mps.is_available():
+            mps = torch.device("mps")
+            model_mps, _ = _load_detector(ckpt, mps)
+
+            def stft_mps():
+                return _spectrogram(td_crop, asds, stft_kwargs, norm_stats, noise_std)
+
+            def cnn_mps():
+                return _cnn_gates(model_mps, spec0, 0.73, mps)
+
+            print("timing MPS front-end", flush=True)
+            mps_summary = {
+                "t_stft": _summary(_time_loop(stft_mps, N_WARM, N_ITER)),
+                "t_cnn": _summary(_time_loop(cnn_mps, N_WARM, N_ITER)),
+            }
+
+        if not args.skip_pe:
+            print("timing PE n=512 x", N_ITER, flush=True)
+            timings["t_pe_512"] = _pe_times(event, assets["fixed_context"], assets["baseline_ckpt"], 512, 2, N_ITER)
+            n20 = int(args.pe_20000_repeats)
+            print("timing PE n=20000 x", n20, flush=True)
+            timings["t_pe_20000"] = _pe_times(event, assets["fixed_context"], assets["baseline_ckpt"], 20000, 1, n20)
+            pe["t_pe_20000_note"] = (
+                f"Measured {n20} iterations after 1 warm-up, not 200. "
+                "A single 20_000-sample GWSamplerGNPE draw is tens of seconds on this CPU; "
+                "200 repeats would be several hours and were not run."
+            )
+        latency_cpu = {key: _summary(val) for key, val in timings.items()}
+
+    prior_fp = prior_summary.get("false_positive") or {}
     summary = {
         "false_positive": {
             "definition": "any IFO time-bin probability above the threshold on a 4 s crop",
@@ -444,22 +520,25 @@ def main(argv=None) -> None:
             "checkpoint_threshold": raw.get("threshold"),
             "noise_std": noise_std,
             "stft": stft_kwargs,
+            "gaussian_seeds": {"original": 0, "additional": 1, "split_at": 500},
             "populations": fp,
-            "combined_n1000": combined,
+            "clean_gaussian": fp["gaussian_asd"],
+            "combined_n1000": prior_fp.get("combined_n1000"),
         },
-        "latency_cpu": {key: _summary(val) for key, val in timings.items()},
+        "latency_cpu": latency_cpu,
         "latency_mps": mps_summary,
         "archived_research_driver_inject_detect_s": 3.158047154545784,
         "pe_notes": pe,
         "device_cpu": str(device),
     }
     (outdir / "summary.json").write_text(json.dumps(summary, indent=2))
-    rows = []
-    for key, samples in timings.items():
-        for i, value in enumerate(samples):
-            rows.append({"component": key, "iteration": i, "seconds": value, "device": "cpu"})
-    pd.DataFrame(rows).to_csv(outdir / "timings.csv", index=False)
-    print(json.dumps({"fp_combined": combined, "latency_cpu": summary["latency_cpu"]}, indent=2))
+    if timings:
+        rows = []
+        for key, samples in timings.items():
+            for i, value in enumerate(samples):
+                rows.append({"component": key, "iteration": i, "seconds": value, "device": "cpu"})
+        pd.DataFrame(rows).to_csv(outdir / "timings.csv", index=False)
+    print(json.dumps({"clean_gaussian": fp["gaussian_asd"], "offsource_gwosc": fp["offsource_gwosc"]}, indent=2))
 
 
 if __name__ == "__main__":
