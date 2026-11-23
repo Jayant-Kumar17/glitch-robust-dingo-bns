@@ -91,6 +91,7 @@ def run(args: argparse.Namespace) -> None:
     outdir.mkdir(parents=True, exist_ok=True)
     device = select_device(args.device)
     rng = np.random.default_rng(int(args.seed))
+    t_rel_range = (float(args.t_rel_min), float(args.t_rel_max))
     n_samples = 64 if args.smoke else int(args.num_samples)
     n_h1 = 2 if args.smoke else int(args.n_placements)
     n_both = 1 if args.smoke else int(args.n_both)
@@ -138,7 +139,9 @@ def run(args: argparse.Namespace) -> None:
         "num_samples": n_samples,
         "batch_size": int(args.batch_size),
         "gate_half_s": gate_half_s,
-        "t_rel_range": list(T_REL_RANGE),
+        "t_rel_range": list(t_rel_range),
+        "fill": str(args.fill),
+        "gate_band_hz": list(args.gate_band) if args.gate_band else None,
         "n_placements_h1": n_h1,
         "n_placements_h1_l1": n_both,
         "recipe": "Tukey gate (alpha 0.5) -> matched-delta FD rebuild -> original analysis ASD (adapt_full); no glitch injected",
@@ -158,9 +161,9 @@ def run(args: argparse.Namespace) -> None:
 
     placements: List[Dict[str, Any]] = []
     for i in range(n_h1):
-        placements.append({"cell_id": i, "detectors": ["H1"], "t_rel": float(rng.uniform(*T_REL_RANGE))})
+        placements.append({"cell_id": i, "detectors": ["H1"], "t_rel": float(rng.uniform(*t_rel_range))})
     for j in range(n_both):
-        placements.append({"cell_id": n_h1 + j, "detectors": ["H1", "L1"], "t_rel": float(rng.uniform(*T_REL_RANGE))})
+        placements.append({"cell_id": n_h1 + j, "detectors": ["H1", "L1"], "t_rel": float(rng.uniform(*t_rel_range))})
 
     fieldnames = ["cell_id", "detectors", "t_rel", "gate_t_start_rel", "gate_t_end_rel"]
     for p in REPORT_PARAMS:
@@ -186,6 +189,8 @@ def run(args: argparse.Namespace) -> None:
             gated = rebuild_event_from_gated_td(
                 event.data, td_by_det={d: td_full[d] for d in pl["detectors"]}, gates=gates,
                 sample_rate=sample_rate, roll_off=roll_off, f_max=f_max, original_asds=asds_clean, mode="matched_delta",
+                fill=str(args.fill), fill_seed=int(args.seed) + int(pl["cell_id"]),
+                gate_band=tuple(args.gate_band) if args.gate_band else None,
             )
             row["modified_detectors"] = ",".join(gated.modified_detectors)
             for d in ("H1", "L1"):
@@ -337,6 +342,11 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     p.add_argument("--gate-half-s", type=float, default=0.4)
     p.add_argument("--n-placements", type=int, default=20)
     p.add_argument("--n-both", type=int, default=5)
+    p.add_argument("--t-rel-min", type=float, default=T_REL_RANGE[0], help="earliest gate centre, s relative to trigger")
+    p.add_argument("--t-rel-max", type=float, default=T_REL_RANGE[1], help="latest gate centre, s relative to trigger")
+    p.add_argument("--fill", choices=("zero", "noise"), default="zero", help="content of the gated samples")
+    p.add_argument("--gate-band", type=float, nargs=2, default=None, metavar=("F_LO", "F_HI"),
+                   help="gate the band-limited strain (zero below F_LO, unity above F_HI); default: raw strain")
     p.add_argument("--smoke", action="store_true", help="2 H1 + 1 H1/L1 placements, 64 samples")
     return p.parse_args(argv)
 

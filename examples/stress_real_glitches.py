@@ -170,7 +170,15 @@ def fetch_excerpts(
     def _one(i_row):
         i, row = i_row
         t = float(row["event_time"])
-        raw = gs.fetch_h1_excerpt(t, sample_rate=sample_rate)
+        # Disk cache: every rerun must inject exactly the same excerpts.
+        cache_dir = REPO_ROOT / "data" / "gravity_spy" / "excerpts"
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        cache_file = cache_dir / f"H1_{t:.4f}_{int(sample_rate)}.npy"
+        if cache_file.is_file():
+            raw = np.load(cache_file)
+        else:
+            raw = gs.fetch_h1_excerpt(t, sample_rate=sample_rate)
+            np.save(cache_file, np.asarray(raw, dtype=np.float64))
         exc = gs.extract_glitch_excerpt(
             raw, sample_rate=sample_rate, duration_s=float(row["duration"]), f_min=f_min, f_max=f_max
         )
@@ -479,6 +487,9 @@ def run(args: argparse.Namespace) -> None:
     model, det_raw = _load_detector(det_path, device)
     threshold = float(det_raw.get("threshold", 0.5))
     gate_half_s = float(det_raw.get("gate_half_s", args.gate_half_s))
+    if getattr(args, "force_gate_half_s", None) is not None:
+        # The checkpoint stores its own gate_half_s and would otherwise win over the CLI.
+        gate_half_s = float(args.force_gate_half_s)
     norm_stats = det_raw.get("norm_stats")
     stft_kwargs = dict(det_raw.get("stft_kwargs") or {})
 
@@ -1028,6 +1039,8 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     p.add_argument("--num-samples", type=int, default=512)
     p.add_argument("--batch-size", type=int, default=256)
     p.add_argument("--gate-half-s", type=float, default=0.4)
+    p.add_argument("--force-gate-half-s", type=float, default=None,
+                   help="gate half-width in s; overrides the value stored in the detector checkpoint")
     p.add_argument("--threshold-event", type=float, default=None)
     p.add_argument("--n-noise-cells", type=int, default=10)
     p.add_argument("--wide-snr-panel", action="store_true",

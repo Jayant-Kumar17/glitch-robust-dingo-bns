@@ -1,0 +1,1063 @@
+diff --git a/.gitignore b/.gitignore
+index e0b8caf..a34f454 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -108,5 +108,6 @@ checkpoints/glitch_detector_v1/last.pt
+ # Gravity Spy raw tables (downloaded on demand; ~190 MB)
+ data/gravity_spy/raw/
+ data/gravity_spy/raw_p/
++data/gravity_spy/excerpts/
+ !data/gravity_spy/selected_h1_o3.csv
+ !data/gravity_spy/selected_h1_o3_wide.csv
+diff --git a/examples/aggregate_phase_b.py b/examples/aggregate_phase_b.py
+new file mode 100644
+index 0000000..857d8e4
+--- /dev/null
++++ b/examples/aggregate_phase_b.py
+@@ -0,0 +1,180 @@
++#!/usr/bin/env python3
++"""Collect the Phase B (honest-gate) results into one markdown report.
++
++Reads results/gate_tolerance_v3/*, results/journal_method_hardening_v3_*,
++results/stress_real_glitches_v3_* and results/gw170817_raw_l1_v3_*.
++Poisoned and gated posteriors are scored with the SAME recovery criterion
++(d_L median in [20, 50] Mpc, within 10 Mpc of the clean median, 90% intervals overlap).
++"""
++
++from __future__ import annotations
++
++import json
++import sys
++from pathlib import Path
++
++import numpy as np
++import pandas as pd
++
++REPO_ROOT = Path(__file__).resolve().parents[1]
++
++
++def _recovers(lo, med, hi, clean) -> pd.Series:
++    return (
++        (med >= 20.0)
++        & (med <= 50.0)
++        & ((med - clean["med"]).abs() <= 10.0)
++        & (hi >= clean["lo"])
++        & (lo <= clean["hi"])
++    )
++
++
++def _wilson(k: int, n: int, z: float = 1.959964) -> str:
++    if n == 0:
++        return "n/a"
++    p = k / n
++    d = 1 + z * z / n
++    c = (p + z * z / (2 * n)) / d
++    h = z * np.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / d
++    return f"{k}/{n} [{100 * max(c - h, 0):.0f}%, {100 * min(c + h, 1):.0f}%]"
++
++
++def _md(rows: list[dict], transpose: bool = False) -> str:
++    """Plain markdown table (no tabulate dependency)."""
++    if transpose:
++        keys = list(rows[0].keys())
++        rows = [{"metric": k, **{f"run {i + 1}": r[k] for i, r in enumerate(rows)}} for k in keys]
++    cols = list(rows[0].keys())
++    lines = ["| " + " | ".join(str(c) for c in cols) + " |", "|" + "|".join(" --- " for _ in cols) + "|"]
++    for r in rows:
++        lines.append("| " + " | ".join("" if r.get(c) is None else str(r.get(c)) for c in cols) + " |")
++    return "\n".join(lines)
++
++
++def gate_tolerance(root: Path) -> list[str]:
++    rows = []
++    for d in sorted(root.glob("*")):
++        cfg_f, res_f = d / "config.json", d / "results.csv"
++        if not (cfg_f.is_file() and res_f.is_file()):
++            continue
++        cfg = json.loads(cfg_f.read_text())
++        df = pd.read_csv(res_f)
++        ok = df[df["error"].fillna("") == ""]
++        h1 = ok[ok["detectors"] == "H1"]
++        rows.append(
++            {
++                "run": d.name,
++                "t_rel range [s]": "%g..%g" % tuple(cfg.get("t_rel_range", [np.nan, np.nan])),
++                "half-width [s]": cfg.get("gate_half_s"),
++                "fill": cfg.get("fill", "zero"),
++                "band [Hz]": cfg.get("gate_band_hz") or "raw",
++                "H1 recovered": _wilson(int(h1["gated_recovers"].astype(bool).sum()), len(h1)),
++                "H1 collapsed": int(h1["poison_style_collapse"].astype(bool).sum()),
++                "mean abs d_L median shift [Mpc]": round(float(h1["delta_dL_med"].abs().mean()), 2) if len(h1) else None,
++                "max JS [nat]": round(float(h1["js_max"].max()), 3) if len(h1) else None,
++                "JS floor [nat]": round(float(cfg.get("js_null_max_nat") or np.nan), 3),
++            }
++        )
++    if not rows:
++        return ["_no gate-tolerance runs found_"]
++    return [_md(rows)]
++
++
++def hardening(results: Path) -> list[str]:
++    rows = []
++    for d in sorted(results.glob("journal_method_hardening_v3_*")):
++        f = d / "ablation_summary.json"
++        if not f.is_file():
++            continue
++        s = json.loads(f.read_text())
++        for arm, v in s.get("by_arm", {}).items():
++            n = int(v["n"])
++            rows.append(
++                {
++                    "run": d.name.replace("journal_method_hardening_v3_", ""),
++                    "arm": arm,
++                    "recovers": _wilson(int(round(v["recovers_like_clean"] * n)), n),
++                    "collapsed": f"{int(round(v['poison_collapsed'] * n))}/{n}",
++                    "median d_L [Mpc]": round(float(v["median_med_d_L"]), 1),
++                }
++            )
++    if not rows:
++        return ["_no hardening runs found_"]
++    return [_md(rows)]
++
++
++def real_panel(results: Path) -> list[str]:
++    rows = []
++    for d in sorted(results.glob("stress_real_glitches_v3_*")):
++        res_f, clean_f = d / "results.csv", d / "clean_reference.json"
++        if not (res_f.is_file() and clean_f.is_file()):
++            continue
++        clean = json.loads(clean_f.read_text())
++        clean = clean.get("d_L", clean.get("luminosity_distance", clean))
++        r = pd.read_csv(res_f)
++        r = r[r["error"].fillna("") == ""]
++        g = r[(~r["is_noise_control"].astype(bool)) & (r["injected_rho_w"].astype(float) > 1.0)].copy()
++        if not len(g):
++            continue
++        for col in ("poison_collapsed", "gated_recovers", "oracle_recovers", "detector_fired"):
++            g[col] = g[col].astype(bool)
++        g["poison_ok"] = _recovers(g["poison_lo"], g["poison_med"], g["poison_hi"], clean)
++        dam, col, und = g[~g["poison_ok"]], g[g["poison_collapsed"]], g[g["poison_ok"]]
++        trig = col.groupby("gs_event_time")
++        rows.append(
++            {
++                "run": d.name.replace("stress_real_glitches_v3_", ""),
++                "cells / triggers": f"{len(g)} / {g['gs_event_time'].nunique()}",
++                "damaged (fail criterion un-gated)": len(dam),
++                "collapsed (cells / triggers)": f"{len(col)} / {col['gs_event_time'].nunique()}",
++                "detector gate: damaged recovered": _wilson(int(dam["gated_recovers"].sum()), len(dam)),
++                "oracle gate: damaged recovered": _wilson(int(dam["oracle_recovers"].sum()), len(dam)),
++                "detector gate: collapsed triggers fully recovered": _wilson(
++                    int(trig["gated_recovers"].all().sum()), int(trig.ngroups)
++                ),
++                "oracle gate: collapsed triggers fully recovered": _wilson(
++                    int(trig["oracle_recovers"].all().sum()), int(trig.ngroups)
++                ),
++                "detector gate breaks undamaged": f"{int((~und['gated_recovers']).sum())}/{len(und)}",
++                "oracle gate breaks undamaged": f"{int((~und['oracle_recovers']).sum())}/{len(und)}",
++            }
++        )
++    if not rows:
++        return ["_no real-glitch runs found_"]
++    return [_md(rows, transpose=True)]
++
++
++def raw_l1(results: Path) -> list[str]:
++    rows = []
++    for d in sorted(results.glob("gw170817_raw_l1_v3_*")):
++        f = d / "summary.json"
++        if not f.is_file():
++            continue
++        s = json.loads(f.read_text())
++        for label, e in s.get("efficiency", {}).items():
++            rows.append(
++                {
++                    "run": d.name.replace("gw170817_raw_l1_v3_", ""),
++                    "package": label,
++                    "efficiency": e.get("sample_efficiency"),
++                    "n_eff": e.get("n_eff"),
++                    "log Z": e.get("log_evidence"),
++                }
++            )
++    if not rows:
++        return ["_no raw-L1 runs found_"]
++    return [_md(rows)]
++
++
++def main() -> None:
++    results = REPO_ROOT / "results"
++    out = ["# Phase B report: honest gates after the packaging-convention fix", ""]
++    out += ["## 1. Forced gates on clean GW170817 (H1 only cells)", ""] + gate_tolerance(results / "gate_tolerance_v3") + [""]
++    out += ["## 2. Hardening cells, detector-driven gates", ""] + hardening(results) + [""]
++    out += ["## 3. Real Gravity Spy panel", ""] + real_panel(results) + [""]
++    out += ["## 4. Unsubtracted GW170817 L1", ""] + raw_l1(results) + [""]
++    sys.stdout.write("\n".join(out) + "\n")
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/examples/clean_gate_control.py b/examples/clean_gate_control.py
+index 008dfdc..7d8dd1a 100644
+--- a/examples/clean_gate_control.py
++++ b/examples/clean_gate_control.py
+@@ -91,6 +91,7 @@ def run(args: argparse.Namespace) -> None:
+     outdir.mkdir(parents=True, exist_ok=True)
+     device = select_device(args.device)
+     rng = np.random.default_rng(int(args.seed))
++    t_rel_range = (float(args.t_rel_min), float(args.t_rel_max))
+     n_samples = 64 if args.smoke else int(args.num_samples)
+     n_h1 = 2 if args.smoke else int(args.n_placements)
+     n_both = 1 if args.smoke else int(args.n_both)
+@@ -138,7 +139,9 @@ def run(args: argparse.Namespace) -> None:
+         "num_samples": n_samples,
+         "batch_size": int(args.batch_size),
+         "gate_half_s": gate_half_s,
+-        "t_rel_range": list(T_REL_RANGE),
++        "t_rel_range": list(t_rel_range),
++        "fill": str(args.fill),
++        "gate_band_hz": list(args.gate_band) if args.gate_band else None,
+         "n_placements_h1": n_h1,
+         "n_placements_h1_l1": n_both,
+         "recipe": "Tukey gate (alpha 0.5) -> matched-delta FD rebuild -> original analysis ASD (adapt_full); no glitch injected",
+@@ -158,9 +161,9 @@ def run(args: argparse.Namespace) -> None:
+ 
+     placements: List[Dict[str, Any]] = []
+     for i in range(n_h1):
+-        placements.append({"cell_id": i, "detectors": ["H1"], "t_rel": float(rng.uniform(*T_REL_RANGE))})
++        placements.append({"cell_id": i, "detectors": ["H1"], "t_rel": float(rng.uniform(*t_rel_range))})
+     for j in range(n_both):
+-        placements.append({"cell_id": n_h1 + j, "detectors": ["H1", "L1"], "t_rel": float(rng.uniform(*T_REL_RANGE))})
++        placements.append({"cell_id": n_h1 + j, "detectors": ["H1", "L1"], "t_rel": float(rng.uniform(*t_rel_range))})
+ 
+     fieldnames = ["cell_id", "detectors", "t_rel", "gate_t_start_rel", "gate_t_end_rel"]
+     for p in REPORT_PARAMS:
+@@ -186,6 +189,8 @@ def run(args: argparse.Namespace) -> None:
+             gated = rebuild_event_from_gated_td(
+                 event.data, td_by_det={d: td_full[d] for d in pl["detectors"]}, gates=gates,
+                 sample_rate=sample_rate, roll_off=roll_off, f_max=f_max, original_asds=asds_clean, mode="matched_delta",
++                fill=str(args.fill), fill_seed=int(args.seed) + int(pl["cell_id"]),
++                gate_band=tuple(args.gate_band) if args.gate_band else None,
+             )
+             row["modified_detectors"] = ",".join(gated.modified_detectors)
+             for d in ("H1", "L1"):
+@@ -337,6 +342,11 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
+     p.add_argument("--gate-half-s", type=float, default=0.4)
+     p.add_argument("--n-placements", type=int, default=20)
+     p.add_argument("--n-both", type=int, default=5)
++    p.add_argument("--t-rel-min", type=float, default=T_REL_RANGE[0], help="earliest gate centre, s relative to trigger")
++    p.add_argument("--t-rel-max", type=float, default=T_REL_RANGE[1], help="latest gate centre, s relative to trigger")
++    p.add_argument("--fill", choices=("zero", "noise"), default="zero", help="content of the gated samples")
++    p.add_argument("--gate-band", type=float, nargs=2, default=None, metavar=("F_LO", "F_HI"),
++                   help="gate the band-limited strain (zero below F_LO, unity above F_HI); default: raw strain")
+     p.add_argument("--smoke", action="store_true", help="2 H1 + 1 H1/L1 placements, 64 samples")
+     return p.parse_args(argv)
+ 
+diff --git a/examples/collapse_threshold.py b/examples/collapse_threshold.py
+index 1bdf49d..0288f98 100644
+--- a/examples/collapse_threshold.py
++++ b/examples/collapse_threshold.py
+@@ -106,6 +106,9 @@ def run(args: argparse.Namespace) -> None:
+     model, det_raw = _load_detector(det_path, device)
+     threshold = float(det_raw.get("threshold", 0.5))
+     gate_half_s = float(det_raw.get("gate_half_s", args.gate_half_s))
++    if getattr(args, "force_gate_half_s", None) is not None:
++        # The checkpoint stores its own gate_half_s and would otherwise win over the CLI.
++        gate_half_s = float(args.force_gate_half_s)
+     norm_stats = det_raw.get("norm_stats"); stft_kwargs = dict(det_raw.get("stft_kwargs") or {})
+ 
+     clean_ci = _sample_dl(assets, event.data, settings, fixed, device=device, n=n_samples, bs=args.batch_size)
+@@ -426,6 +429,8 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
+     p.add_argument("--num-samples", type=int, default=512)
+     p.add_argument("--batch-size", type=int, default=256)
+     p.add_argument("--gate-half-s", type=float, default=0.4)
++    p.add_argument("--force-gate-half-s", type=float, default=None,
++                   help="gate half-width in s; overrides the value stored in the detector checkpoint")
+     p.add_argument("--threshold-event", type=float, default=None)
+     p.add_argument("--max-cells", type=int, default=None)
+     p.add_argument("--extend-low-rho", action="store_true",
+diff --git a/examples/method_hardening.py b/examples/method_hardening.py
+index 19bc6ef..8a3844d 100644
+--- a/examples/method_hardening.py
++++ b/examples/method_hardening.py
+@@ -400,6 +400,9 @@ def run(args: argparse.Namespace) -> None:
+     model, det_raw = _load_detector(det_path, device)
+     threshold = float(det_raw.get("threshold", 0.5))
+     gate_half_s = float(det_raw.get("gate_half_s", args.gate_half_s))
++    if getattr(args, "force_gate_half_s", None) is not None:
++        # The checkpoint stores its own gate_half_s and would otherwise win over the CLI.
++        gate_half_s = float(args.force_gate_half_s)
+     norm_stats = det_raw.get("norm_stats")
+     stft_kwargs = dict(det_raw.get("stft_kwargs") or {})
+ 
+@@ -1141,6 +1144,8 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
+     p.add_argument("--num-samples", type=int, default=512)
+     p.add_argument("--batch-size", type=int, default=256)
+     p.add_argument("--gate-half-s", type=float, default=0.4)
++    p.add_argument("--force-gate-half-s", type=float, default=None,
++                   help="gate half-width in s; overrides the value stored in the detector checkpoint")
+     p.add_argument("--device", type=str, default=None)
+     p.add_argument("--detector-ckpt", type=str, default=None)
+     p.add_argument("--max-cells", type=int, default=None)
+diff --git a/examples/stress_gw170817.py b/examples/stress_gw170817.py
+index f5559f0..5cdfa93 100644
+--- a/examples/stress_gw170817.py
++++ b/examples/stress_gw170817.py
+@@ -528,6 +528,9 @@ def run(args: argparse.Namespace) -> None:
+     model, det_raw = _load_detector(det_path, device)
+     threshold = float(det_raw.get("threshold", 0.5))
+     gate_half_s = float(det_raw.get("gate_half_s", args.gate_half_s))
++    if getattr(args, "force_gate_half_s", None) is not None:
++        # The checkpoint stores its own gate_half_s and would otherwise win over the CLI.
++        gate_half_s = float(args.force_gate_half_s)
+     norm_stats = det_raw.get("norm_stats")
+     stft_kwargs = dict(det_raw.get("stft_kwargs") or {})
+ 
+@@ -1179,6 +1182,8 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
+     p.add_argument("--hf-samples", type=int, default=2000)
+     p.add_argument("--batch-size", type=int, default=256)
+     p.add_argument("--gate-half-s", type=float, default=0.4)
++    p.add_argument("--force-gate-half-s", type=float, default=None,
++                   help="gate half-width in s; overrides the value stored in the detector checkpoint")
+     p.add_argument("--max-cells", type=int, default=None, help="Cap cells (smoke test)")
+     p.add_argument("--overwrite", action="store_true")
+     return p.parse_args(argv)
+diff --git a/examples/stress_real_glitches.py b/examples/stress_real_glitches.py
+index 77e3bd2..bac739d 100644
+--- a/examples/stress_real_glitches.py
++++ b/examples/stress_real_glitches.py
+@@ -170,7 +170,15 @@ def fetch_excerpts(
+     def _one(i_row):
+         i, row = i_row
+         t = float(row["event_time"])
+-        raw = gs.fetch_h1_excerpt(t, sample_rate=sample_rate)
++        # Disk cache: every rerun must inject exactly the same excerpts.
++        cache_dir = REPO_ROOT / "data" / "gravity_spy" / "excerpts"
++        cache_dir.mkdir(parents=True, exist_ok=True)
++        cache_file = cache_dir / f"H1_{t:.4f}_{int(sample_rate)}.npy"
++        if cache_file.is_file():
++            raw = np.load(cache_file)
++        else:
++            raw = gs.fetch_h1_excerpt(t, sample_rate=sample_rate)
++            np.save(cache_file, np.asarray(raw, dtype=np.float64))
+         exc = gs.extract_glitch_excerpt(
+             raw, sample_rate=sample_rate, duration_s=float(row["duration"]), f_min=f_min, f_max=f_max
+         )
+@@ -479,6 +487,9 @@ def run(args: argparse.Namespace) -> None:
+     model, det_raw = _load_detector(det_path, device)
+     threshold = float(det_raw.get("threshold", 0.5))
+     gate_half_s = float(det_raw.get("gate_half_s", args.gate_half_s))
++    if getattr(args, "force_gate_half_s", None) is not None:
++        # The checkpoint stores its own gate_half_s and would otherwise win over the CLI.
++        gate_half_s = float(args.force_gate_half_s)
+     norm_stats = det_raw.get("norm_stats")
+     stft_kwargs = dict(det_raw.get("stft_kwargs") or {})
+ 
+@@ -1028,6 +1039,8 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
+     p.add_argument("--num-samples", type=int, default=512)
+     p.add_argument("--batch-size", type=int, default=256)
+     p.add_argument("--gate-half-s", type=float, default=0.4)
++    p.add_argument("--force-gate-half-s", type=float, default=None,
++                   help="gate half-width in s; overrides the value stored in the detector checkpoint")
+     p.add_argument("--threshold-event", type=float, default=None)
+     p.add_argument("--n-noise-cells", type=int, default=10)
+     p.add_argument("--wide-snr-panel", action="store_true",
+diff --git a/examples/stress_synthetic_bns.py b/examples/stress_synthetic_bns.py
+index eda2524..7e64b16 100644
+--- a/examples/stress_synthetic_bns.py
++++ b/examples/stress_synthetic_bns.py
+@@ -665,6 +665,9 @@ def run(args: argparse.Namespace) -> None:
+     model, det_raw = _load_detector(det_path, device)
+     threshold = float(det_raw.get("threshold", 0.5))
+     gate_half_s = float(det_raw.get("gate_half_s", args.gate_half_s))
++    if getattr(args, "force_gate_half_s", None) is not None:
++        # The checkpoint stores its own gate_half_s and would otherwise win over the CLI.
++        gate_half_s = float(args.force_gate_half_s)
+     norm_stats = det_raw.get("norm_stats")
+     stft_kwargs = dict(det_raw.get("stft_kwargs") or {})
+ 
+@@ -1053,6 +1056,8 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
+     p.add_argument("--num-samples", type=int, default=512)
+     p.add_argument("--batch-size", type=int, default=256)
+     p.add_argument("--gate-half-s", type=float, default=0.4)
++    p.add_argument("--force-gate-half-s", type=float, default=None,
++                   help="gate half-width in s; overrides the value stored in the detector checkpoint")
+     p.add_argument("--device", type=str, default=None)
+     p.add_argument("--baseline-ckpt", type=str, default=None)
+     p.add_argument("--detector-ckpt", type=str, default=None)
+diff --git a/scripts/run_phase_b.sh b/scripts/run_phase_b.sh
+new file mode 100644
+index 0000000..9c239a7
+--- /dev/null
++++ b/scripts/run_phase_b.sh
+@@ -0,0 +1,92 @@
++#!/usr/bin/env bash
++# Phase B: the decisive honest-gate experiments after the packaging-convention fix.
++# Usage (from the repo root, inside the conda env):
++#   export PYTHONPATH=DINGO-BNS/dingo:src:examples KMP_DUPLICATE_LIB_OK=TRUE
++#   bash scripts/run_phase_b.sh [/path/to/L-L1_GWOSC_4KHZ_R1-1187006835-4096.hdf5]
++# Every run writes to a NEW results/*_v3_* folder. Nothing existing is overwritten.
++# A step that fails is logged and the script moves on; finished folders are skipped on rerun.
++set -u
++L1_HDF5="${1:-}"
++BAND="20,23"
++LOG=results/phase_b_logs
++mkdir -p "$LOG"
++
++run () {  # run <outdir> <env assignments or "-"> <command...>
++  local out="$1"; local envs="$2"; shift 2
++  if [ -f "$out/.done" ]; then echo "[skip] $out"; return 0; fi
++  mkdir -p "$out"
++  printf '{"ADAPT_GATE_BAND_HZ": "%s", "ADAPT_GATE_FILL": "%s"}\n' \
++    "$(echo "$envs" | sed -n 's/.*ADAPT_GATE_BAND_HZ=\([^ ]*\).*/\1/p')" \
++    "$(echo "$envs" | sed -n 's/.*ADAPT_GATE_FILL=\([^ ]*\).*/\1/p')" > "$out/gate_env.json"
++  echo "[run ] $out  ($envs)"
++  if [ "$envs" = "-" ]; then
++    "$@" > "$LOG/$(basename "$out").log" 2>&1
++  else
++    env $envs "$@" > "$LOG/$(basename "$out").log" 2>&1
++  fi
++  local rc=$?
++  if [ $rc -eq 0 ]; then touch "$out/.done"; else echo "[FAIL] $out (exit $rc) see $LOG/$(basename "$out").log"; fi
++  return 0
++}
++
++# --- B1. Forced gates on CLEAN GW170817: what gate does the network tolerate? ---------------
++GT=results/gate_tolerance_v3
++for half in 0.05 0.1 0.2 0.4 0.8; do
++  for variant in raw_zero band_zero band_noise; do
++    case $variant in
++      raw_zero)   extra="--fill zero" ;;
++      band_zero)  extra="--fill zero --gate-band 20 23" ;;
++      band_noise) extra="--fill noise --gate-band 20 23" ;;
++    esac
++    out="$GT/near_${variant}_h${half}"
++    run "$out" - python -u examples/clean_gate_control.py --seed 0 --num-samples 512 \
++      --gate-half-s "$half" --t-rel-min -2.0 --t-rel-max -0.2 $extra --outdir "$out" --figdir "$out"
++  done
++done
++for half in 0.1 0.4 0.8; do
++  for variant in band_zero band_noise; do
++    case $variant in
++      band_zero)  extra="--fill zero --gate-band 20 23" ;;
++      band_noise) extra="--fill noise --gate-band 20 23" ;;
++    esac
++    out="$GT/far_${variant}_h${half}"
++    run "$out" - python -u examples/clean_gate_control.py --seed 0 --num-samples 512 \
++      --gate-half-s "$half" --t-rel-min -60.0 --t-rel-max -5.0 $extra --outdir "$out" --figdir "$out"
++  done
++done
++
++# --- B2. The 16 hardening cells with detector-driven gates ----------------------------------
++MH=results/journal_method_hardening_v3
++run "${MH}_raw_zero_h0.4" - python -u examples/method_hardening.py --profile v2 --num-samples 512 \
++  --batch-size 512 --skip-synth-oracle --overwrite --outdir "${MH}_raw_zero_h0.4"
++for half in 0.4 0.1; do
++  run "${MH}_band_zero_h${half}" "ADAPT_GATE_BAND_HZ=$BAND" python -u examples/method_hardening.py \
++    --profile v2 --num-samples 512 --batch-size 512 --skip-synth-oracle --overwrite \
++    --force-gate-half-s "$half" --arms adapt_full poison_welch glitch_orig_asd --outdir "${MH}_band_zero_h${half}"
++  run "${MH}_band_noise_h${half}" "ADAPT_GATE_BAND_HZ=$BAND ADAPT_GATE_FILL=noise" python -u examples/method_hardening.py \
++    --profile v2 --num-samples 512 --batch-size 512 --skip-synth-oracle --overwrite \
++    --force-gate-half-s "$half" --arms adapt_full poison_welch glitch_orig_asd --outdir "${MH}_band_noise_h${half}"
++done
++
++# --- B3. Real Gravity Spy panel (detector gate and centred oracle gate) ---------------------
++RG=results/stress_real_glitches_v3
++REAL="python -u examples/stress_real_glitches.py --seed 0 --num-samples 512 --wide-snr-panel --native-only --n-noise-cells 5 --selected-csv data/gravity_spy/selected_h1_o3_wide.csv"
++for half in 0.1 0.4; do
++  run "${RG}_band_noise_h${half}" "ADAPT_GATE_BAND_HZ=$BAND ADAPT_GATE_FILL=noise" $REAL \
++    --force-gate-half-s "$half" --outdir "${RG}_band_noise_h${half}" --figdir "${RG}_band_noise_h${half}"
++  run "${RG}_band_zero_h${half}" "ADAPT_GATE_BAND_HZ=$BAND" $REAL \
++    --force-gate-half-s "$half" --outdir "${RG}_band_zero_h${half}" --figdir "${RG}_band_zero_h${half}"
++done
++
++# --- B4. Unsubtracted GW170817 L1 ------------------------------------------------------------
++if [ -n "$L1_HDF5" ]; then
++  RL=results/gw170817_raw_l1_v3
++  run "${RL}_band_zero" "ADAPT_GATE_BAND_HZ=$BAND" python -u examples/gw170817_raw_l1.py \
++    --num-processes 2 --strain-hdf5 "$L1_HDF5" --outdir "${RL}_band_zero"
++  run "${RL}_band_noise" "ADAPT_GATE_BAND_HZ=$BAND ADAPT_GATE_FILL=noise" python -u examples/gw170817_raw_l1.py \
++    --num-processes 2 --strain-hdf5 "$L1_HDF5" --outdir "${RL}_band_noise"
++else
++  echo "[skip] raw L1: pass the GWOSC L1 HDF5 path as the first argument to run it"
++fi
++
++python -u examples/aggregate_phase_b.py | tee results/PHASE_B_REPORT.md
+diff --git a/src/adapt/event_glitch_io.py b/src/adapt/event_glitch_io.py
+index 46b2df0..1627dab 100644
+--- a/src/adapt/event_glitch_io.py
++++ b/src/adapt/event_glitch_io.py
+@@ -14,6 +14,8 @@ from typing import Any, Dict, Tuple
+ import numpy as np
+ from scipy import signal as sp_signal
+ 
++from adapt.packaging import DEFAULT_TIME_BUFFER_S, package_fd
++
+ logger = logging.getLogger("event_glitch_io")
+ 
+ 
+@@ -100,18 +102,12 @@ def td_to_fd_strain(
+     *,
+     roll_off: float = 0.4,
+     f_max: float,
++    time_buffer: float = DEFAULT_TIME_BUFFER_S,
+ ) -> np.ndarray:
+-    """Tukey-windowed FFT matching demo conditioning."""
+-    x = np.asarray(td, dtype=np.float64).ravel()
+-    alpha = 2.0 * float(roll_off) * float(sample_rate) / max(len(x), 1)
+-    alpha = float(np.clip(alpha, 0.0, 1.0))
+-    window = sp_signal.windows.tukey(len(x), alpha=alpha)
+-    xw = x * window
+-    fd = np.fft.rfft(xw) / float(sample_rate)
+-    freqs = np.fft.rfftfreq(len(x), d=1.0 / float(sample_rate))
+-    n_keep = int(np.floor(float(f_max) / (freqs[1] if len(freqs) > 1 else 1.0))) + 1
+-    n_keep = min(n_keep, len(fd))
+-    return np.asarray(fd[:n_keep], dtype=np.complex128)
++    """Tukey-windowed rFFT + cyclic time shift, matching DINGO ``data_to_domain``."""
++    return package_fd(
++        td, sample_rate, roll_off=roll_off, f_max=f_max, time_buffer=time_buffer
++    )
+ 
+ 
+ def welch_asd(
+diff --git a/src/adapt/glitch_excision.py b/src/adapt/glitch_excision.py
+index 7a439fe..fc29e88 100644
+--- a/src/adapt/glitch_excision.py
++++ b/src/adapt/glitch_excision.py
+@@ -18,6 +18,15 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
+ import numpy as np
+ from scipy import signal as sp_signal
+ 
++import os
++
++from adapt.packaging import (
++    DEFAULT_TIME_BUFFER_S,
++    band_limit_td,
++    coloured_noise_td,
++    package_fd,
++)
++
+ # Keep this module free of heavy STFT-builder imports.
+ SPECTROGRAM_ANALYSIS_SECONDS = 4.0
+ 
+@@ -204,22 +213,17 @@ def td_to_fd_strain(
+     roll_off: float = 0.4,
+     f_max: float,
+     n_freq: Optional[int] = None,
++    time_buffer: float = DEFAULT_TIME_BUFFER_S,
+ ) -> np.ndarray:
+-    """Tukey-windowed rFFT matching the GW170817 packaging convention."""
+-    x = np.asarray(td, dtype=np.float64).ravel()
+-    alpha = 2.0 * float(roll_off) * float(sample_rate) / max(len(x), 1)
+-    alpha = float(np.clip(alpha, 0.0, 1.0))
+-    window = sp_signal.windows.tukey(len(x), alpha=alpha)
+-    fd = np.fft.rfft(x * window) / float(sample_rate)
+-    freqs = np.fft.rfftfreq(len(x), d=1.0 / float(sample_rate))
+-    if n_freq is None:
+-        n_keep = int(np.floor(float(f_max) / (freqs[1] if len(freqs) > 1 else 1.0))) + 1
+-        n_keep = min(n_keep, len(fd))
+-    else:
+-        n_keep = int(n_freq)
+-    if len(fd) < n_keep:
+-        fd = np.pad(fd, (0, n_keep - len(fd)))
+-    return np.asarray(fd[:n_keep], dtype=np.complex128)
++    """Tukey-windowed rFFT + cyclic time shift, matching DINGO ``data_to_domain``."""
++    return package_fd(
++        td,
++        sample_rate,
++        roll_off=roll_off,
++        f_max=f_max,
++        n_freq=n_freq,
++        time_buffer=time_buffer,
++    )
+ 
+ 
+ def gate_delta_fd(
+@@ -265,9 +269,23 @@ def rebuild_event_from_gated_td(
+     alpha: float = DEFAULT_TUKEY_ALPHA,
+     replace_ungated: bool = False,
+     mode: str = "matched_delta",
++    fill: Optional[str] = None,
++    fill_seed: int = 0,
++    gate_band: Optional[Tuple[float, float]] = None,
+ ) -> ExcisionResult:
+     """Honest excision on the **glitchy** DINGO package.
+ 
++    ``fill``: ``"zero"`` leaves the gated samples at zero (plain Tukey gate);
++    ``"noise"`` replaces them with stationary Gaussian noise drawn from the
++    analysis ASD (``original_asds`` if given, else the package ASD), cross-faded
++    with ``sqrt(1 - w**2)`` so the variance stays flat through the taper.
++    ``None`` reads the environment variable ``ADAPT_GATE_FILL`` (default ``"zero"``).
++
++    ``gate_band``: ``(f_lo, f_hi)`` in Hz. When set, the gate (and the fill) act on
++    the band-limited strain (zero below ``f_lo``, unity above ``f_hi``) instead of
++    the raw strain, so the seismic wall is not multiplied by the gate taper.
++    ``None`` reads ``ADAPT_GATE_BAND_HZ`` (e.g. ``"20,23"``); unset means raw strain.
++
+     ``mode``:
+       - ``"matched_delta"`` (default, recovers ``d_L``): for each gated IFO apply
+         ``packaged_FD += FFT(gated_TD) - FFT(ungated_TD)`` using the **same**
+@@ -292,6 +310,18 @@ def rebuild_event_from_gated_td(
+         mode_l = "replace"
+     else:
+         mode_l = "matched_delta"
++    fill_l = str(fill if fill is not None else os.environ.get("ADAPT_GATE_FILL", "zero")).lower().strip()
++    if fill_l not in ("zero", "noise"):
++        raise ValueError(f"fill must be 'zero' or 'noise', got {fill_l!r}")
++    if gate_band is None:
++        env_band = os.environ.get("ADAPT_GATE_BAND_HZ", "").strip()
++        if env_band:
++            lo_s, hi_s = env_band.split(",")
++            gate_band = (float(lo_s), float(hi_s))
++    if gate_band is not None:
++        gate_band = (float(gate_band[0]), float(gate_band[1]))
++        if not 0.0 <= gate_band[0] < gate_band[1]:
++            raise ValueError(f"gate_band must satisfy 0 <= f_lo < f_hi, got {gate_band}")
+ 
+     if not gates_list and not replace_ungated:
+         if original_asds is not None:
+@@ -308,6 +338,8 @@ def rebuild_event_from_gated_td(
+                 "asd_policy": "original" if original_asds is not None else "unchanged",
+                 "packaged_base": "rebuild_from_gated_td",
+                 "rebuild_mode": mode_l,
++            "fill": fill_l,
++            "gate_band_hz": list(gate_band) if gate_band is not None else None,
+             },
+         )
+ 
+@@ -328,15 +360,38 @@ def rebuild_event_from_gated_td(
+             continue
+         td = np.asarray(td_by_det[det], dtype=np.float64).ravel()
+         det_gates = by_det.get(det, [])
++        if gate_band is not None:
++            # Already segment-windowed and band-limited: transform without a second window.
++            td_base = band_limit_td(td, sample_rate, gate_band[0], gate_band[1], roll_off=roll_off)
++            fd_roll_off = 0.0
++        else:
++            td_base = td
++            fd_roll_off = roll_off
+         if det_gates:
+-            td_use = apply_gates_td(td, sample_rate, det_gates, t0=t0, alpha=alpha)
++            w_gate = tukey_gate_weights(td.size, sample_rate, det_gates, t0=t0, alpha=alpha)
++            td_use = td_base * w_gate
++            if fill_l == "noise":
++                asd_fill = None
++                if original_asds is not None and det in original_asds:
++                    asd_fill = original_asds[det]
++                elif det in data.get("asds", {}):
++                    asd_fill = data["asds"][det]
++                if asd_fill is None:
++                    raise ValueError(f"fill='noise' needs an ASD for {det}")
++                noise = coloured_noise_td(
++                    asd_fill,
++                    td.size,
++                    sample_rate,
++                    seed=int(fill_seed) + 1000 * sorted(dets_to_rebuild).index(det),
++                )
++                td_use = td_use + np.sqrt(np.clip(1.0 - w_gate**2, 0.0, 1.0)) * noise
+         else:
+-            td_use = td
++            td_use = td_base
+         fd_gated = td_to_fd_strain(
+-            td_use, sample_rate, roll_off=roll_off, f_max=f_max, n_freq=n_freq
++            td_use, sample_rate, roll_off=fd_roll_off, f_max=f_max, n_freq=n_freq
+         )
+         fd_ungated = td_to_fd_strain(
+-            td, sample_rate, roll_off=roll_off, f_max=f_max, n_freq=n_freq
++            td_base, sample_rate, roll_off=fd_roll_off, f_max=f_max, n_freq=n_freq
+         )
+         packaged = np.asarray(data["waveform"][det], dtype=np.complex128)
+         if mode_l == "replace":
+@@ -369,6 +424,8 @@ def rebuild_event_from_gated_td(
+             "asd_policy": "original" if original_asds is not None else "unchanged",
+             "packaged_base": "rebuild_from_gated_td",
+             "rebuild_mode": mode_l,
++            "fill": fill_l,
++            "gate_band_hz": list(gate_band) if gate_band is not None else None,
+             "residual_power_frac": residual_power,
+             "replace_ungated": bool(replace_ungated),
+         },
+diff --git a/src/adapt/packaging.py b/src/adapt/packaging.py
+new file mode 100644
+index 0000000..2370b11
+--- /dev/null
++++ b/src/adapt/packaging.py
+@@ -0,0 +1,99 @@
++"""Single source of truth for strain -> frequency-domain packaging.
++
++Reproduces ``dingo.gw.data.data_preparation.data_to_domain`` for one detector:
++Tukey window (``alpha = 2 * roll_off / T``), ``rfft / f_s``, then
++``cyclic_time_shift(time_buffer)``, i.e. multiplication by
++``exp(-2j * pi * f * time_buffer)``.
++
++Every glitch injection and every gate rebuild must go through
++``package_fd`` so that injected glitches, gate deltas, and the archived event
++package all live in the same time frame as the frozen network.
++"""
++
++from __future__ import annotations
++
++from typing import Optional
++
++import numpy as np
++from scipy import signal as sp_signal
++
++DEFAULT_TIME_BUFFER_S = 2.0
++
++
++def package_fd(
++    td: np.ndarray,
++    sample_rate: float,
++    *,
++    roll_off: float = 0.4,
++    f_max: float,
++    n_freq: Optional[int] = None,
++    time_buffer: float = DEFAULT_TIME_BUFFER_S,
++) -> np.ndarray:
++    """Windowed rFFT of ``td`` in the DINGO event-package convention."""
++    x = np.asarray(td, dtype=np.float64).ravel()
++    n = len(x)
++    alpha = 2.0 * float(roll_off) * float(sample_rate) / max(n, 1)
++    alpha = float(np.clip(alpha, 0.0, 1.0))
++    window = sp_signal.windows.tukey(n, alpha=alpha)
++    fd = np.fft.rfft(x * window) / float(sample_rate)
++    freqs = np.fft.rfftfreq(n, d=1.0 / float(sample_rate))
++    if float(time_buffer) != 0.0:
++        fd = fd * np.exp(-2j * np.pi * freqs * float(time_buffer))
++    if n_freq is None:
++        df = freqs[1] if len(freqs) > 1 else 1.0
++        n_keep = min(int(np.floor(float(f_max) / df)) + 1, len(fd))
++    else:
++        n_keep = int(n_freq)
++    if len(fd) < n_keep:
++        fd = np.pad(fd, (0, n_keep - len(fd)))
++    return np.asarray(fd[:n_keep], dtype=np.complex128)
++
++
++def coloured_noise_td(
++    asd: np.ndarray,
++    n_samples: int,
++    sample_rate: float,
++    *,
++    seed: int = 0,
++) -> np.ndarray:
++    """Stationary Gaussian noise with one-sided PSD ``asd**2`` on the package grid.
++
++    ``asd[k]`` belongs to frequency ``k * sample_rate / n_samples``. Bins where the
++    ASD is a placeholder (``<= 0`` or ``>= 1e-6``, e.g. the 1.0 that DINGO writes
++    below ``f_min``) and bins above ``len(asd)`` are left empty, so the noise is
++    band-limited to the analysis band.
++    """
++    n = int(n_samples)
++    n_rfft = n // 2 + 1
++    a = np.asarray(asd, dtype=np.float64).ravel()
++    m = min(a.size, n_rfft)
++    valid = (a[:m] > 0.0) & (a[:m] < 1e-6)
++    rng = np.random.default_rng(int(seed))
++    spec = np.zeros(n_rfft, dtype=np.complex128)
++    draw = rng.standard_normal(m) + 1j * rng.standard_normal(m)
++    spec[:m] = np.where(valid, draw * a[:m], 0.0) * (np.sqrt(n * float(sample_rate)) / 2.0)
++    spec[0] = 0.0
++    return np.fft.irfft(spec, n=n)
++
++
++def band_limit_td(
++    td: np.ndarray,
++    sample_rate: float,
++    f_lo: float,
++    f_hi: float,
++    *,
++    roll_off: float = 0.4,
++) -> np.ndarray:
++    """Segment-windowed strain with everything below the analysis band removed.
++
++    Zero below ``f_lo``, unity above ``f_hi``, raised-cosine in between. Gating raw
++    strain multiplies the seismic wall by the gate taper and leaks it into the
++    analysis band; gating this band-limited series does not.
++    """
++    x = np.asarray(td, dtype=np.float64).ravel()
++    n = len(x)
++    alpha = float(np.clip(2.0 * float(roll_off) * float(sample_rate) / max(n, 1), 0.0, 1.0))
++    spec = np.fft.rfft(x * sp_signal.windows.tukey(n, alpha=alpha))
++    freqs = np.fft.rfftfreq(n, d=1.0 / float(sample_rate))
++    ramp = np.clip((freqs - float(f_lo)) / max(float(f_hi) - float(f_lo), 1e-12), 0.0, 1.0)
++    return np.fft.irfft(spec * (0.5 - 0.5 * np.cos(np.pi * ramp)), n=n)
+diff --git a/tests/test_honest_excision_dl.py b/tests/test_honest_excision_dl.py
+index 8fcb46d..311311c 100644
+--- a/tests/test_honest_excision_dl.py
++++ b/tests/test_honest_excision_dl.py
+@@ -36,6 +36,11 @@ def _assets_available() -> bool:
+ 
+ 
+ @pytest.mark.skipif(not _assets_available(), reason="GW170817/DINGO assets missing")
++@pytest.mark.xfail(
++    strict=False,
++    reason="After the packaging-convention fix this is an honest raw-strain gate. Whether d_L "
++    "recovers is a scientific result (Phase B), not a regression. Do not change code to make it pass.",
++)
+ def test_glitchy_package_gate_orig_asd_recovers_dl():
+     """Honest path on the object ``inject_h1_glitch_into_event`` returns."""
+     from adapt.glitch_excision import GateWindow, rebuild_event_from_gated_td
+diff --git a/tests/test_packaging_convention.py b/tests/test_packaging_convention.py
+new file mode 100644
+index 0000000..3a2d9ff
+--- /dev/null
++++ b/tests/test_packaging_convention.py
+@@ -0,0 +1,259 @@
++"""The injection, the gate rebuild and the archived package must share one time frame.
++
++``package_fd`` has to equal upstream DINGO ``data_to_domain`` (Tukey window,
++rfft / f_s, ``cyclic_time_shift(time_buffer)``). If these tests fail, do NOT
++relax them: the convention is wrong and every recovery number is invalid.
++"""
++
++from __future__ import annotations
++
++import sys
++from pathlib import Path
++
++import numpy as np
++import pytest
++from scipy.signal.windows import tukey
++
++REPO = Path(__file__).resolve().parents[1]
++for _p in (REPO / "src", REPO / "examples", REPO / "DINGO-BNS" / "dingo"):
++    if _p.is_dir() and str(_p) not in sys.path:
++        sys.path.insert(0, str(_p))
++
++FS = 4096.0
++T = 16.0
++TB = 2.0
++N = int(FS * T)
++
++
++def _toy(seed: int = 0):
++    from adapt.stft_context import sine_gaussian_glitch
++
++    rng = np.random.default_rng(seed)
++    x = rng.standard_normal(N)
++    t_peak = (T - TB) - 1.0  # 1 s before the trigger
++    g = sine_gaussian_glitch(N, FS, t_peak=t_peak, f0=100.0, q=5.0, amplitude=300.0)
++    return x, g, t_peak
++
++
++def _to_segment_time(fd: np.ndarray) -> np.ndarray:
++    """Undo the cyclic shift and return the (windowed) time series the network sees."""
++    f = np.fft.rfftfreq(N, d=1.0 / FS)
++    return np.fft.irfft(fd * np.exp(+2j * np.pi * f * TB) * FS, n=N)
++
++
++def test_package_fd_matches_pycbc_cyclic_time_shift():
++    """Same operations, same order, as dingo.gw.data.data_preparation.data_to_domain."""
++    pycbc_types = pytest.importorskip("pycbc.types")
++    from adapt.packaging import package_fd
++
++    x, _, _ = _toy()
++    window = tukey(N, alpha=2 * 0.4 / T)
++    ts = pycbc_types.TimeSeries(x, delta_t=1.0 / FS)
++    ref = np.array((ts * window).to_frequencyseries().cyclic_time_shift(TB))
++    got = package_fd(x, FS, roll_off=0.4, f_max=FS / 2, time_buffer=TB)
++    assert got.shape == ref.shape
++    rel = np.linalg.norm(got - ref) / np.linalg.norm(ref)
++    assert rel < 1e-10, rel
++
++
++def test_both_td_to_fd_wrappers_use_the_shift():
++    from adapt.event_glitch_io import td_to_fd_strain as inject_fd
++    from adapt.glitch_excision import td_to_fd_strain as rebuild_fd
++    from adapt.packaging import package_fd
++
++    x, _, _ = _toy()
++    ref = package_fd(x, FS, f_max=FS / 2, time_buffer=TB)
++    np.testing.assert_allclose(inject_fd(x, FS, f_max=FS / 2), ref)
++    np.testing.assert_allclose(rebuild_fd(x, FS, f_max=FS / 2), ref)
++    unshifted = package_fd(x, FS, f_max=FS / 2, time_buffer=0.0)
++    assert np.linalg.norm(ref - unshifted) / np.linalg.norm(ref) > 1.0
++
++
++def test_injected_glitch_lands_at_its_nominal_time():
++    from adapt.event_glitch_io import td_to_fd_strain
++
++    x, g, t_peak = _toy()
++    clean = td_to_fd_strain(x, FS, f_max=FS / 2)
++    poison = clean + td_to_fd_strain(g, FS, f_max=FS / 2)
++    diff = _to_segment_time(poison) - _to_segment_time(clean)
++    t_seen = np.argmax(np.abs(diff)) / FS
++    assert abs(t_seen - t_peak) < 0.01, (t_seen, t_peak)
++
++
++def test_matched_delta_equals_official_repackage_of_gated_strain():
++    from adapt.glitch_excision import (
++        GateWindow,
++        apply_gates_td,
++        rebuild_event_from_gated_td,
++        td_to_fd_strain,
++    )
++
++    x, g, t_peak = _toy()
++    n_freq = N // 2 + 1
++    clean = td_to_fd_strain(x, FS, f_max=FS / 2)
++    poison = {
++        "waveform": {"H1": clean + td_to_fd_strain(g, FS, f_max=FS / 2)},
++        "asds": {"H1": np.ones(n_freq)},
++    }
++    gates = [GateWindow("H1", t_peak - 0.4, t_peak + 0.4)]
++    res = rebuild_event_from_gated_td(
++        poison,
++        td_by_det={"H1": x + g},
++        gates=gates,
++        sample_rate=FS,
++        f_max=FS / 2,
++        fill="zero",
++    )
++    honest = td_to_fd_strain(apply_gates_td(x + g, FS, gates), FS, f_max=FS / 2)
++    rel = np.linalg.norm(res.data["waveform"]["H1"] - honest) / np.linalg.norm(honest)
++    assert rel < 1e-10, rel
++
++
++def test_gate_is_a_real_hole_in_the_network_frame():
++    from adapt.glitch_excision import GateWindow, rebuild_event_from_gated_td, td_to_fd_strain
++
++    x, g, t_peak = _toy()
++    n_freq = N // 2 + 1
++    clean = td_to_fd_strain(x, FS, f_max=FS / 2)
++    poison = {
++        "waveform": {"H1": clean + td_to_fd_strain(g, FS, f_max=FS / 2)},
++        "asds": {"H1": np.ones(n_freq)},
++    }
++    gates = [GateWindow("H1", t_peak - 0.4, t_peak + 0.4)]
++    res = rebuild_event_from_gated_td(
++        poison, td_by_det={"H1": x + g}, gates=gates, sample_rate=FS, f_max=FS / 2, fill="zero"
++    )
++    y = _to_segment_time(res.data["waveform"]["H1"])
++    core = slice(int((t_peak - 0.15) * FS), int((t_peak + 0.15) * FS))  # fully zeroed part
++    away = slice(int((t_peak - 2.15) * FS), int((t_peak - 1.85) * FS))  # 2 s earlier, untouched
++    rms = lambda s: float(np.sqrt(np.mean(y[s] ** 2)))  # noqa: E731
++    assert rms(core) < 1e-6, rms(core)
++    assert 0.9 < rms(away) < 1.1, rms(away)
++
++
++def test_noise_fill_has_the_requested_spectrum_and_removes_the_glitch():
++    from adapt.glitch_excision import GateWindow, rebuild_event_from_gated_td, td_to_fd_strain
++    from adapt.packaging import coloured_noise_td
++
++    # Spectrum: band-limited ASD with a DINGO-style placeholder (1.0) below f_min.
++    n_freq = N // 2 + 1
++    f = np.fft.rfftfreq(N, d=1.0 / FS)
++    asd = np.full(n_freq, 2e-23)
++    asd[f < 23.0] = 1.0
++    noise = coloured_noise_td(asd, N, FS, seed=3)
++    spec = np.fft.rfft(noise)
++    psd = 2.0 * np.abs(spec) ** 2 / (N * FS)
++    band = (f >= 23.0) & (f <= FS / 2 - 1)
++    assert abs(np.mean(psd[band]) / (2e-23) ** 2 - 1.0) < 0.05
++    assert np.all(psd[f < 22.9] < 1e-60)
++
++    # Fill: strain-scale white data with a matching ASD -> variance stays flat, glitch gone.
++    scale = 1e-21
++    x, g, t_peak = _toy(seed=5)
++    x, g = scale * x, scale * g
++    asd1 = np.full(n_freq, scale * np.sqrt(2.0 / FS))  # white, std = scale per sample
++    clean = td_to_fd_strain(x, FS, f_max=FS / 2)
++    poison = {
++        "waveform": {"H1": clean + td_to_fd_strain(g, FS, f_max=FS / 2)},
++        "asds": {"H1": asd1.copy()},
++    }
++    gates = [GateWindow("H1", t_peak - 0.4, t_peak + 0.4)]
++    res = rebuild_event_from_gated_td(
++        poison,
++        td_by_det={"H1": x + g},
++        gates=gates,
++        sample_rate=FS,
++        f_max=FS / 2,
++        original_asds={"H1": asd1},
++        fill="noise",
++    )
++    assert res.meta["fill"] == "noise"
++    y = _to_segment_time(res.data["waveform"]["H1"]) / scale
++    core = slice(int((t_peak - 0.15) * FS), int((t_peak + 0.15) * FS))
++    taper = slice(int((t_peak - 0.4) * FS), int((t_peak - 0.2) * FS))
++    rms = lambda s: float(np.sqrt(np.mean(y[s] ** 2)))  # noqa: E731
++    assert 0.9 < rms(core) < 1.1, rms(core)
++    assert 0.85 < rms(taper) < 1.15, rms(taper)
++    assert np.max(np.abs(y[core])) < 6.0  # the 300-sigma glitch is gone
++
++
++def _assets_available() -> bool:
++    try:
++        from adapt.dingo_bns_demo import discover_assets
++
++        assets = discover_assets()
++        return Path(assets["baseline_ckpt"]).is_file() and Path(assets["event_hdf5"]).is_file()
++    except Exception:
++        return False
++
++
++@pytest.mark.skipif(not _assets_available(), reason="GW170817/DINGO assets missing")
++def test_package_fd_reproduces_the_archived_gw170817_package():
++    """The decisive check: our transform of the local strain equals the archive."""
++    from adapt.dingo_bns_demo import discover_assets, load_event_dataset
++    from adapt.event_glitch_io import load_full_event_td
++    from adapt.packaging import package_fd
++
++    assets = discover_assets()
++    event = load_event_dataset(assets)
++    settings = dict(event.settings)
++    f_min = float(settings.get("f_min", 23.0))
++    f_max = float(settings.get("f_max", 1535.3046875))
++    report = {}
++    for det in ("H1", "L1", "V1"):
++        td, f_s, time_buffer = load_full_event_td(assets, settings, det)
++        archived = np.asarray(event.data["waveform"][det], dtype=np.complex128)
++        freqs = np.arange(archived.size) * (f_s / td.size)
++        band = (freqs >= f_min) & (freqs <= f_max)
++        rel = {}
++        for label, tb in (("shifted", time_buffer), ("unshifted", 0.0)):
++            ours = package_fd(td, f_s, roll_off=0.4, f_max=f_max, n_freq=archived.size, time_buffer=tb)
++            rel[label] = float(np.linalg.norm((ours - archived)[band]) / np.linalg.norm(archived[band]))
++        report[det] = rel
++    print("relative L2 to archived package:", report)
++    for det, rel in report.items():
++        assert rel["shifted"] < 1e-2, (det, rel)
++        assert rel["unshifted"] > 0.5, (det, rel)
++
++
++def test_band_limited_gate_does_not_leak_the_seismic_wall():
++    """Gating raw strain leaks low-frequency power into the band; gate_band must prevent it."""
++    from adapt.glitch_excision import GateWindow, rebuild_event_from_gated_td, td_to_fd_strain
++
++    n_freq = N // 2 + 1
++    f = np.fft.rfftfreq(N, d=1.0 / FS)
++    rng = np.random.default_rng(11)
++    # White in-band noise (unit variance) plus a wall 1e4 times louder below 10 Hz.
++    wall = np.where((f > 0.5) & (f < 10.0), 1e4, 0.0)
++    spec = (rng.standard_normal(n_freq) + 1j * rng.standard_normal(n_freq)) * (1.0 + wall)
++    x = np.fft.irfft(spec * np.sqrt(N) / np.sqrt(2.0), n=N)
++    clean = td_to_fd_strain(x, FS, f_max=FS / 2)
++    data = {"waveform": {"H1": clean.copy()}, "asds": {"H1": np.ones(n_freq)}}
++    t_c = (T - TB) - 1.0
++    gates = [GateWindow("H1", t_c - 0.1, t_c + 0.1)]
++    band = (f >= 23.0) & (f <= 1500.0)
++
++    def inband_change(**kw):
++        res = rebuild_event_from_gated_td(
++            data, td_by_det={"H1": x}, gates=gates, sample_rate=FS, f_max=FS / 2, fill="zero", **kw
++        )
++        return float(np.linalg.norm((res.data["waveform"]["H1"] - clean)[band]))
++
++    raw = inband_change()
++    limited = inband_change(gate_band=(20.0, 23.0))
++    assert raw > 10.0 * limited, (raw, limited)
++
++    # With the band limit, the in-band data inside the gate core are gone.
++    res = rebuild_event_from_gated_td(
++        data, td_by_det={"H1": x}, gates=gates, sample_rate=FS, f_max=FS / 2,
++        fill="zero", gate_band=(20.0, 23.0),
++    )
++    assert res.meta["gate_band_hz"] == [20.0, 23.0]
++    spec_out = res.data["waveform"]["H1"].copy()
++    spec_out[f < 30.0] = 0.0
++    spec_in = clean.copy()
++    spec_in[f < 30.0] = 0.0
++    y_out, y_in = _to_segment_time(spec_out), _to_segment_time(spec_in)
++    core = slice(int((t_c - 0.03) * FS), int((t_c + 0.03) * FS))
++    rms = lambda y: float(np.sqrt(np.mean(y[core] ** 2)))  # noqa: E731
++    assert rms(y_out) < 0.1 * rms(y_in), (rms(y_out), rms(y_in))
