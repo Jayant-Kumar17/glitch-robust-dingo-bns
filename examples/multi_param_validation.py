@@ -42,15 +42,15 @@ def _as_bool(series: pd.Series) -> pd.Series:
     return series.astype(str).str.lower().isin(["true", "1"])
 
 
-def _select_real() -> pd.DataFrame:
-    df = pd.read_csv(REAL_CSV)
+def _select_real(real_csv=None, koi_only: bool = True) -> pd.DataFrame:
+    df = pd.read_csv(real_csv or REAL_CSV)
     mask = _as_bool(df["poison_collapsed"])
     if "severity_mode" in df.columns:
         mask &= df["severity_mode"].astype(str) == "native"
     if "is_noise_control" in df.columns:
         mask &= ~_as_bool(df["is_noise_control"])
     out = df.loc[mask].copy()
-    if "family" in out.columns:
+    if koi_only and "family" in out.columns:
         out = out[out["family"].astype(str).str.contains("Koi", case=False)]
     return out.sort_values("cell_id")
 
@@ -220,7 +220,7 @@ def _run_real(session, args, outdir: Path) -> list[dict]:
     from stress_real_glitches import Transplanter, inject_excerpt_into_event
     from adapt import gravity_spy_io as gs
 
-    cells = _select_real()
+    cells = _select_real(args.real_csv, koi_only=not args.all_morphologies)
     logger.info("Real collapsed Koi Fish cells: %d", len(cells))
     assets = discover_assets()
     event = load_event_dataset(assets)
@@ -260,7 +260,7 @@ def _run_real(session, args, outdir: Path) -> list[dict]:
     model, det_raw = _load_detector(
         REPO_ROOT / "checkpoints" / "glitch_detector_v1" / "best_glitch_detector.pt", device
     )
-    catalogue = pd.read_csv(REAL_CAT)
+    catalogue = pd.read_csv(args.real_catalogue or REAL_CAT)
     clean_path = outdir / "real_clean_samples.csv"
     if clean_path.is_file() and not args.overwrite:
         clean_samples = pd.read_csv(clean_path)
@@ -283,7 +283,11 @@ def _run_real(session, args, outdir: Path) -> list[dict]:
             continue
         cat = catalogue.iloc[(catalogue["event_time"] - float(rec.gs_event_time)).abs().argmin()]
         try:
-            raw_td = gs.fetch_h1_excerpt(float(cat["event_time"]), sample_rate=sample_rate)
+            _cache = REPO_ROOT / "data" / "gravity_spy" / "excerpts" / f"H1_{float(cat['event_time']):.4f}_{int(sample_rate)}.npy"
+            if _cache.is_file():
+                raw_td = np.load(_cache)
+            else:
+                raw_td = gs.fetch_h1_excerpt(float(cat["event_time"]), sample_rate=sample_rate)
         except Exception as exc:
             logger.warning("Real cell %s excerpt fetch failed: %s", rec.cell_id, exc)
             continue
@@ -316,15 +320,26 @@ def _run_real(session, args, outdir: Path) -> list[dict]:
             norm_stats=det_raw.get("norm_stats"),
             stft_kwargs=dict(det_raw.get("stft_kwargs") or {}),
         )
-        gates, _ = _detector_gates(
-            model,
-            spec,
-            detectors=detectors,
-            crop_start=int(meta["crop_start"]),
-            sample_rate=sample_rate,
-            threshold=0.7283049106597901,
-            gate_half_s=float(det_raw.get("gate_half_s", 0.4)),
-            device=device,
+        _half = (
+            float(args.force_gate_half_s)
+            if args.force_gate_half_s is not None
+            else float(det_raw.get("gate_half_s", 0.4))
+        )
+        from adapt.localize import select_gates
+
+        gates, _loc = select_gates(
+            lambda: _detector_gates(
+                model,
+                spec,
+                detectors=detectors,
+                crop_start=int(meta["crop_start"]),
+                sample_rate=sample_rate,
+                threshold=0.7283049106597901,
+                gate_half_s=_half,
+                device=device,
+            ),
+            td_by_det={"H1": meta["td_full"]["H1"]}, asds={"H1": asds["H1"]},
+            sample_rate=sample_rate, f_max=f_max, pad_s=_half, detectors=["H1"],
         )
         gated = rebuild_event_from_gated_td(
             poison,
@@ -561,6 +576,14 @@ def main(argv=None) -> None:
     parser.add_argument("--overwrite", action="store_true")
     parser.add_argument("--skip-real", action="store_true")
     parser.add_argument("--skip-synthetic", action="store_true")
+    parser.add_argument("--real-csv", type=resolve_under_repo, default=None,
+                        help="real-panel results.csv to take collapsed cells from (default: stress_real_glitches_v2)")
+    parser.add_argument("--real-catalogue", type=resolve_under_repo, default=None,
+                        help="matching glitch_catalogue.csv (default: stress_real_glitches_v2)")
+    parser.add_argument("--all-morphologies", action="store_true",
+                        help="use every collapsed cell, not only Koi Fish")
+    parser.add_argument("--force-gate-half-s", type=float, default=None,
+                        help="gate half-width in s; overrides the value stored in the detector checkpoint")
     args = parser.parse_args(argv)
     outdir = Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)

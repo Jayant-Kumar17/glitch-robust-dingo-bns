@@ -678,9 +678,15 @@ def run(args: argparse.Namespace) -> None:
                 meta["td_stft"], asds_clean=asds_clean, detectors=detectors, sample_rate=sample_rate,
                 delta_f=delta_f, noise_std=noise_std, norm_stats=norm_stats, stft_kwargs=stft_kwargs,
             )
-            gates, _ = _detector_gates(
-                model, spec_g, detectors=detectors, crop_start=int(meta["crop_start"]), sample_rate=sample_rate,
-                threshold=thr_event, gate_half_s=gate_half_s, device=device, ifo_whitelist=["H1"],
+            from adapt.localize import select_gates
+
+            gates, _loc = select_gates(
+                lambda: _detector_gates(
+                    model, spec_g, detectors=detectors, crop_start=int(meta["crop_start"]), sample_rate=sample_rate,
+                    threshold=thr_event, gate_half_s=gate_half_s, device=device, ifo_whitelist=["H1"],
+                ),
+                td_by_det={"H1": meta["td_full"]["H1"]}, asds={"H1": asds_clean["H1"]},
+                sample_rate=sample_rate, f_max=f_max, pad_s=gate_half_s, detectors=["H1"],
             )
             row["detector_n_gates"] = len(gates)
             row["detector_fired"] = bool(len(gates) > 0)
