@@ -149,8 +149,16 @@ def run_cell(c, inj: Injector, row, half: float, clean_ci: dict, clean_res, outd
     base = build_ufd_likelihood(resA)
     ops = S2.gate_ops(c, base, wins, [c.args.eps])[c.args.eps]
     payload = S2._Payload(base, S2.unit_ops(c, base, ["H1"]), {"H1": ops["H1"].idx})
-    L0, u = S2.evaluate(payload, theta_frame(resA), int(c.args.num_processes))
-    corr = S2.corrections(ops, u, payload.windows)
+    # chunked so that 1e5-sample runs with long gates fit in memory
+    theta = theta_frame(resA)
+    chunk = int(getattr(c.args, "chunk", 20_000))
+    L0_parts, corr_parts = [], []
+    for i0 in range(0, len(theta), chunk):
+        L0_i, u_i = S2.evaluate(payload, theta.iloc[i0:i0 + chunk], int(c.args.num_processes))
+        L0_parts.append(L0_i)
+        corr_parts.append(S2.corrections(ops, u_i, payload.windows))
+        del u_i
+    L0, corr = np.concatenate(L0_parts), np.concatenate(corr_parts)
     G = S2.summarise_route(resA.samples, L0 + corr, "gated")
     rec["gated_is"] = {k: v for k, v in G.items() if not k.startswith("_")}
     rec["gated_is"]["recovers"] = bool(_gated_recovers(G["d_L"], clean_ci))
@@ -168,6 +176,17 @@ def run_cell(c, inj: Injector, row, half: float, clean_ci: dict, clean_res, outd
     out.to_csv(outdir / f"{rec['id']}_samples.csv.gz", index=False)
     rec["elapsed_s"] = time.time() - t0
     return rec
+
+
+def untrusted_targets(folder: Path, pads) -> set:
+    """(group, cell_id, pad) of every analysed cell in ``folder`` whose gated IS had n_eff < 100."""
+    out = set()
+    pads = {round(float(p), 6) for p in pads}
+    for f in sorted((Path(folder) / "cells").glob("*.json")):
+        r = json.loads(f.read_text())
+        if "gated_is" in r and not r["gated_is"].get("trusted", True) and round(float(r.get("half", -1)), 6) in pads:
+            out.add((r["group"], int(r["cell_id"]), float(r["half"])))
+    return out
 
 
 def _wilson(k, n, z=1.959964):
@@ -255,23 +274,34 @@ def main(argv=None) -> None:
     p.add_argument("--max-hours", type=float, default=11.0)
     p.add_argument("--max-cells", type=int, default=None)
     p.add_argument("--smoke", action="store_true", help="300 samples, 2 cells, pad 0.1 only")
+    p.add_argument("--clean-samples", type=int, default=10_000, help="samples for the clean reference")
+    p.add_argument("--chunk", type=int, default=20_000, help="likelihood evaluations per chunk")
+    p.add_argument("--only-untrusted-from", type=resolve_under_repo, default=None,
+                   help="a previous Stage 3 output folder: rerun exactly its untrusted cells (pads in --pads only)")
     args = p.parse_args(argv)
     args.eps_sensitivity = []
     if args.smoke:
         args.num_samples, args.batch_size, args.max_cells, args.pads = 300, 300, 2, [0.1]
+        args.clean_samples = 300
     outdir = Path(args.outdir)
     (outdir / "cells").mkdir(parents=True, exist_ok=True)
     t_start = time.time()
     (outdir / "config.json").write_text(json.dumps(vars(args), indent=2, default=str))
 
     cells = select_cells(Path(args.real_dir))
+    only = None
+    if args.only_untrusted_from:
+        only = untrusted_targets(Path(args.only_untrusted_from), args.pads)
+        logger.info("rerunning %d untrusted (group, cell, pad) combinations", len(only))
+        keep = {(g, cid) for g, cid, _ in only}
+        cells = cells[[(g, int(cid)) in keep for g, cid in zip(cells["group"], cells["cell_id"])]]
     if args.max_cells:
         cells = cells.groupby("group", sort=False).head(int(args.max_cells))
     logger.info("selected %d damaged and %d broken cells", int((cells["group"] == "damaged").sum()), int((cells["group"] == "broken").sum()))
 
     c = S2.setup(args)
     inj = Injector(c, Path(args.real_dir))
-    clean_res, _ = S2.draw(c, c.event.data, args.num_samples)
+    clean_res, _ = S2.draw(c, c.event.data, args.clean_samples)
     wC = clean_res.samples["weights"].to_numpy(float)
     clean_ci = S2._ci(clean_res.samples["luminosity_distance"].to_numpy(float), wC)
     meta = {"clean_ci": clean_ci, "clean_eff": float(clean_res.sample_efficiency)}
@@ -284,6 +314,8 @@ def main(argv=None) -> None:
         for _, row in cells[cells["group"] == grp].iterrows():
             cid = f"{grp}_{int(row['cell_id']):03d}_h{half:g}"
             if cid in done:
+                continue
+            if only is not None and (grp, int(row["cell_id"]), float(half)) not in only:
                 continue
             if (time.time() - t_start) / 3600.0 > args.max_hours:
                 logger.warning("time budget reached before %s", cid)

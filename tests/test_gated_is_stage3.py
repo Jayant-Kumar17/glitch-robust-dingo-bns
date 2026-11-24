@@ -45,6 +45,7 @@ def test_run_cell_and_report_on_fake_model(tmp_path, monkeypatch):
 
     c = _ctx()
     c.args.num_samples = 120
+    c.args.chunk = 50  # exercise the chunked path (120 samples -> 3 chunks)
     c.asds = {"H1": ASD.copy()}
     rng = np.random.default_rng(4)
     x = np.fft.irfft((rng.standard_normal(N // 2 + 1) + 1j * rng.standard_normal(N // 2 + 1))
@@ -73,3 +74,50 @@ def test_run_cell_and_report_on_fake_model(tmp_path, monkeypatch):
     text = S3.report(tmp_path, [rec, dict(rec, id="damaged_007_h0.2", half=0.2), bad],
                      {"clean_ci": clean_ci, "clean_eff": 0.1})
     assert "gated IS (trusted)" in text and "Adaptive rule" in text and "1 mismatched" in text
+
+
+def test_chunked_equals_unchunked(tmp_path, monkeypatch):
+    import gated_is_stage2 as S2
+    import gated_is_stage3 as S3
+    import adapt.gated_likelihood as G
+    from test_gated_is_driver import ASD, FS, N, N_FREQ, T, TB, FakeBase, FakeResult, _ctx
+
+    rng = np.random.default_rng(4)
+    x = np.fft.irfft((rng.standard_normal(N // 2 + 1) + 1j * rng.standard_normal(N // 2 + 1))
+                     * np.concatenate([np.where(ASD < 1e-6, ASD, 0.0), np.zeros(N // 2 + 1 - N_FREQ)]) * np.sqrt(N * FS) / 2, n=N)
+    t = np.arange(N) / FS
+    tc = T - TB - 1.0
+    x = x + 40 * np.std(x) * np.sin(2 * np.pi * 120 * (t - tc)) * np.exp(-((t - tc) / 0.02) ** 2)
+    base = FakeBase()
+    clean = FakeResult(base, n=90, seed=5)
+    monkeypatch.setattr(S2, "draw", lambda ctx, data, n: (lambda r: (r, r.samples.copy()))(FakeResult(base, n=n, seed=11)))
+    monkeypatch.setattr(G, "build_ufd_likelihood", lambda res: res._base)
+    inj = lambda row: ({"waveform": {"H1": np.zeros(N_FREQ, complex)}, "asds": {"H1": ASD.copy()}},  # noqa: E731
+                       {"injected_rho_w": 200.0, "td_full": {"H1": x}})
+    row = {"group": "damaged", "cell_id": 1, "gs_label": "Blip", "gs_snr_bin": "x", "injected_rho_w": 200.0,
+           "t_rel": -1.0, "gated_recovers": False, "poison_collapsed": True}
+    clean_ci = S2._ci(clean.samples["luminosity_distance"].to_numpy(float), clean.samples["weights"].to_numpy(float))
+    out = []
+    for chunk in (1000, 7):
+        c = _ctx()
+        c.args.num_samples, c.args.chunk = 90, chunk
+        c.asds = {"H1": ASD.copy()}
+        out.append(S3.run_cell(c, inj, row, 0.1, clean_ci, clean, tmp_path)["gated_is"])
+    assert np.isclose(out[0]["n_eff"], out[1]["n_eff"], rtol=1e-12)
+    assert np.isclose(out[0]["d_L"]["med"], out[1]["d_L"]["med"], rtol=1e-12)
+
+
+def test_untrusted_targets(tmp_path):
+    import gated_is_stage3 as S3
+
+    (tmp_path / "cells").mkdir()
+    recs = [
+        {"group": "damaged", "cell_id": 3, "half": 0.1, "gated_is": {"trusted": False}},
+        {"group": "damaged", "cell_id": 4, "half": 0.1, "gated_is": {"trusted": True}},
+        {"group": "broken", "cell_id": 5, "half": 0.2, "gated_is": {"trusted": False}},
+        {"group": "broken", "cell_id": 6, "half": 0.1, "error": "x"},
+    ]
+    for i, r in enumerate(recs):
+        (tmp_path / "cells" / f"{i}.json").write_text(json.dumps(r))
+    assert S3.untrusted_targets(tmp_path, [0.1]) == {("damaged", 3, 0.1)}
+    assert S3.untrusted_targets(tmp_path, [0.1, 0.2]) == {("damaged", 3, 0.1), ("broken", 5, 0.2)}
