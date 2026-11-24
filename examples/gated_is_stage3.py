@@ -56,6 +56,27 @@ def select_cells(real_dir: Path) -> pd.DataFrame:
     return sel.sort_values(["group", "cell_id"], ascending=[False, True])
 
 
+def classify_cells(real_dir: Path) -> pd.DataFrame:
+    """Every cell passing select_cells' filters, labelled damaged, broken or fine.
+
+    select_cells is not used and is not modified. damaged: the ungated network
+    fails. broken: it passes and gated_recovers is false. fine: it passes and
+    gated_recovers is true.
+    """
+    r = pd.read_csv(real_dir / "results.csv")
+    clean = json.loads((real_dir / "clean_reference.json").read_text())
+    clean = clean.get("d_L", clean.get("luminosity_distance", clean))
+    r = r[r["error"].fillna("") == ""].copy()
+    for col in ("poison_collapsed", "gated_recovers", "detector_fired", "is_noise_control"):
+        r[col] = r[col].astype(str).str.lower().isin(["true", "1"])
+    r = r[(~r["is_noise_control"]) & (r["injected_rho_w"].astype(float) > 1.0)].copy()
+    damaged = ~_recovers(r["poison_lo"], r["poison_med"], r["poison_hi"], clean)
+    broken = (~damaged) & (~r["gated_recovers"])
+    r = r.copy()
+    r["group"] = np.where(damaged, "damaged", np.where(broken, "broken", "fine"))
+    return r.sort_values(["group", "cell_id"], ascending=[False, True])
+
+
 class Injector:
     """Rebuilds a Phase C real-panel cell bit-for-bit from the cached excerpt."""
 
@@ -208,7 +229,7 @@ def report(outdir: Path, rows: list, meta: dict) -> str:
          f"A cell counts as recovered by gated IS only if n_eff >= {TRUST_N_EFF:.0f} AND the d_L criterion passes (docs/STAGE3_PLAN.md).", ""]
     L += ["| group | gate pad | cells | Phase C localiser recovers | network only | naive IS | gated IS (trusted) | gated IS untrusted (n_eff<100) | no gate | median eff |",
           "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
-    for grp in ("damaged", "broken"):
+    for grp in ("damaged", "broken", "fine"):
         for half in sorted({r["half"] for r in ok}):
             sub = [r for r in ok if r["group"] == grp and r["half"] == half]
             if not sub:
@@ -229,7 +250,7 @@ def report(outdir: Path, rows: list, meta: dict) -> str:
         if "gated_is" in r:
             by_cell.setdefault((r["group"], r["cell_id"]), []).append(r)
     L += ["", "Adaptive rule (pre-registered): per cell, take the pad with the larger gated-IS n_eff.", ""]
-    for grp in ("damaged", "broken"):
+    for grp in ("damaged", "broken", "fine"):
         cells = [v for (g, _), v in by_cell.items() if g == grp and len(v) == 2]
         if cells:
             pick = [max(v, key=lambda r: r["gated_is"]["n_eff"]) for v in cells]
@@ -259,10 +280,7 @@ def report(outdir: Path, rows: list, meta: dict) -> str:
     return text
 
 
-def main(argv=None) -> None:
-    import gated_is_stage2 as S2
-
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--outdir", type=resolve_under_repo, default="results/gated_is_stage3")
     p.add_argument("--real-dir", type=resolve_under_repo, default=str(REAL))
@@ -278,7 +296,16 @@ def main(argv=None) -> None:
     p.add_argument("--chunk", type=int, default=20_000, help="likelihood evaluations per chunk")
     p.add_argument("--only-untrusted-from", type=resolve_under_repo, default=None,
                    help="a previous Stage 3 output folder: rerun exactly its untrusted cells (pads in --pads only)")
-    args = p.parse_args(argv)
+    p.add_argument("--groups", nargs="+", choices=("damaged", "broken", "fine"), default=["damaged", "broken"],
+                   help="cell groups to run; default is the Stage 3 selection (damaged and broken)")
+    return p
+
+
+def main(argv=None) -> None:
+    import gated_is_stage2 as S2
+
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    args = build_parser().parse_args(argv)
     args.eps_sensitivity = []
     if args.smoke:
         args.num_samples, args.batch_size, args.max_cells, args.pads = 300, 300, 2, [0.1]
@@ -288,7 +315,12 @@ def main(argv=None) -> None:
     t_start = time.time()
     (outdir / "config.json").write_text(json.dumps(vars(args), indent=2, default=str))
 
-    cells = select_cells(Path(args.real_dir))
+    groups = list(args.groups)
+    if "fine" in groups:
+        cells = classify_cells(Path(args.real_dir))
+    else:
+        cells = select_cells(Path(args.real_dir))
+    cells = cells[cells["group"].isin(groups)]
     only = None
     if args.only_untrusted_from:
         only = untrusted_targets(Path(args.only_untrusted_from), args.pads)
@@ -298,6 +330,8 @@ def main(argv=None) -> None:
     if args.max_cells:
         cells = cells.groupby("group", sort=False).head(int(args.max_cells))
     logger.info("selected %d damaged and %d broken cells", int((cells["group"] == "damaged").sum()), int((cells["group"] == "broken").sum()))
+    if "fine" in groups:
+        logger.info("selected %d fine cells", int((cells["group"] == "fine").sum()))
 
     c = S2.setup(args)
     inj = Injector(c, Path(args.real_dir))
@@ -309,7 +343,7 @@ def main(argv=None) -> None:
 
     rows = [json.loads(f.read_text()) for f in sorted((outdir / "cells").glob("*.json"))]
     done = {r["id"] for r in rows}
-    plan = [(grp, half) for grp in ("damaged", "broken") for half in args.pads]
+    plan = [(grp, half) for grp in groups for half in args.pads]
     for grp, half in plan:
         for _, row in cells[cells["group"] == grp].iterrows():
             cid = f"{grp}_{int(row['cell_id']):03d}_h{half:g}"
