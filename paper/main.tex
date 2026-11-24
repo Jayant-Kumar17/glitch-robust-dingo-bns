@@ -1,1001 +1,583 @@
-%% Astronomy and Computing manuscript
-%% Diagnostic audit of a frozen DINGO-BNS posterior
-%% Single-file Overleaf upload: compile with pdfLaTeX (+ BibTeX if \usebibtextrue)
-\documentclass[preprint,12pt]{elsarticle}
-\usepackage[margin=2.5cm]{geometry}
+%% Gate-aware importance sampling for a frozen DINGO-BNS posterior
+%% pdfLaTeX + BibTeX.  Overleaf: upload this folder as is (main.tex, refs.bib, figures/).
+\documentclass[11pt,a4paper]{article}
 
-%% Bibliography: refs.bib with elsarticle-num (numbered in order of citation).
-\newif\ifusebibtex
-\usebibtextrue
-
-\usepackage{amssymb,amsmath,amsfonts}
+\usepackage[margin=2.4cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb}
 \usepackage{graphicx}
 \usepackage{booktabs}
-\usepackage{siunitx}
-\usepackage{xurl}
-\usepackage[hidelinks]{hyperref}
 \usepackage{xcolor}
 \usepackage{xspace}
 \usepackage{enumitem}
-\usepackage{natbib}
-\renewcommand{\textbullet}{\ensuremath{\bullet}}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{microtype}
+\usepackage{xurl}
+\usepackage[hidelinks]{hyperref}
+\usepackage[capitalise,noabbrev]{cleveref}
+\usepackage{caption}
+\captionsetup{font=small,labelfont=bf}
 \emergencystretch=2em
 
-\journal{Astronomy and Computing}
-
 \newcommand{\DINGOBNS}{DINGO-BNS\xspace}
-\newcommand{\adapt}{\textsc{Adapt}\xspace}
-\newcommand{\SNR}{\mathrm{SNR}}
 \newcommand{\dL}{d_L}
-\newcommand{\Mc}{\mathcal{M}}
+\newcommand{\neff}{n_{\mathrm{eff}}}
+\newcommand{\T}{^{\mathsf{T}}}
+
+%% =====================================================================
+%% STAGE 3b SWITCH.  Leave \stagethreebfalse until Stage 3b has finished.
+%% When it has: set \stagethreebtrue and fill the four numbers below from
+%% results/gated_is_stage3b/STAGE3B_REPORT.md.  Nothing else needs editing.
+%% =====================================================================
+\newif\ifstagethreeb
+\stagethreebfalse
+\newcommand{\SBSAMPLES}{$10^{5}$}% proposal size actually used in Stage 3b
+\newcommand{\SBDAMAGED}{\textbf{??}}% of the 8 untrusted damaged cells: now trusted AND recovered
+\newcommand{\SBBROKEN}{\textbf{??}}% of the 10 untrusted broken cells: now trusted AND recovered
+\newcommand{\SBSTILL}{\textbf{??}}% of the 18: still untrusted (n_eff < 100)
+\newcommand{\SBDAMAGEDTOTAL}{\textbf{??}}% 32 + \SBDAMAGED  (out of 41)
+\newcommand{\SBBROKENTOTAL}{\textbf{??}}% 4 + \SBBROKEN   (out of 14)
+
+%% =====================================================================
+%% HARDWARE (fill in): the machine that produced the timing numbers.
+%% =====================================================================
+\newcommand{\HARDWARE}{eight CPU worker processes}
 
 \begin{document}
 
-\begin{frontmatter}
-
-\title{A diagnostic audit of transient-glitch collapse in a frozen DINGO-BNS posterior}
-
-\author{Jayant Kumar Haresh\corref{cor1}}
-\ead{j.kumar16224@kgs.edu.pk}
-\cortext[cor1]{Corresponding author.}
-\affiliation{organization={Karachi Grammar School},
-            addressline={Plot ST-19, Khayaban-e-Saadi, Clifton Block 5},
-            city={Karachi},
-            postcode={75600},
-            state={Sindh},
-            country={Pakistan}}
+\title{Gate-aware importance sampling for a frozen neural binary neutron star posterior in the presence of glitches}
+\author{Jayant Kumar Haresh\\[2pt]
+\small Karachi Grammar School, Plot ST-19, Khayaban-e-Saadi, Clifton Block 5, Karachi 75600, Pakistan\\
+\small \href{mailto:j.kumar16224@kgs.edu.pk}{j.kumar16224@kgs.edu.pk}}
+\date{}
+\maketitle
 
 \begin{abstract}
-This paper audits the public \DINGOBNS checkpoint for GW170817: when a transient glitch overlaps the analysis segment, how the frozen posterior leaves its training distribution, and which write-back of a gated strain the weights will still accept.
-The checkpoint fixes the sky at the optical counterpart, so the comparisons cover the 15 parameters it actually samples and do not address localization.
-Raw network samples do not indicate that an input has left the training distribution.
-Neural importance sampling can, because a proposal on the prior boundary receives almost no weight~\cite{Dax2023is}, but the $2\times10^{4}$-sample draw required for that test takes $10.7\,\mathrm{s}$ and cannot move a posterior that has already collapsed to a spike of width $0.65\,\mathrm{Mpc}$ at $10\,\mathrm{Mpc}$.
-No glitch in the study collapses luminosity distance below a whitened signal-to-noise ratio $\rho_w\approx100$.
-Above Omicron SNR 300 the collapse rate is $9/15$ cells from five Koi-Fish triggers.
-Although $11\%$ of confidently classified O3 H1 triggers exceed that SNR, $89\%$ of them belong to the Extremely Loud class, which was not injected, so the catalogue fraction is not itself a failure rate.
-Where the distance posterior had already collapsed, a detect--gate--rebuild probe that does not modify the network restores $17/17$ cases (Wilson 95\% interval $[81.6\%,100\%]$), all of them Koi Fish on this event.
-Across the native panel it preserves $181/183$ cells ($98.9\%$; cluster-bootstrap 95\% interval $[96.7\%,100\%]$; design-effect Wilson interval $[94.1\%,99.8\%]$) and $60/61$ unique glitches.
-These figures measure agreement with the clean neural posterior, rather than calibration against the true parameters.
-Rebuilding the gated strain with the official \texttt{data\_to\_domain} conditioner recovers none of 16 hardening cells, whether or not the $+2\,\mathrm{s}$ cyclic shift is applied, whereas a matched-delta correction of the original package, retaining the original amplitude spectral density, recovers $13/16$.
-The same gate applied to the unsubtracted GWOSC Livingston frame does not recover the BayesWave-cleaned posterior, because the two frames diverge below $30\,\mathrm{Hz}$.
-The probe itself has a median runtime of $16.9\,\mathrm{ms}$, but the gate does not replace coherent subtraction when the analysis spectrum is not the spectrum of the frame.
+\noindent
+Neural posterior estimators for gravitational-wave inference are trained on stationary Gaussian noise, and a frozen checkpoint cannot be retrained when a glitch overlaps a signal.
+Gating the glitch out is the standard remedy, but the network then sees an input unlike its training data, and the usual importance-sampling correction evaluates a likelihood that treats the gated samples as real, zero-valued data.
+We reweight the frozen network's samples instead with the gated Gaussian likelihood, which marginalises the gated samples and is exactly independent of them.
+We write it as a correction to DINGO's own likelihood in DINGO's packaging convention, and let the effective sample size decide whether a result is trusted.
+We test the method on the public \DINGOBNS checkpoint for GW170817, which fixes the sky and samples 15 parameters.
+Real O3 Gravity Spy glitches transplanted at their native loudness damage the luminosity-distance posterior in 41 of 195 cells, and none collapses it below a whitened signal-to-noise ratio of 170.
+On the damaged cells, gated importance sampling returns a trusted posterior that passes the distance criterion in 32/41 cells (78\%; 95\% interval 63--88\%) with a $0.1\,\mathrm{s}$ gate pad, against 31/41 for the network alone and 29/41 for ordinary importance sampling; with a $0.2\,\mathrm{s}$ pad the counts are 30, 25 and 21.
+\ifstagethreeb
+With \SBSAMPLES{} proposal samples, \SBDAMAGED{} of the eight damaged cells that were untrusted at $10^{4}$ samples become trusted and correct, for \SBDAMAGEDTOTAL/41 in total.
+\fi
+Across all 110 real-glitch analyses, trusted results pass in 66 of 68 cases, whereas the network alone passes in 1 of the 42 cases the flag rejects.
+Gates of $\pm0.2\,\mathrm{s}$ ending within $2\,\mathrm{s}$ of merger are handled; at $\pm0.4\,\mathrm{s}$ the distance is right in 9/10 cells but only 3 are trusted with $10^{4}$ samples, and $\pm0.8\,\mathrm{s}$ fails.
+On the unsubtracted GW170817 Livingston data the method reproduces the BayesWave-cleaned posterior with a sample efficiency of 10.7\%.
+The likelihood costs about $0.1\,\mathrm{s}$ per sample on the uniform frequency grid, so a trusted answer takes minutes rather than the network's seconds.
 \end{abstract}
 
-\begin{highlights}
-\item The audit uses the public GW170817 checkpoint, which fixes the sky, so it covers the 15 sampled parameters and not localization.
-\item Conditional on collapse, the probe restores $17/17$ Koi-Fish cells (Wilson $[81.6\%,100\%]$), and preserves $181/183$ cells and $60/61$ glitches after cluster resampling.
-\item The $11\%$ of O3 triggers above SNR 300 is mostly the untested Extremely Loud class; the measured $60\%$ collapse is $9/15$ cells from five Koi-Fish triggers.
-\item Official repackaging of the gated strain recovers $0/16$ cells; the matched-delta probe recovers $13/16$. Gating the raw Livingston frame does not recover the cleaned posterior.
-\item The probe median is $16.9\,\mathrm{ms}$. Importance sampling flags a collapse in $10.7\,\mathrm{s}$ but does not repair a spike on the prior boundary.
-\end{highlights}
+\noindent\textbf{Keywords:} gravitational waves; binary neutron stars; neural posterior estimation; importance sampling; glitches; gating
 
-\begin{keyword}
-gravitational waves \sep binary neutron stars \sep neural posterior estimation \sep DINGO \sep signal gating \sep detector glitches
-\end{keyword}
-
-\end{frontmatter}
-
+%% =====================================================================
 \section{Introduction}
-\label{sec:introduction}
+\label{sec:intro}
 %% =====================================================================
 
-Amortized neural posterior estimation can return a binary neutron star posterior in about a second~\cite{Cranmer2020sbi,Papamakarios2016mdn,Greenberg2019snpe,Papamakarios2021review,Durkan2019nsf,Green2021npe,Dax2021dingo,Dax2022gnpe,Dax2023is,Wildberger2023psd,Dax2025bns}, whereas a conventional stochastic sampler still requires hours to days~\cite{Morisaki2023rapid,Chaudhary2024latency}.
-That speed is bought by training the flow on stationary Gaussian noise, and a frozen network gives no internal warning when the strain leaves that distribution.
-The network audited here is the public \DINGOBNS demonstration for GW170817~\cite{Abbott2017gw170817,Dax2025bns}.
-Its right ascension and declination are fixed at the optical counterpart~\cite{Abbott2017mma,Singer2016bayestar}, so the audit concerns the 15 parameters the checkpoint samples and is not a test of sky localization.
-The questions are how those parameters fail when a glitch is present, and which properties of the original data package a probe must leave intact if the frozen weights are to accept the repaired input.
+Neural posterior estimation returns a gravitational-wave posterior in seconds~\cite{Cranmer2020sbi,Papamakarios2021review,Green2021npe,Dax2021dingo,Dax2022gnpe}.
+\DINGOBNS extends this to binary neutron stars, whose signals last minutes in band~\cite{Dax2025bns}.
+The speed comes from training a normalising flow on simulated signals in stationary Gaussian noise.
+Real detector data contain transient glitches~\cite{Nuttall2018transient,Davis2021detchar,Glanzer2023gravityspy,Soni2025o4}, and of order one in five candidates in the third observing run needed some glitch mitigation before parameter estimation~\cite{Davis2022subtract}.
+GW170817 itself overlapped a loud glitch in LIGO Livingston~\cite{Abbott2017gw170817,Pankow2018mitigation}.
+A frozen network has no input channel for this, and the \DINGOBNS authors note that events overlapping glitches would need fast mitigation~\cite{Dax2025bns}.
 
-Real interferometer data do not match that training assumption.
-Transient, non-Gaussian artefacts (glitches) occur often enough that of order one in five compact-binary candidates in the third observing run required some form of glitch mitigation~\cite{Nuttall2018transient,Davis2021detchar,Davis2022subtract,Glanzer2023gravityspy}.
-For likelihood-based analyses the effect of a glitch is a bias that can be diagnosed, modelled, and subtracted~\cite{Powell2018glitchpe,Pankow2018mitigation,Payne2022gw200129,Ghonge2024efficacy,Macas2022localization}.
-Raw samples from the frozen network do not self-diagnose that input.
-Neural importance sampling can, because a proposal that has left the training support receives near-zero weight~\cite{Dax2023is}, but the $2\times10^{4}$-sample draw that feeds it takes $10.7\,\mathrm{s}$ on the hardware used here and does not pull a posterior off a spike at the prior boundary (width $0.65\,\mathrm{Mpc}$ at $10\,\mathrm{Mpc}$ in the control).
-The network also cannot be retrained at event time.
-The symptom measured below is a luminosity-distance posterior that saturates at a prior edge.
-The \DINGOBNS authors themselves note that inference for events overlapping glitches would in practice require fast glitch mitigation~\cite{Dax2025bns}.
-Training-time remedies, such as augmenting the training set with glitches or redesigning the density estimator~\cite{Sun2024ttsf,Xiong2025robust}, address a network that can be retrained.
-They do not describe the failure of a public checkpoint whose weights are held fixed.
+Importance sampling corrects a neural posterior towards the exact one~\cite{Dax2023is}.
+Each network sample is reweighted by prior times likelihood over the network density, and the sample efficiency flags results that cannot be trusted.
+The correction, however, is only as good as the likelihood.
+When a glitch has been gated, the ordinary Gaussian likelihood still compares the model with the gated, zero-valued samples, and penalises templates for signal power inside the gate.
+The gated Gaussian likelihood of gating-and-inpainting~\cite{Zackay2021nongaussian,Capano2023multimode,Wang2025gating} instead marginalises over whatever is inside the gate, so it does not depend on the gated samples at all.
 
-The audit addresses two questions for this checkpoint.
-The first is how loud a glitch must be, and of which morphology, before the luminosity-distance posterior saturates at an edge of the prior.
-The second is which frequency-domain representation of a gated strain the network will accept.
-Gating alone does not answer the second question.
-Re-deriving the package from the gated strain with the official conditioner fails, while a correction applied to the original package succeeds for transplanted glitches whose frame is still consistent with the analysis spectrum, and fails for the unsubtracted Livingston frame, which is not.
-The findings of the audit are as follows.
-\begin{enumerate}[leftmargin=*,itemsep=0.25em]
-\item On the whitened scale $\rho_w$, none of the families tested here collapses below $\rho_w\approx100$.
-The loudness at which half of the injections collapse depends on morphology: it lies near $\rho_w\approx5\times10^{2}$ for the real Koi-Fish excerpts and near a few thousand for the synthetic sine-Gaussians and broadband bursts.
-The position of the glitch within the segment does not change the rate.
-These thresholds describe one checkpoint and one event packaging, rather than neural posterior estimation in general.
-\item Sixty-one real O3 Gravity Spy excerpts, transplanted into GW170817 at their native loudness, produce no collapse below Omicron SNR 100.
-Above SNR 300 the rate is $9/15$ cells drawn from five Koi-Fish triggers.
-Eleven percent of confidently classified O3 H1 triggers exceed that SNR, but $89\%$ of those triggers are Extremely Loud and were not part of the injection set.
-\item The detect--gate--rebuild probe does not modify the network.
-Conditional on an initially collapsed posterior it recovers $17/17$ cases (Wilson 95\% interval $[81.6\%,100\%]$), every one of them a Koi Fish.
-On the full native panel it preserves $181/183$ cells ($98.9\%$; cluster bootstrap $[96.7\%,100\%]$; design-effect Wilson $[94.1\%,99.8\%]$) and $60/61$ unique glitches.
-The same distance criterion holds for $86\%$ of a 240-cell loud grid and $92\%$ of a 160-cell synthetic panel.
-Because most of those cells had not collapsed, the two percentages measure preservation rather than a second estimate of the conditional recovery.
-\item Passing the same gated strain through official \texttt{data\_to\_domain}, with or without the $+2\,\mathrm{s}$ cyclic shift, and doing so after linear inpainting, recovers none of 16 hardening cells.
-Matched-delta reconstruction, the probe that leaves the archived package in place, recovers $13/16$ with the original amplitude spectral density.
-The residual discarded by a bare Fourier replacement is the packaging convention, including that time shift, rather than an unidentified calibration error.
-\item Applying the same gate to the unsubtracted GWOSC Livingston frame does not recover the BayesWave-cleaned posterior.
-The two frames correlate closely above $30\,\mathrm{Hz}$ and essentially not at all below that frequency.
-\item When the probe fails on the injected grids, the detector has fired and the gate is simply too short or too long.
-A control with forced gates on clean data bounds the cost of a false trigger.
-The released software, detector checkpoint, and archived summaries reproduce each reported number.
+This paper combines the two for a network whose weights are fixed.
+The frozen \DINGOBNS network provides the proposal from gated data; the gated likelihood provides the target; and the effective sample size decides whether the answer is reported.
+The approach needs no retraining and no glitch model, and it is exact in the limit of many samples whenever the network puts proposal mass where the gated posterior is.
+The question is how often that holds.
+
+The contributions are:
+\begin{enumerate}[leftmargin=*,itemsep=0.2em]
+\item A derivation and implementation of the gated likelihood as an additive correction to DINGO's own likelihood, in DINGO's packaging convention, with an out-of-band regulariser, verified against DINGO to machine precision and against a dense brute-force calculation (\cref{sec:method,sec:checks}).
+\item A map of when the frozen network fails on real glitches and how much gating it tolerates without help (\cref{sec:audit}).
+\item A pre-registered test on 110 analyses of real O3 glitches, comparing gated importance sampling with the network alone and with ordinary importance sampling, and measuring how well the trust flag separates correct from incorrect results (\cref{sec:real}).
+\item A demonstration on the unsubtracted GW170817 Livingston frame (\cref{sec:gw170817}).
 \end{enumerate}
-Section~\ref{sec:background} reviews neural BNS inference and glitch mitigation.
-Section~\ref{sec:methods} specifies the probe.
-Section~\ref{sec:setup} describes the experimental design.
-Section~\ref{sec:results} reports quantitative results.
-Section~\ref{sec:discussion} discusses the mechanism and the limitations of low-latency use for this checkpoint, and Section~\ref{sec:conclusion} concludes.
+Every criterion used to judge the method was committed to the code repository before the corresponding run.
 
 %% =====================================================================
-\section{Background and related work}
+\section{Background}
 \label{sec:background}
 %% =====================================================================
 
-\subsection{Bayesian inference and noise modelling}
-\label{sec:bg-bayes}
+\paragraph{Glitch mitigation for likelihood-based inference.}
+Search and inference pipelines gate loud transients~\cite{Usman2016pycbc,Zackay2021nongaussian,Ewing2024gstlal}, model and subtract them with wavelets~\cite{Cornish2015bayeswave,Cornish2021bayeswave,Pankow2018mitigation,Hourihane2022overlap,Davis2022subtract,Ghonge2024efficacy}, fit glitch bases or physical models~\cite{Merritt2021glitschen,Udall2023scattered,Malz2025joint}, or change the noise model~\cite{Ashton2023gp,Legin2025score}.
+Zackay et al.~\cite{Zackay2021nongaussian} showed that gating followed by inpainting makes the noise-weighted inner product independent of the gated samples.
+PyCBC Inference uses the same construction as a likelihood for ringdown analyses~\cite{Capano2023multimode,Wang2025gating}.
+All of these evaluate a likelihood on a stochastic sampler and take minutes to hours.
 
-Standard parameter estimation treats the strain as a stationary Gaussian process and evaluates a Whittle likelihood~\cite{Abbott2020guide,Abbott2019gwtc1,Abbott2021opendata,Abbott2023opendata,Macleod2021gwpy,Ashton2019bilby}.
-The PSD choice moves the posterior~\cite{Chatziioannou2019psd,Talbot2020psd}, and a glitch invalidates the interval even when the point estimate looks ordinary~\cite{Edy2021mismodel,Mozzon2020dynamic,Zackay2021nongaussian}.
-
-\subsection{Neural posterior estimation and \DINGOBNS}
-\label{sec:bg-npe}
-
-NPE trains $q_\phi(\theta\mid d)$ on simulated pairs $(\theta,d)$~\cite{Cranmer2020sbi,Papamakarios2021review}.
-DINGO conditions a flow on whitened frequency-domain strain and the PSD~\cite{Dax2021dingo,Dax2022gnpe}; \DINGOBNS extends that to long BNS signals~\cite{Dax2025bns}.
-Importance sampling reweights the draws by the likelihood~\cite{Dax2023is}.
-When they sit on a prior boundary the efficiency goes to zero, which is a diagnosis, not a repair: a $2\times10^{4}$-sample draw takes $10.7\,\mathrm{s}$ and a spike one sample wide has nothing else to promote.
-A latent PSD model extends the time covered by one network~\cite{Wildberger2023psd}; it does not remove a glitch.
-
-\paragraph{The checkpoint used here}
-\label{sec:checkpoint}
-
-Every run uses the official GW170817 demonstration checkpoint~\cite{Dax2025bns}, unmodified, through \texttt{GWSamplerGNPE}.
-The training set is $3\times10^{7}$ IMRPhenomPv2-NRTidal injections in stationary Gaussian noise for H1, L1, and V1.
-Priors include $m_1\in[1.0,3.2]\,M_\odot$, $m_2\in[1.0,2.0]\,M_\odot$, chirp mass in $[1.0,2.2]\,M_\odot$ with an event-specific half-width of $0.005\,M_\odot$, spins $a_{1,2}\in[0,0.05]$, $\Lambda_1\in[0,5000]$, $\Lambda_2\in[0,10^{4}]$, and $\dL$ uniform on $[10,100]\,\mathrm{Mpc}$.
-Right ascension and declination are fixed at the optical counterpart ($3.446$ and $-0.408\,\mathrm{rad}$), so the sampler returns 15 parameters and those 15 are what this paper compares.
-The package is $T=128\,\mathrm{s}$ at $f_s=4096\,\mathrm{Hz}$, Tukey roll-off $0.4\,\mathrm{s}$, a $2\,\mathrm{s}$ post-trigger buffer, and frequencies from $23$ to $1535.3\,\mathrm{Hz}$.
-The Livingston data in that package are the LVK's BayesWave-subtracted frame~\cite{Pankow2018mitigation}.
-Injections go into H1.
-Dax et al.\ note that a glitch overlapping the event needs a fast mitigation step before this network is used~\cite{Dax2025bns}.
-
-\subsection{Transient noise in ground-based detectors}
-\label{sec:bg-glitches}
-
-Glitches have many time--frequency morphologies and were still a leading data-quality issue in early O4~\cite{Abbott2016noise,Nuttall2018transient,Davis2021detchar,Soni2025o4}.
-Omicron parametrizes them~\cite{Robinet2020omicron}, iDQ scores them from auxiliary channels~\cite{Essick2021idq}, and Gravity Spy labels the morphology~\cite{Zevin2017gravityspy,Bahaadini2018,Glanzer2023gravityspy}.
-Blips and scattered light matter most for compact binaries~\cite{Cabero2019blip,Soni2021scattered}.
-About 20\% of O3 candidates needed mitigation, and a nearby glitch moves a low-latency sky map~\cite{Davis2022subtract,Macas2022localization}.
-
-\subsection{Mitigation for likelihood-based parameter estimation}
-\label{sec:bg-mitigation}
-
-Likelihood pipelines gate~\cite{Zackay2021nongaussian,Usman2016pycbc,Ewing2024gstlal}, model the glitch with wavelets (BayesWave)~\cite{Cornish2015bayeswave,Cornish2021bayeswave,Pankow2018mitigation,Hourihane2022overlap,Davis2022subtract,Ghonge2024efficacy}, fit a glitch basis~\cite{Merritt2021glitschen,Udall2023scattered,Malz2025joint}, or change the noise model~\cite{Ashton2023gp}.
-All of them evaluate a likelihood, and the accurate ones take minutes to hours.
-
-\subsection{Glitches and neural parameter estimation}
-\label{sec:bg-neural-glitch}
-
-Two recent lines of work train normalizing flows to remain accurate under glitch contamination, either by time--spectral fusion architectures~\cite{Sun2024ttsf} or by studying robustness to sine-Gaussian contaminants without explicit deglitching~\cite{Xiong2025robust}.
-A related data-domain line inpaints sub-second strain gaps: Kumar and Sahay find that global temporal context helps on simulated gaps, while a noise-conditioned network is unstable on real strain unless the conditioning is bounded~\cite{Kumar2026inpaint}.
-That result is about reconstructing the missing samples.
-The question here is different: once samples have been gated, which frequency-domain convention the frozen estimator will accept.
-Malz and Veitch sample a Gravity Spy glitch prior jointly with the signal in Bilby~\cite{Malz2025joint}.
-Legin et al.\ put the non-Gaussianity into a score-based likelihood~\cite{Legin2025score}.
-Online flows such as AMPLFI see the same data~\cite{Chatterjee2024amplfi}.
-On the data side, auxiliary-channel regression, time-domain subtraction, and inpainting of a gated signal are all established~\cite{Cuoco2025review,Ormiston2020deepclean,Dooney2025deepextractor,Mogushi2021nnetfix,Razzano2018cnn,George2018dnn}.
-None of them tests how a repaired strain must be written back into a frozen flow.
-Here the \DINGOBNS weights stay frozen and only the detector is trained.
-Table~\ref{tab:related} compares that choice with the alternatives.
-
-\begin{table}[t]
-\centering
-\caption{Glitch-mitigation approaches relevant to neural BNS inference, as described in the cited works.
-``PE retraining'' refers to the parameter-estimation network or sampler; ``Labels'' refers to glitch morphology labels or a labelled glitch catalogue.
-Latency is the additional time at event time beyond the base sampler, as reported by the respective authors.}
-\label{tab:related}
-\scriptsize
-\setlength{\tabcolsep}{2pt}
-\begin{tabular}{@{}lcccc@{}}
-\toprule
-Approach & PE retraining & Likelihood & Added latency & Labels \\
-\midrule
-Gating in search/PE pipelines~\cite{Usman2016pycbc,Zackay2021nongaussian} & No & Yes (downstream) & Negligible & No \\
-BayesWave joint modelling~\cite{Cornish2015bayeswave,Davis2022subtract} & No & Yes & Hours & No \\
-Data-driven glitch bases~\cite{Merritt2021glitschen} & No & Yes & Minutes & Catalogue \\
-Gravity-Spy-informed joint inference~\cite{Malz2025joint} & No & Yes & Hours & Catalogue \\
-Glitch-augmented flow training~\cite{Sun2024ttsf,Xiong2025robust} & Yes & No & None & Training only \\
-This work (detect--gate--rebuild) & No & No & $<0.02\,\mathrm{s}$ & No \\
-\bottomrule
-\end{tabular}
-\end{table}
+\paragraph{Neural posterior estimation and glitches.}
+DINGO conditions a flow on whitened frequency-domain strain and the noise spectrum~\cite{Dax2021dingo,Dax2022gnpe,Wildberger2023psd}, and DINGO-IS corrects it with importance sampling~\cite{Dax2023is}.
+On signal-free data containing a blip glitch, DINGO-IS reports a sample efficiency of order $10^{-5}$, which shows that the efficiency flags glitch-contaminated inputs~\cite{Dax2023is}.
+Networks have been trained to be robust to glitches~\cite{Sun2024ttsf,Xiong2025robust}, and a transformer-based DINGO can mask frequency ranges and detectors at inference time~\cite{Kofler2025transformer}.
+These require training a new network.
+Inpainting short gaps with a network has also been studied~\cite{Kumar2026inpaint}, but an inpainted input is still not the data the likelihood should score.
+Here the network is the public checkpoint, unchanged, and only the likelihood used for reweighting is new.
 
 %% =====================================================================
-\section{Methods}
-\label{sec:methods}
+\section{Method}
+\label{sec:method}
 %% =====================================================================
 
-\subsection{Problem statement}
-\label{sec:problem}
-
-Let $d$ denote the frequency-domain event package consumed by \DINGOBNS (whitened strain and ASDs for each interferometer) and let $q_\phi(\theta\mid d)$ be the frozen neural posterior.
-A short glitch $g$ overlapping the analysis segment produces a contaminated package $d_g$ for which $q_\phi(\theta\mid d_g)$ can differ qualitatively from $q_\phi(\theta\mid d)$.
-In our diagnostics the dominant symptom is \emph{saturation}: the luminosity-distance marginal, whose clean 90\% interval spans roughly $19$--$45\,\mathrm{Mpc}$ for GW170817, collapses to a narrow spike at one boundary of the network's training prior, $[10,100]\,\mathrm{Mpc}$ (Section~\ref{sec:results-gw170817}).
-The network is not returning a biased distance; it is returning the edge of what it is allowed to say, with a credible interval that is far too narrow.
-We seek a map $d_g\mapsto \tilde d$ such that $q_\phi(\theta\mid \tilde d)\approx q_\phi(\theta\mid d)$ without modifying $\phi$.
-The map is the probe used to ask what the frozen package will accept.
-It is not a candidate stage of an alert path.
-
-\subsection{A common loudness scale}
-\label{sec:loudness}
-
-To compare synthetic injections, real glitches, and catalogue statistics we express every injected glitch $g$ by its whitened optimal signal-to-noise ratio in the injected interferometer,
-\begin{equation}
-\label{eq:rhow}
-\rho_w^2 = 4\int_{f_{\min}}^{f_{\max}} \frac{|\tilde g(f)|^2}{S_n(f)}\,\mathrm{d}f ,
-\end{equation}
-evaluated as a discrete sum on the packaged frequency grid ($\Delta f=1/128\,\mathrm{Hz}$) between $f_{\min}=23\,\mathrm{Hz}$ and $f_{\max}=1535.3\,\mathrm{Hz}$, with $S_n$ the square of the H1 analysis ASD that accompanies the GW170817 package.
-Here $\tilde g(f)$ is the Fourier transform of the injected time-domain glitch alone, passed through exactly the packaging transform of the event (the $128\,\mathrm{s}$ segment and $0.4\,\mathrm{s}$ Tukey roll-off), so that it is placed on the same grid and in the same conventions as the strain the network sees.
-For synthetic families $g$ is the generated waveform; for real Gravity Spy excerpts it is the re-coloured, glitch-only estimate described in Section~\ref{sec:realglitches} after it has been placed in the segment, so $\rho_w$ measures the loudness of what was actually injected.
-This is the matched-filter SNR the glitch would have if it were the template, and it is the quantity the whitened network input actually sees.
-
-Gravity Spy reports an Omicron SNR~\cite{Robinet2020omicron} for each trigger~\cite{Zevin2017gravityspy,Glanzer2023gravityspy}, and the two scales are related only approximately, because Omicron matches a sine-Gaussian basis to the trigger while $\rho_w$ integrates whatever power the excerpt contains across the analysis band.
-Over the 61 real glitches of the native-loudness panel (Section~\ref{sec:realglitches}), each of which carries both quantities, the ratio $\rho_w/\mathrm{SNR}_{\mathrm{Omicron}}$ has median $1.6$ with a 16--84\% range of $1.0$--$2.3$ and extremes of $0.4$ and $5.4$, and it depends on morphology: median $1.6$ (16--84\% range $1.2$--$1.8$, $n=15$) for blips, $1.4$ ($1.3$--$1.8$, $n=20$) for Koi Fish, $1.3$ ($0.8$--$1.6$, $n=7$) for tomtes, $1.1$ ($0.6$--$2.3$, $n=9$) for scattered light, and $3.0$ ($1.9$--$4.4$, $n=10$) for whistles.
-Omicron-SNR bins should therefore be read as approximate loudness bins, accurate to a factor of two or so; wherever real glitches are reported by Omicron-SNR bin (Table~\ref{tab:real}) we also give the median injected $\rho_w$ of that bin, and the catalogue-tail fractions of Section~\ref{sec:results-real} are quoted on the Omicron scale on which the catalogue is defined.
-At the Koi-Fish ratio, Omicron SNR 300 corresponds to $\rho_w\approx4\times10^{2}$ and Omicron SNR $2\times10^{3}$ to $\rho_w\approx3\times10^{3}$.
-
-\subsection{Stress-test procedure}
-\label{sec:pipeline}
-
-Fig.~\ref{fig:pipeline} summarizes the procedure.
-Contaminated time-domain strain is transformed to a whitened STFT, scored by a convolutional time-bin detector, converted to Tukey gate windows, excised in the time domain, and rewritten into the frequency-domain package by a matched-delta update that preserves the original analysis ASDs.
-The rebuilt package is passed to the unchanged \DINGOBNS sampler.
+\Cref{fig:schematic} summarises the procedure.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\linewidth]{figures/fig1_pipeline.pdf}
-\caption{The stress-test procedure.
-Contaminated strain is scored by a small convolutional detector on its whitened spectrogram, gated in the time domain, and written back into the frequency-domain event package by a matched-delta update that keeps the original analysis ASD.
-Teal boxes are the probe introduced in this work, of which only the STFT detector is trained; the red box is the official \DINGOBNS network, whose weights are never modified.}
-\label{fig:pipeline}
+\begin{tikzpicture}[
+  box/.style={draw=black!55, rounded corners=2pt, align=center, font=\footnotesize, minimum height=1.1cm, text width=3.0cm, fill=#1, execute at begin node={\hyphenpenalty=10000}},
+  box/.default=white,
+  arr/.style={-{Stealth[length=2mm]}, black!70, semithick},
+  lab/.style={font=\scriptsize, black!70, fill=white, inner sep=1pt},
+  node distance=0.4cm]
+\node[box] (data) {strain with\\a glitch};
+\node[box=blue!6, right=of data] (loc) {whitened-excess\\localiser ($8\sigma$),\\gate $G$ = cluster $\pm$ pad};
+\node[box=blue!6, right=of loc] (gate) {band-limited gate,\\written back as $\mathcal{S}\mathcal{F}[\cdot]$};
+\node[box=red!7, right=of gate] (net) {frozen \DINGOBNS:\\$\theta_i\sim q(\theta\mid d_G)$};
+\node[box=blue!6, below=0.9cm of net, text width=4.0cm] (lik) {gated likelihood on $G$:\\\mbox{$\ln L_G=\ln L+\tfrac12 u_G\T P_{GG}^{-1}u_G$}};
+\node[box=blue!6, left=0.6cm of lik, text width=3.1cm] (w) {weights $w_i$,\\\mbox{$\neff=(\sum w)^2/\sum w^2$}};
+\node[box=green!8, left=1.5cm of w, yshift=0.62cm, minimum height=0.8cm] (ok) {trusted: report\\the posterior};
+\node[box=orange!10, left=1.5cm of w, yshift=-0.62cm, minimum height=0.8cm] (no) {untrusted: more\\samples or slower method};
+\draw[arr] (data) -- (loc);
+\draw[arr] (loc) -- (gate);
+\draw[arr] (gate) -- (net);
+\draw[arr] (net) -- (lik);
+\draw[arr] (lik) -- (w);
+\draw[arr] (w.west) -- node[lab, pos=0.45] {$\neff\ge100$} (ok.east);
+\draw[arr] (w.west) -- node[lab, pos=0.45] {$\neff<100$} (no.east);
+\end{tikzpicture}
+\caption{Gate-aware importance sampling.
+The localiser sets the gate; the gated strain is written back into the event package in DINGO's convention and passed to the unchanged network, whose samples are the proposal.
+Each sample is reweighted with the gated likelihood, which uses the same gate mask and does not depend on the data inside the gate.
+The effective sample size decides whether the result is reported.
+Blue boxes are this work; the red box is the public network, never modified.}
+\label{fig:schematic}
 \end{figure}
 
-\subsection{STFT glitch detector}
-\label{sec:detector}
+\subsection{The event package and its convention}
+\label{sec:convention}
 
-For each interferometer we form a whitened spectrogram of an analysis crop of $\approx4\,\mathrm{s}$ around the trigger with $n_{\mathrm{fft}}=2048$, a window of $1024$ samples, and a hop of $256$ samples at $4096\,\mathrm{Hz}$; the resulting $1025$ real-FFT frequency bins are linearly interpolated onto $F=128$ bins spanning $20$--$512\,\mathrm{Hz}$, and the time axis is resampled onto $T=32$ bins, so that the detector always sees a fixed $32\times128$ grid.
-A compact convolutional network maps the multi-detector spectrogram stack to per-interferometer, per-time-bin logits.
-Architecture details and training hyperparameters are given in \ref{app:detector}.
-Operating thresholds are calibrated to a target clean false-positive rate of $1\%$ on held-out clean crops; at event time an optional stricter threshold (used in the GW170817 stress grid) further suppresses clean triggers.
-Positive time bins are dilated to Tukey windows of half-width $0.4\,\mathrm{s}$ (default).
+\DINGOBNS consumes a frequency-domain package for each detector: the strain $\tilde d(f)$ on a uniform grid with spacing $\Delta f = 1/T$ and the analysis amplitude spectral density (ASD).
+For GW170817 the segment is $T=128\,\mathrm{s}$ at $f_s=4096\,\mathrm{Hz}$ ($N=T f_s$ samples), with a Tukey window of roll-off $0.4\,\mathrm{s}$, a band from $23$ to $1535.3\,\mathrm{Hz}$, and the trigger $t_b=2\,\mathrm{s}$ before the end of the segment.
+DINGO's conditioner computes the package as
+\begin{equation}
+\tilde d = \mathcal{S}\,\mathcal{F}[x], \qquad \mathcal{S} = e^{-2\pi i f t_b},
+\label{eq:package}
+\end{equation}
+where $\mathcal{F}$ is the windowed real FFT divided by $f_s$, and $\mathcal{S}$ is a cyclic time shift.
+On the clean GW170817 strain, \cref{eq:package} reproduces the archived package to a whitened residual signal-to-noise ratio of $0.26$.
 
-\subsection{Tukey gating}
+The shift is easy to miss.
+A gate defined in segment time but applied to data in the unshifted frame lands on the wrong samples.
+An earlier version of this analysis (software release v1.2.0) injected and removed glitches in a frame that omitted $\mathcal{S}$; the gate then never acted on the data the network saw, and the recoveries it reported were artefacts.
+All results here use \cref{eq:package}, enforced by unit tests, and the likelihood check in \cref{sec:checks} includes a gate deliberately misplaced by $t_b$ as a negative control.
+
+\subsection{Localising and gating}
 \label{sec:gating}
 
-Given gate windows $\{(t_{s,i},t_{e,i})\}$, we form multiplicative weights $w(t)\in[0,1]$ that equal unity outside gates and follow a Tukey taper (shape parameter $\alpha=0.5$) inside each window~\cite{Harris1978windows}.
-Gated time-domain strain is $x_{\mathrm{g}}(t)=w(t)\,x(t)$.
-Detector-driven gates are built by dilating \emph{every} positive STFT time bin by $\pm0.4\,\mathrm{s}$ and merging overlapping windows, so their total extent grows with the duration of the detected excess.
+Each detector's segment is band-limited, whitened with the analysis ASD, and scaled to unit variance with the median absolute deviation.
+Samples with $|z|>8$ are clustered (gaps under $50\,\mathrm{ms}$ merged), and each cluster becomes a gate widened by a pad on each side.
+This is a training-free localiser in the spirit of PyCBC autogating~\cite{Usman2016pycbc}.
+It replaces the convolutional detector of earlier versions, whose dilated gates proved too wide once the packaging was corrected (\cref{sec:audit}).
 
-As a diagnostic we also construct a \emph{centred fixed-width oracle}: a single gate of the same $\pm0.4\,\mathrm{s}$ half-width centred exactly on the true injection time.
-The oracle has perfect localization but a fixed extent, so comparing it with the detector-driven gate separates two possible causes of failure, mislocalization and insufficient excision.
-It is never used as the primary method.
+The gate is applied to band-limited strain: a raised-cosine high-pass from $20$ to $23\,\mathrm{Hz}$ removes the seismic wall before the Tukey gate ($\alpha=0.5$~\cite{Harris1978windows}) multiplies the data.
+Gating raw strain multiplies the steep low-frequency noise by the gate taper and leaks it into the analysis band (\cref{sec:audit}).
+The gated samples are set to zero, and the result is written back as $\tilde d \leftarrow \tilde d + \mathcal{S}\mathcal{F}[x_G - x]$ with the original ASD retained.
+Since $\tilde d=\mathcal{S}\mathcal{F}[x]$, this is the package of the gated strain in DINGO's convention.
 
-\subsection{Matched-delta frequency-domain reconstruction}
-\label{sec:matched-delta}
+\subsection{The gated likelihood}
+\label{sec:gatedlik}
 
-Let $X(f)$ be the packaged frequency-domain strain for a gated interferometer and let $\mathcal{F}$ denote the analysis Tukey-windowed real FFT consistent with the \DINGOBNS event packaging.
-The matched-delta update replaces $X$ by
+For one detector, let $r = d - h(\theta)$ be the time-domain residual of the $N$-sample segment, $C$ the noise covariance and $P=C^{-1}$.
+The Gaussian log-likelihood is $\ln L = -\tfrac12 r\T P r$ up to a constant.
+For stationary noise, $P$ is diagonal in frequency, and in DINGO's whitened variables
 \begin{equation}
-\label{eq:matched-delta}
-\tilde X(f) = X(f) + \mathcal{F}[x_{\mathrm{g}}](f) - \mathcal{F}[x](f),
+\ln L(\theta) = -\tfrac12 \sum_k \bigl|d_{w,k} - \mu_{w,k}(\theta)\bigr|^2,
+\qquad d_w = \frac{\tilde d}{\sigma_n\, \mathrm{ASD}},
+\label{eq:whittle}
 \end{equation}
-i.e.\ it adds the Fourier transform of the gated-minus-ungated residual rather than overwriting $X$ with $\mathcal{F}[x_{\mathrm{g}}]$.
-If $X=\mathcal{F}[x]$, Eq.~\eqref{eq:matched-delta} reduces to $\tilde X=\mathcal{F}[x_{\mathrm{g}}]$.
-The official conditioner is not that bare transform.
-\texttt{data\_to\_domain} windows with the $128\,\mathrm{s}$ Tukey ($\alpha=2\times0.4/T$) and then applies \texttt{cyclic\_time\_shift}($+2\,\mathrm{s}$).
-On the clean GW170817 strain that single shift matches the archived package to a whitened residual SNR of $0.26$.
-Against the windowed FFT without the shift, the same package has relative $L_2$ norm $1.313$ and whitened residual SNR $\rho_\varepsilon=876$; after the $+2\,\mathrm{s}$ phase is restored the relative $L_2$ norm falls below $10^{-12}$.
-The $1.313$ figure is that missing shift, not a second shift applied on top of an already shifted strain.
-Full replacement throws away $X$ and keeps only the new transform.
-Matched-delta adds $\mathcal{F}[x_{\mathrm{g}}]-\mathcal{F}[x]$ onto the original $X$, so any linear convention common to both Fourier transforms cancels and the packaged noise realization is left in place.
-Full replacement discards the archived $+2\,\mathrm{s}$ shift, which is why the official conditioner is part of the test rather than an implementation detail.
-The DFT and the cyclic shift are linear, but they are not applied to the same object: the glitch is added as an unshifted windowed transform $\mathcal{F}[g]$, and matched-delta cancels that term with the same $\mathcal{F}$, whereas \texttt{data\_to\_domain} discards the archive and applies the $+2\,\mathrm{s}$ shift to the whole gated series.
-If $X=\mathcal{S}\mathcal{F}[x]$, the outputs differ by $(\mathcal{I}-\mathcal{S})\mathcal{F}[x_{\mathrm{g}}-x]$, which is zero only when the shift is the identity or the gate leaves the strain unchanged.
-Section~\ref{sec:results-ablation} measures the difference: matched-delta recovers $13/16$ hardening cells, and both the shifted and the unshifted full repackages recover none.
+where $\mu_w$ is the whitened signal and $\sigma_n$ DINGO's domain normalisation.
 
-\subsection{ASD policy}
-\label{sec:asd}
+Let $G$ be the $M$ gated sample indices and $O$ the rest.
+Model the data inside the gate as signal plus noise plus an arbitrary contribution $g\in\mathbb{R}^M$ with a flat prior, $d = h + n + E_G g$.
+Completing the square in $g$ and integrating gives
+\begin{equation}
+\ln L_G(\theta) = \ln L(\theta) + \tfrac12\, u_G\T P_{GG}^{-1} u_G, \qquad u = P r,
+\label{eq:gated}
+\end{equation}
+up to a $\theta$-independent constant, where $u_G$ is the restriction of $u$ to $G$ and $P_{GG}$ the corresponding block of $P$.
+By the Schur complement identity $(C_{OO})^{-1} = P_{OO} - P_{OG}P_{GG}^{-1}P_{GO}$, \cref{eq:gated} equals $-\tfrac12 r_O\T C_{OO}^{-1} r_O$: it is the likelihood of the samples outside the gate.
+It does not depend on $r_G$, so neither the glitch nor the value used to fill the gate affects it.
+It is also the inpainted likelihood: the inpainting vector $x=-P_{GG}^{-1}u_G$ placed in the gate makes $(P(r+x))_G=0$, and $(r+x)\T P(r+x) = r\T P r - u_G\T P_{GG}^{-1}u_G$~\cite{Zackay2021nongaussian,Capano2023multimode}.
 
-After reconstruction we restore the original analysis ASDs that accompany the event package.
-Welch estimates recomputed on the gated segment~\cite{Welch1967} are \emph{not} retained: they encode the gate as a spectral feature and drive residual collapse in ablation.
-This choice is the frequency-domain analogue of insisting that whitening statistics match those seen in training~\cite{Chatziioannou2019psd,Talbot2020psd,Wildberger2023psd}.
+\paragraph{Implementation.}
+The correction needs $u_G$ and $P_{GG}$ in segment time.
+We compute $u$ from the whitened residual on the package grid: divide by the whitening factor once more, undo the shift by multiplying by $\mathcal{S}^{-1}=e^{+2\pi i f t_b}$, and inverse-FFT.
+$P_{GG}$ is the $M\times M$ block of the circulant matrix whose kernel is the inverse FFT of $1/(\sigma_n\mathrm{ASD})^2$; its Cholesky factor is computed once per gate.
+Each sample then costs one inverse FFT of length $N$ and one triangular solve.
+The gate mask covers the whole Tukey window, tapers included.
+Normalisation details are in \cref{app:norm}.
 
-\subsection{Frozen sampler}
-\label{sec:sampler}
+\paragraph{Regularisation.}
+The package holds data only inside the analysis band.
+Outside it the precision is zero, so $P$ is singular and $P_{GG}$ is ill-conditioned: a gated contribution could hide arbitrary out-of-band content.
+We give out-of-band frequencies a weak precision, $\epsilon$ times the median in-band precision, with $\epsilon=10^{-3}$.
+Importance sampling uses only likelihood differences between samples; changing $\epsilon$ from $10^{-2}$ to $10^{-4}$ moves the luminosity-distance median by at most $0.017\,\mathrm{Mpc}$ (\cref{sec:checks}).
 
-Posterior samples are drawn with the official GW170817 \DINGOBNS demonstration checkpoint via the unchanged \texttt{GWSamplerGNPE} interface.
-No embedding weights, flow parameters, or PE heads are fine-tuned.
-The only learned component contributed here is the STFT detector checkpoint distributed with the accompanying software.
+\subsection{Gate-aware importance sampling and the trust rule}
+\label{sec:is}
+
+The frozen network, given the gated package $d_G$, draws $\theta_i\sim q(\theta\mid d_G)$.
+Each sample receives the weight
+\begin{equation}
+w_i = \frac{\pi(\theta_i)\, L_G(\theta_i)}{q(\theta_i\mid d_G)},
+\qquad
+\neff = \frac{\bigl(\sum_i w_i\bigr)^2}{\sum_i w_i^2},
+\label{eq:weights}
+\end{equation}
+with the prior $\pi$ and proposal density taken from DINGO's own stored columns, so that only the likelihood differs from DINGO-IS~\cite{Dax2023is}.
+The sample efficiency is $\neff/n$ and $\neff$ is Kish's effective sample size~\cite{Kish1965}.
+The gated likelihood is evaluated on the uniform frequency grid without phase heterodyning or multibanding, because the time-domain correction needs the full grid.
+
+A result is called \emph{trusted} only if $\neff\ge100$.
+The threshold was fixed before any real-glitch run.
+Below it, the answer is reported as untrusted and never counted as a recovery, even when its distance happens to be right.
+Two comparators use the same gate: the \emph{network alone} (unweighted samples from $q(\theta\mid d_G)$) and \emph{ordinary importance sampling}, which is DINGO-IS on the gated package with the ungated likelihood of \cref{eq:whittle}.
 
 %% =====================================================================
 \section{Experimental setup}
 \label{sec:setup}
 %% =====================================================================
 
-\subsection{Data and assets}
-\label{sec:data}
+\paragraph{Checkpoint.}
+All runs use the public \DINGOBNS GW170817 checkpoint~\cite{Dax2025bns}, unmodified, through \texttt{GWSamplerGNPE}.
+Its sky position is fixed at the optical counterpart~\cite{Abbott2017mma}, so the network samples 15 parameters and sky localisation is not tested.
+The luminosity-distance prior is uniform on $[10,100]\,\mathrm{Mpc}$.
+The archived Livingston data are the LVK's BayesWave-cleaned frame~\cite{Pankow2018mitigation}; glitches are injected into Hanford (H1).
 
-All GW170817 experiments use the public open-data packaging and the official \DINGOBNS demonstration model~\cite{Abbott2017gw170817,Abbott2021opendata,Abbott2023opendata,Dax2025bns}.
-Synthetic BNS events are generated with the same domain conventions (segment duration, sampling rate, frequency grid, and ASD handling) so that the frozen checkpoint remains applicable.
-Strain handling uses GWpy and the scientific Python stack~\cite{Macleod2021gwpy,Harris2020numpy,Virtanen2020scipy,Paszke2019pytorch}.
+\paragraph{Loudness.}
+Each injected glitch $g$ is described by its whitened optimal signal-to-noise ratio in the package,
+$\rho_w^2 = 4\Delta f \sum_k |\tilde g_k|^2/S_n(f_k)$ over the analysis band, with $\tilde g$ passed through \cref{eq:package}.
 
-\subsection{Glitch families and severity}
-\label{sec:glitches}
+\paragraph{Criteria.}
+A posterior is \emph{collapsed} if the 90\% interval of $\dL$ lies below $15\,\mathrm{Mpc}$ or above $90\,\mathrm{Mpc}$.
+A posterior \emph{passes} (is \emph{recovered}) if its $\dL$ median lies in $[20,50]\,\mathrm{Mpc}$ and within $10\,\mathrm{Mpc}$ of the clean median, and its 90\% interval overlaps the clean one.
+The clean reference is DINGO-IS on the clean package with $10^{4}$ samples: median $34.2\,\mathrm{Mpc}$, 90\% interval $[18.9, 45.9]\,\mathrm{Mpc}$, efficiency 10.0\%.
+These are coarse, distance-only criteria; Jensen--Shannon (JS) divergences~\cite{Lin1991jsd} are reported alongside.
+Intervals on proportions are Wilson 95\% intervals~\cite{Wilson1927}.
 
-We inject morphologically diverse synthetic glitches into a single interferometer (H1 unless noted):
-held-in families \{\texttt{sine\_gaussian}, \texttt{broadband\_burst}, \texttt{whistle}, \texttt{scattered\_light}, \texttt{glitch\_train}\} used in detector training, and held-out families \{\texttt{ringing}, \texttt{double\_blip}, \texttt{narrowband\_tone}\}.
-Amplitude is set by an in-band amplitude ratio relative to the local raw-strain noise, with severity midpoints $\{3,6,10\}$; \ref{app:glitch} lists parameter ranges.
-These three levels were fixed a priori, before the loudness scale of Section~\ref{sec:loudness} existed, to span roughly a factor of three in raw-strain amplitude, an order of magnitude in power, from an excess that is clearly visible above the local noise to one that dominates it; they are retained because the released detector was trained on that distribution and the archived panels were run on it.
-The loudness sweep below, not the severity index, is the quantitative axis of this paper.
-Because raw in-band RMS is dominated by the low-frequency noise wall, the severity convention produces very loud glitches on the whitened scale: median $\rho_w$ is $4.2\times10^{3}$, $7.3\times10^{3}$, and $1.0\times10^{4}$ at the three severities (range $1.5\times10^{2}$--$6.4\times10^{4}$), and the official-control sine-Gaussian has $\rho_w=4.3\times10^{3}$.
-Two facts make the synthetic panels a stress test rather than a population study.
-First, their loudness lies one to two orders of magnitude above the bulk of real O3 triggers, whose median Omicron SNR is 13 (Section~\ref{sec:results-real}), and overlaps only the loudest $5$--$10\%$ of the catalogue.
-Second, the eight families were chosen for morphological diversity and for held-in/held-out separation, not weighted by how often each morphology occurs in the detector; the panel therefore says nothing about population-averaged failure rates, which is why the native-loudness real-glitch panel and the catalogue-tail fractions are reported separately.
-ASD policies alternate between retaining the stationary analysis ASD and recomputing a Welch ASD on the contaminated segment, so that collapse and recovery can be attributed to strain versus noise-spectrum mismodelling.
-
-\paragraph{Loudness sweep}
-\label{sec:sweep}
-To locate the failure threshold we inject sine-Gaussians and broadband bursts into the GW170817 H1 segment at target $\rho_w$ values log-spaced from $10$ to $10^{4}$ (eight levels, five seeds per family), extended by ten further cells per family at each of $\rho_w\in\{10,30,100\}$ to tighten the low-loudness bound; 139 cells in all, with the injection time drawn uniformly in $[-1.5,-0.3]\,\mathrm{s}$ relative to the trigger.
-
-\paragraph{Real Gravity Spy glitches}
-\label{sec:realglitches}
-We select H1 triggers from the O3 Gravity Spy classifications~\cite{Glanzer2023gravityspy} with machine-learning confidence $\geq0.95$ and duration $\leq3\,\mathrm{s}$, in four Omicron-SNR bins ($[8,30)$, $[30,100)$, $[100,300)$, $[300,\infty)$) for five morphologies (Blip, Koi Fish, Scattered Light, Tomte, Whistle), taking the highest-confidence triggers in each bin; 72 were selected, 70 fetched from GWOSC (two fell in data gaps), and 61 yielded a usable excerpt (the remaining nine, all quiet scattered-light or tomte triggers, had no whitened excess above the extraction threshold below).
-For each, $8\,\mathrm{s}$ of open strain centred on the trigger is whitened with a PSD from its own off-trigger portion, cut to the trigger duration (at least $\pm0.5\,\mathrm{s}$) with a Tukey taper, reduced to a glitch-only estimate by thresholding its STFT at eight times the per-frequency off-trigger median power, re-coloured with the GW170817 H1 analysis ASD, and added to the H1 analysis segment at three injection times per glitch ($183$ cells).
-Injection is at \emph{native} loudness, i.e.\ the same whitened energy the glitch had in O3; no rescaling is applied.
-Five trigger-free O3 excerpts processed identically (without thresholding) serve as a noise-only control.
-Working in the whitened domain is necessary because a Gravity Spy blip at Omicron SNR 20 is not measurable as a raw in-band RMS excess at all.
-
-\subsection{Evaluation panels}
-\label{sec:panels}
-
-\begin{description}[style=nextline,leftmargin=1.2em]
-\item[GW170817 stress grid.]
-Eight families $\times$ three severities $\times$ two ASD policies $\times$ five seeds yield $N=240$ cells.
-A clean reference posterior ($n=512$ samples) anchors recovery criteria.
-\item[Synthetic BNS panel.]
-Locked injections that pass a known-answer test (KAT) against the frozen sampler; $N=160$ glitch cells across four families and two severities.
-\item[Loudness sweep.]
-$N=139$ cells on GW170817 across $\rho_w=10$--$10^{4}$ (Section~\ref{sec:sweep}); arms: poisoned and gated.
-\item[Real Gravity Spy panel.]
-$N=183$ native-loudness cells from 61 O3 H1 glitches plus 5 noise-only cells; arms: poisoned, gated, and centred oracle.
-\item[Clean-gate cost control.]
-$N=25$ forced $\pm0.4\,\mathrm{s}$ gates on glitch-free GW170817 data (20 on H1 at injection times uniform in $[-2.0,-0.2]\,\mathrm{s}$; 5 on H1 and L1 simultaneously), passed through the full front-end and compared with the clean posterior.
-\item[Method hardening / ablation.]
-$N=16$ cells and nine rewrites, including \texttt{adapt\_full}, both \texttt{data\_to\_domain} conventions, inpainting, \texttt{fft\_replace}, and the Welch and no-gate arms (Section~\ref{sec:results-ablation}).
-\item[Clean false-positive audit.]
-$N=1{,}000$ stationary Gaussian draws at thresholds $0.46$ and $0.73$, kept separate from $500$ off-source GWOSC crops.
-A no-glitch pass through the front-end is bit-identical to the input when no gate fires.
+\paragraph{Panels.}
+\begin{description}[leftmargin=1em,itemsep=0.15em,font=\normalfont\itshape]
+\item[Forced gates on clean data.] Gates of half-width $0.05$--$0.8\,\mathrm{s}$ centred near merger ($t-t_c$ uniform in $[-2,-0.2]\,\mathrm{s}$) or far from it ($[-60,-5]\,\mathrm{s}$) on glitch-free GW170817 data, 20 placements per setting.
+The gated-IS tests use the first ten near-merger placements at each of $\pm0.2$, $\pm0.4$ and $\pm0.8\,\mathrm{s}$.
+\item[Real glitches.] H1 O3 Gravity Spy triggers~\cite{Zevin2017gravityspy,Glanzer2023gravityspy} with confidence $\ge0.95$ and duration $\le3\,\mathrm{s}$, in four Omicron SNR bins~\cite{Robinet2020omicron} and five morphologies (blip, koi fish, scattered light, tomte, whistle).
+Each usable 8\,s excerpt is whitened, reduced to a glitch-only estimate, recoloured with the GW170817 H1 ASD, and added at three times before merger at its native loudness: 195 cells from 65 glitches.
+\item[Loudness sweep.] Sine-Gaussians and broadband bursts at $\rho_w$ from $10$ to $10^{4}$, 139 cells.
+\item[Real-glitch reweighting.] From the real-glitch panel, the 41 \emph{damaged} cells (the ungated network fails the criterion) and the 14 \emph{broken} cells (the ungated network passes but the localiser gate made it fail), each at pads of $0.1$ and $0.2\,\mathrm{s}$: 110 analyses.
+Each cell is rebuilt from its cached excerpt and analysed only if its $\rho_w$ matches the archived value to $10^{-6}$; all 110 matched.
+\item[GW170817 Livingston.] The unsubtracted GWOSC Livingston frame~\cite{Abbott2021opendata} in place of the cleaned one, compared with the cleaned-data DINGO-IS posterior.
 \end{description}
-
-\subsection{Success criteria}
-\label{sec:criteria}
-
-A poisoned posterior is labelled \emph{collapsed} if the 90\% credible interval on $\dL$ has upper edge below $15\,\mathrm{Mpc}$ or lower edge above $90\,\mathrm{Mpc}$ (relative to the GW170817 clean median $\approx 34\,\mathrm{Mpc}$).
-The two thresholds correspond to the collapse spikes observed at the prior boundaries.
-A gated posterior \emph{recovers} if its $\dL$ median lies in $[20,50]\,\mathrm{Mpc}$ and within $10\,\mathrm{Mpc}$ of the clean median, and its 90\% credible interval overlaps the clean interval.
-These are deliberately coarse, $\dL$-only criteria chosen to separate collapse from non-collapse across hundreds of cells with $n=512$ samples each; on successful cells the actual median offsets are far smaller (mean $1$--$1.4\,\mathrm{Mpc}$, reported per panel).
-Throughout the paper a posterior that satisfies this criterion is called \emph{recovered}; where the text says a gated posterior is \emph{clean-like}, it means exactly this operational condition and nothing stronger.
-The criterion does not by itself establish equivalence of the full posterior.
-Parameter-by-parameter Jensen--Shannon divergences are reported for the control (Table~\ref{tab:js}) and, separately, for every initially collapsed real Koi-Fish cell and a synthetic subset (Section~\ref{sec:results-multiparam}).
-For that case study we compute Jensen--Shannon (JS) divergences~\cite{Lin1991jsd} between clean and gated one-dimensional marginals for all 15 sampled parameters and require $\mathrm{JS}<0.02\,\mathrm{nat}$ on the core set $\{\Mc,q,\dL,\theta_{JN},t_{\mathrm{c}}\}$.
-The threshold was fixed before the comparison was run.
-It corresponds to two equal-width Gaussians offset by $0.4\sigma$, a shift well inside any credible interval; it is an order of magnitude below the JS at which two marginals visibly disagree; and it lies above the resampling floor for the sample sizes used in the case study ($n=2\times10^{4}$), so that a pass is informative rather than automatic.
-The clean-versus-clean floor at $n=512$ is $0.04\,\mathrm{nat}$ (Section~\ref{sec:results-cleangate}), so the grids stay on the $\dL$ criterion.
-The 15-parameter comparison uses $n=10^{4}$ and is reported separately (Section~\ref{sec:results-multiparam}).
-All criteria are implemented in the released drivers; the reported rates are read directly from the archived CSVs.
-
-\subsection{Software and reproducibility}
-\label{sec:repro}
-
-Example drivers, configuration hashes, and archived JSON/CSV summaries are released with the accompanying repository (\ref{app:repro}).
-Reported metrics are taken from the full (non-smoke) archived runs under \texttt{results/}.
+The real-glitch reweighting and forced-gate tests draw $10^{4}$ proposal samples per cell.
 
 %% =====================================================================
-\section{Results}
+\section{When the frozen network fails, and how much gating it tolerates}
+\label{sec:audit}
+%% =====================================================================
+
+\paragraph{Failure on real glitches.}
+Of the 195 real-glitch cells, 25 collapse (13\%; 12 of 65 glitches) and 41 fail the criterion (21\%).
+No cell collapses at $\rho_w\le170$ (135 cells), while 25 of 60 cells above that loudness do (\cref{fig:collapse}a).
+Collapse is concentrated in two morphologies: 10/45 blip and 14/60 koi-fish cells, against 1/30 whistle and none of the 60 scattered-light and tomte cells.
+Seven of the twelve collapsing glitches collapse at some placements and not others.
+In the synthetic sweep the lowest loudness with any collapse is $\rho_w=100$ and the pooled 50\% point is $\rho_w\approx770$ (\cref{fig:collapse}b).
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig2_collapse.pdf}
+\caption{Where the frozen network fails.
+(a) Fraction of real-glitch cells whose $\dL$ posterior collapses, by injected whitened SNR; labels give counts.
+(b) Collapse fraction in the synthetic loudness sweep; the dotted line is the pooled 50\% point.
+Bars and error bars are Wilson 95\% intervals.}
+\label{fig:collapse}
+\end{figure}
+
+\paragraph{The localiser.}
+At $8\sigma$ the localiser is silent on the GW170817 segment in all three detectors (maximum $|z|$ of 4.9, 4.7 and 5.8 for H1, L1 and V1), on 1000 Gaussian noise realisations in each of H1 and L1, and on 12 of 14 off-source H1 segments (all 14 for L1 and V1).
+On the real-glitch panel it fires on 158/195 cells, and on every blip and tomte cell but only 7 of 39 scattered-light cells.
+Used with the network alone and a $\pm0.1\,\mathrm{s}$ pad, it recovers 31/41 damaged cells and breaks 14 of the 154 undamaged ones.
+A gate of the same width centred on the true glitch time recovers 33/41 and breaks 2/154, so localisation is not the main limit.
+
+\paragraph{Gate tolerance.}
+On clean data the network tolerates short gates and fails on long gates near merger (\cref{fig:tolerance}a).
+With band-limited gating it recovers 20/20 cells at $\pm0.05$ and $\pm0.1\,\mathrm{s}$, 17/20 at $\pm0.2\,\mathrm{s}$, 7/20 at $\pm0.4\,\mathrm{s}$ and 0/20 at $\pm0.8\,\mathrm{s}$; far from merger every width up to $\pm0.8\,\mathrm{s}$ is harmless.
+Filling the gate with coloured Gaussian noise instead of zeros changes these counts by at most four cells.
+Gating raw strain fails even at $\pm0.05\,\mathrm{s}$, where all 20 cells collapse, because the taper modulates the seismic wall into the band.
+The earlier convolutional detector, which dilates every positive time bin and so produces long gates, recovers 0/41 damaged cells and breaks 108--128 of 154 undamaged ones, depending on fill and dilation.
+
+The network alone therefore needs a gate that is accurate, short and band-limited.
+On real glitches it reaches 31/41 with no way to tell which 31.
+The rest of the paper asks whether reweighting can supply that missing information.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig3_tolerance.pdf}
+\caption{Gate tolerance on clean GW170817 data.
+(a) Fraction of cells the network alone recovers after a forced gate, against gate half-width; error bars are Wilson 95\% intervals.
+(b) Ten near-merger cells per width (band-limited, zero fill): the network alone, ordinary importance sampling, gated importance sampling whose $\dL$ passes regardless of $\neff$, and gated importance sampling that is trusted ($\neff\ge100$).
+At $\pm0.2\,\mathrm{s}$ all nine trusted cells pass.}
+\label{fig:tolerance}
+\end{figure}
+
+%% =====================================================================
+\section{Verification of the gated likelihood}
+\label{sec:checks}
+%% =====================================================================
+
+Two checks on real GW170817 data were fixed in advance as conditions for running anything else.
+\begin{enumerate}[leftmargin=*,itemsep=0.2em,label=\Alph*.]
+\item With an empty gate, our uniform-grid log-likelihood equals DINGO's own \texttt{Stationary\-Gaussian\-GW\-Likelihood} on 12 posterior samples to a maximum relative difference of $1.9\times10^{-16}$.
+\item A compact $150\,\mathrm{Hz}$ burst of whitened SNR 1000 placed inside a $\pm0.2\,\mathrm{s}$ H1 gate changes the ordinary log-likelihood of 6 posterior samples by at least $4.99\times10^{5}$ and the gated log-likelihood by at most $2.3\times10^{-10}$.
+The same gate moved by $t_b=2\,\mathrm{s}$, the error a missed shift would cause, changes the gated log-likelihood by up to $4.99\times10^{5}$, as it should.
+\end{enumerate}
+Unit tests compare \cref{eq:gated} with a dense brute-force evaluation of $r_O\T C_{OO}^{-1} r_O$ on short segments, check invariance to the gated data, and check that likelihood differences are insensitive to $\epsilon$.
+As a consistency test, on the three $\pm0.4\,\mathrm{s}$ forced-gate cells where both routes are trusted, reweighting a clean-data proposal and a gated-data proposal with the same gated likelihood gives $\dL$ JS divergences of at most $0.05\,\mathrm{nat}$ between the two.
+Changing $\epsilon$ from $10^{-2}$ to $10^{-4}$ moves the $\dL$ median by at most $0.017\,\mathrm{Mpc}$.
+
+%% =====================================================================
+\section{Gate-aware importance sampling}
 \label{sec:results}
 %% =====================================================================
 
-\subsection{Where the frozen network fails}
-\label{sec:results-threshold}
+\subsection{Forced gates on clean data}
+\label{sec:forced}
 
-Fig.~\ref{fig:threshold} is the loudness sweep on GW170817.
-No cell collapses below $\rho_w\approx100$ (89 cells, including 69 at $\rho_w\in\{10,30,100\}$).
-The rates are $0\%$ through $\rho_w\approx100$, $10\%$ at $\approx200$, $30\%$ at $\approx500$ and $\approx1400$, $60\%$ at $\approx3700$, and $80\%$ at $10^{4}$.
-The $50\%$ point is not a grid point.
-Log-linear interpolation between $30\%$ at $\approx1400$ and $60\%$ at $\approx3700$ gives $\rho_w\approx2.7\times10^{3}$ for the two families together, $2.3\times10^{3}$ for broadband bursts, and $6.1\times10^{3}$ for sine-Gaussians, uncertain by about a factor of two.
-Real Koi Fish cross $50\%$ several times lower (Section~\ref{sec:results-real}).
-At $\rho_w>3000$, pooling this sweep with the stress grid (194 cells), collapse is $56\%$ within $1\,\mathrm{s}$ of the trigger and $53\%$ further away ($p=0.75$).
-The front-end recovers $135/139$ cells ($97\%$; $92.8$--$98.9\%$) and $90\%$ of collapsed cells.
-Sine-Gaussians recover at every grid point.
-Broadband bursts fail only at $\rho_w\approx27$ ($3/5$, over-excision of a harmless glitch; the pooled point is $13/15$) and at $10^{4}$ ($2/5$ still collapsed).
-At the extension points the detector fires on $0\%$ of cells at $\rho_w=10$ and about $65\%$ at $\rho_w=30$; recovery is $100\%$ and the mean $\dL$-median offset is $0.5$--$1.6\,\mathrm{Mpc}$.
+\Cref{tab:forced} and \cref{fig:tolerance}b give the forced-gate results.
+At $\pm0.2\,\mathrm{s}$, nine of ten cells are trusted and all nine pass, including one that the network alone fails; the tenth has $\neff=57$.
+At $\pm0.4\,\mathrm{s}$, gated importance sampling puts the distance right in 9/10 cells, against 3/10 for the network alone and 3/10 for ordinary importance sampling, but the median efficiency is 0.83\% and only three cells are trusted.
+At $\pm0.8\,\mathrm{s}$ no cell is trusted; the largest $\neff$ is 83, and five cells, each with $\neff\le4$, have $\dL$ medians between $14.8$ and $20.2\,\mathrm{Mpc}$.
+The pre-registered decision for this test was \emph{partial}: the likelihood checks and the distance criterion passed, the efficiency criterion (at least 1\% in 7 of 10 cells at $\pm0.4\,\mathrm{s}$) did not.
+
+The pattern follows from \cref{eq:weights}.
+The gated likelihood is correct whatever the gate, but reweighting can only move mass the proposal already has.
+A long gate just before merger removes the part of the signal that the network relies on, its proposal drifts away from the gated posterior, and $\neff$ falls.
+The trust rule turns that fall into an explicit refusal instead of a wrong answer.
+
+\begin{table}[t]
+\centering
+\caption{Forced gates near merger on clean GW170817 data, ten cells per width, $10^{4}$ proposal samples.
+``Passes'' is the distance criterion of \cref{sec:setup}; ``trusted'' is $\neff\ge100$.
+Efficiency is the median over cells for gated importance sampling.}
+\label{tab:forced}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+Half-width & Network alone & Ordinary IS & Gated IS passes & Gated IS trusted & Trusted and passes & Median eff.\\
+\midrule
+$\pm0.2\,\mathrm{s}$ & 8/10 & 8/10 & 10/10 & 9/10 & 9/10 & 6.6\% \\
+$\pm0.4\,\mathrm{s}$ & 3/10 & 3/10 & 9/10 & 3/10 & $\le$3/10 & 0.83\% \\
+$\pm0.8\,\mathrm{s}$ & 0/10 & 0/10 & 5/10 & 0/10 & 0/10 & 0.04\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Real glitches}
+\label{sec:real}
+
+\Cref{tab:real} and \cref{fig:real} give the 110 real-glitch analyses.
+On the damaged cells with a $0.1\,\mathrm{s}$ pad, gated importance sampling returns a trusted, passing posterior in 32/41 cells (78\%; 63--88\%), against 31/41 for the network alone and 29/41 for ordinary importance sampling.
+The difference from the network alone is one cell, well within the intervals; the gain is not in the count.
+With a $0.2\,\mathrm{s}$ pad the network alone drops to 25/41 and ordinary importance sampling to 21/41, while gated importance sampling holds 30/41.
+Ordinary importance sampling is worse than not reweighting at all at both pads, because its likelihood scores the zeroed gate as data.
+Choosing, per cell, the pad with the larger $\neff$ (a rule fixed in advance that does not use the clean answer) gives 33/41 (80\%; 66--90\%).
+By morphology, the trusted recoveries at $\pm0.1\,\mathrm{s}$ are 15/15 blip, 17/24 koi-fish and 0/2 whistle cells.
+The trusted cells have a median $\dL$ JS divergence from the clean posterior of $0.018\,\mathrm{nat}$.
+
+On the 14 cells that the localiser gate broke, the network alone and ordinary importance sampling recover none at either pad.
+Gated importance sampling recovers 4/14 at $\pm0.1\,\mathrm{s}$; the other ten are untrusted, as are all 14 at $\pm0.2\,\mathrm{s}$.
+These are gates the network should never have been shown: undamaged cells where the localiser fired near merger.
+
+\begin{table}[t]
+\centering
+\caption{Real O3 glitches injected into GW170817 H1, $10^{4}$ proposal samples per cell.
+Counts are cells passing the distance criterion; gated importance sampling counts only trusted cells ($\neff\ge100$).
+The adaptive rule takes, per cell, the pad with the larger $\neff$.
+Intervals are Wilson 95\%.}
+\label{tab:real}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}llccccc@{}}
+\toprule
+Cells & Pad & Network alone & Ordinary IS & Gated IS (trusted) & Untrusted & Median eff.\\
+\midrule
+damaged (41) & $\pm0.1\,\mathrm{s}$ & 31 & 29 & 32 \;(63--88\%) & 8 & 8.2\% \\
+damaged (41) & $\pm0.2\,\mathrm{s}$ & 25 & 21 & 30 \;(58--84\%) & 10 & 4.6\% \\
+damaged (41) & adaptive & --- & --- & 33 \;(66--90\%) & 7 & --- \\
+broken (14) & $\pm0.1\,\mathrm{s}$ & 0 & 0 & 4 \;(12--55\%) & 10 & 0.30\% \\
+broken (14) & $\pm0.2\,\mathrm{s}$ & 0 & 0 & 0 \;(0--22\%) & 14 & 0.13\% \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.62\linewidth]{figures/fig9_threshold.pdf}
-\caption{Loudness sweep on GW170817.
-Poisoned collapse rate and gated recovery rate as a function of the whitened optimal SNR $\rho_w$ of the injected glitch, for sine-Gaussians and broadband bursts (grid points within a factor of 1.5 pooled; 139 cells).
-The shaded band is the $\rho_w$ range of real O3 Gravity Spy glitches with Omicron SNR 9--30.
-The dotted line marks the interpolated $50\%$ collapse point for these two synthetic families.
-The dip in broadband-burst gated recovery at $\rho_w\approx30$ is three over-excised, non-collapsed cells (Section~\ref{sec:results-threshold}).}
-\label{fig:threshold}
-\end{figure}
-
-\subsection{Real O3 glitches at native loudness}
-\label{sec:results-real}
-
-Fig.~\ref{fig:real} and Table~\ref{tab:real} are the 183 native-loudness cells.
-No cell collapses in the two lower bins (123 cells, 41 glitches, $\rho_w\approx40$--$70$; Wilson $0$--$3.0\%$).
-The $[100,300)$ bin collapses $8/45=18\%$ ($9.3$--$31.3\%$, $\rho_w\approx190$) and the $[300,\infty)$ bin $9/15=60\%$ ($35.7$--$80.2\%$, $\rho_w\approx560$).
-That last interval is five triggers wide.
-Every collapse is a Koi Fish: $53\%$ of Koi-Fish cells at SNR $100$--$300$, $60\%$ above $300$, and $17/60$ overall.
-Blips, whistles, tomtes, and scattered light do not collapse at the loudness they reach here, so the Koi-Fish $50\%$ point sits near $\rho_w\approx5\times10^{2}$, about five times below the synthetic crossing.
-The five noise-only controls do not collapse and all five are recovered.
-The detector fires on them because the transplanted excerpt is a real excess; the clean-data rate is measured on unmodified draws (Section~\ref{sec:results-cleangate}).
-
-The headline is the conditional result: every one of the 17 initially collapsed cells is recovered ($17/17$; Wilson 95\% interval $[81.6\%,100\%]$).
-Across all 183 cells the front-end preserves $181/183=98.9\%$.
-Those cells are three placements of 61 triggers, so a binomial interval overstates the information.
-Resampling triggers gives a cluster-bootstrap 95\% interval $[96.7\%,100\%]$; a design-effect Wilson interval at $n_{\mathrm{eff}}\approx91.5$ (ICC $0.50$) is $[94.1\%,99.8\%]$.
-Strict recovery, all three placements of a trigger, is $60/61=98.4\%$ (bootstrap $[95.1\%,100\%]$).
-The loudest bin is $15/15$ cells from five triggers (Wilson $[79.6\%,100\%]$).
-The mean $\dL$-median offset on successes is $1.0\,\mathrm{Mpc}$.
-The two failures are both scattered-light cells whose poisoned posterior was already fine and where the gate over-excised, pulling the $\dL$ median to $18$ and $22\,\mathrm{Mpc}$; the centred oracle, with its narrower support, recovers both.
-The detector fires on $87\%$ of cells overall, rising from $85\%$ in the quietest bin to $100\%$ above SNR 300; the cells it does not fire on are quiet ones that pass through unchanged and, being non-collapsed, count as recovered.
-The centred oracle recovers $90\%$, losing to the detector on every morphology, for the reason given in Section~\ref{sec:results-oracle}.
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=\linewidth]{figures/fig8_real_glitches.pdf}
-\caption{Real O3 H1 Gravity Spy glitches injected into GW170817 at native loudness (183 cells).
-Left: by Omicron-SNR bin, with the median injected $\rho_w$ of each bin.
-Right: by morphology, with the five noise-only control cells.
-Bars are poisoned collapse, detector-gated recovery, and centred-oracle recovery; ticks are the detector fire rate.}
+\includegraphics[width=\linewidth]{figures/fig4_real_glitches.pdf}
+\caption{Real-glitch analyses.
+(a) Fraction of cells passing the distance criterion for the network alone, ordinary importance sampling, and trusted gated importance sampling, with Wilson 95\% intervals; the number of untrusted gated-IS cells is given under each group.
+(b) Over all 110 analyses: trusted gated-IS results pass in 66 of 68 cases; on the 42 cases the flag rejects, the network alone passes once.}
 \label{fig:real}
 \end{figure}
 
-\begin{table}[t]
-\centering
-\caption{Real Gravity Spy panel by Omicron-SNR bin ($N=183$ cells from $N=61$ triggers, three placements each).
-$\rho_w$ is the median whitened optimal SNR of the injected excerpts in the bin.
-Per-bin intervals are Wilson 95\% intervals on cells.
-The all-cells recovery interval in the text is the cluster bootstrap, not the binomial interval in this table.
-The $[300,\infty)$ bin is five Koi-Fish triggers (15 cells); Extremely Loud triggers were not injected.
-The detector fires on all five noise-only controls because the transplanted excerpt is a real power excess (Section~\ref{sec:results-real}).}
-\label{tab:real}
-\scriptsize
-\setlength{\tabcolsep}{2.5pt}
-\begin{tabular}{@{}lcccllcc@{}}
-\toprule
-SNR bin & Glitches & $N$ & $\rho_w$ & Collapse [95\% CI] & Gated rec.\ [95\% CI] & Oracle rec. & Det.\ fire \\
-\midrule
-$[8,30)$      & 18 & 54  & 42  & 0.000 [0.00, 0.07] & 1.000 [0.93, 1.00] & 0.926 & 0.852 \\
-$[30,100)$    & 23 & 69  & 71  & 0.000 [0.00, 0.05] & 0.971 [0.90, 0.99] & 0.899 & 0.841 \\
-$[100,300)$   & 15 & 45  & 186 & 0.178 [0.09, 0.31] & 1.000 [0.92, 1.00] & 0.933 & 0.911 \\
-$[300,\infty)$&  5 & 15  & 560 & 0.600 [0.36, 0.80] & 1.000 [0.80, 1.00] & 0.733 & 1.000 \\
-\midrule
-All           & 61 & 183 & 80  & 0.093 [0.06, 0.14] & 0.989 [0.96, 1.00] & 0.902 & 0.874 \\
-Noise only    & 5  & 5   & 64  & 0.000 [0.00, 0.43] & 1.000 [0.57, 1.00] & 1.000 & 1.000 \\
-\bottomrule
-\end{tabular}
-\end{table}
+\paragraph{The trust flag.}
+Across the 110 analyses, 68 are trusted and 42 untrusted.
+Of the trusted results, 66 pass (97\%).
+Of the 42 untrusted cases, the network alone passes in one.
+The flag thus marks almost exactly the cases where the fast answer would also have been wrong, while the trusted cases are almost always right.
+Untrusted cases are not necessarily wrong: all eight untrusted damaged cells at $\pm0.1\,\mathrm{s}$ have a gated $\dL$ that passes the criterion.
+But they rest on a handful of effective samples, the largest JS divergences in the set all belong to cells with $\neff$ between 1 and 10, and the rule declines to count them.
+\IfFileExists{figures/fig5_trust_scatter.pdf}{\Cref{fig:scatter} shows $\neff$ against the $\dL$ JS divergence for every cell.}{}
 
-\paragraph{Prevalence in the O3 catalogue}
-\label{sec:prevalence}
-Among the $132{,}065$ O3 H1 Gravity Spy triggers with confidence $\geq0.95$, $11.0\%$ exceed SNR $300$.
-That tail is not a Koi-Fish tail.
-Extremely Loud accounts for $14{,}894$ triggers and $89\%$ of the triggers above SNR 300, and that class was not injected.
-Koi Fish account for $9{,}683$ triggers, of which $13\%$ exceed SNR 300.
-The collapse boundary measured above SNR 300 is a Koi-Fish boundary: the $60\%$ rate in Table~\ref{tab:real} is $9/15$ cells from five Koi-Fish triggers, drawn from the five morphologies that were injected (Blip, Koi Fish, Scattered Light, Tomte, and Whistle), and it is not a rate for the catalogue tail.
-Extremely Loud dominates that tail and remains untested.
-It is the next morphology for a later audit to map.
-The synthetic grid at $\rho_w\sim10^{3}$--$10^{4}$ probes a loudness that $5$--$10\%$ of the catalogue reaches, but not the class that dominates that tail.
-
-\subsection{Qualitative failure and recovery}
-\label{sec:results-qual}
-
-Fig.~\ref{fig:example} illustrates a representative H1 sine-Gaussian injection into the GW170817 package.
-The whitened spectrogram shows a compact excess; the detector marks a contiguous time support; Tukey gates zero that support; and the matched-delta rebuild restores a frequency-domain package on which \DINGOBNS again yields an extended $\dL$ marginal.
-Fig.~\ref{fig:posteriors} contrasts clean, poisoned, and gated one-dimensional posteriors in the official-control case study (an H1 sine-Gaussian at $f_0=100\,\mathrm{Hz}$, $Q=5$, $1\,\mathrm{s}$ before the trigger, $\rho_w=4.3\times10^{3}$).
-The clean and gated posteriors shown, and those compared in Table~\ref{tab:js}, are both importance-sampled with the release's own machinery ($2\times10^{4}$ samples each); the poisoned posterior is the raw network output, since importance sampling of a posterior that has collapsed onto the prior boundary has negligible efficiency and would only confirm the collapse.
-The poisoned run collapses to $\dL\approx10\,\mathrm{Mpc}$ with a 90\% interval of width $0.65\,\mathrm{Mpc}$, against a clean interval spanning $19$--$45\,\mathrm{Mpc}$.
-The gated run overlaps the clean reference on every one of the 15 sampled parameters (Table~\ref{tab:js}); the largest JS divergence, $0.012\,\mathrm{nat}$, occurs for the secondary spin magnitude $a_2$, and the $\dL$ median shifts by $-0.3\,\mathrm{Mpc}$.
-The importance-sampling efficiency of the gated package ($8.5\%$) is comparable to that of the clean package ($11.1\%$), indicating that the rebuilt input remains close to the network's training support rather than merely producing a plausible-looking marginal.
-
-\begin{table}[t]
-\centering
-\caption{Official-control case study: one-dimensional JS divergence (nat) between the importance-sampled clean and gated posteriors, and whether the 90\% credible intervals overlap, for all 15 sampled parameters (sky position is fixed in the demonstration packaging; Section~\ref{sec:checkpoint}).
-Core parameters used in the recovery criterion are marked with $\ast$.}
-\label{tab:js}
-\begin{tabular}{@{}lcc@{\hskip 1.5em}lcc@{}}
-\toprule
-Parameter & JS & Overlap & Parameter & JS & Overlap \\
-\midrule
-$\Mc$ $\ast$              & 0.0072 & \checkmark & $\phi_{12}$          & 0.0057 & \checkmark \\
-$\Delta\mathcal{M}$       & 0.0073 & \checkmark & $\phi_{JL}$          & 0.0070 & \checkmark \\
-$q$ $\ast$                & 0.0080 & \checkmark & $\theta_{JN}$ $\ast$ & 0.0070 & \checkmark \\
-$a_1$                     & 0.0098 & \checkmark & $\psi$               & 0.0074 & \checkmark \\
-$a_2$                     & 0.0118 & \checkmark & $t_{\mathrm{c}}$ $\ast$ & 0.0049 & \checkmark \\
-$\theta_1$                & 0.0085 & \checkmark & $\Lambda_1$          & 0.0014 & \checkmark \\
-$\theta_2$                & 0.0098 & \checkmark & $\Lambda_2$          & 0.0014 & \checkmark \\
-$\dL$ $\ast$              & 0.0066 & \checkmark &                      &        &            \\
-\bottomrule
-\end{tabular}
-\end{table}
-
+\IfFileExists{figures/fig5_trust_scatter.pdf}{%
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.6\linewidth]{figures/fig2_injection_gate.pdf}
-\caption{Example glitch injection, detection, and gating on the GW170817 H1 analysis crop.
-Top: whitened strain with the injected sine-Gaussian and the Tukey gate window (shaded).
-Middle: the whitened spectrogram seen by the detector.
-Bottom: per-time-bin detector probability with the event-level threshold.}
-\label{fig:example}
-\end{figure}
+\includegraphics[width=0.55\linewidth]{figures/fig5_trust_scatter.pdf}
+\caption{Effective sample size against the $\dL$ JS divergence from the clean posterior for every real-glitch analysis.
+Filled markers pass the distance criterion; the dotted line is the trust threshold $\neff=100$.}
+\label{fig:scatter}
+\end{figure}}{}
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=\linewidth]{figures/fig3_posteriors.pdf}
-\caption{Posterior comparison for the official-control case study.
-One-dimensional marginals of $\dL$, $\Mc$, $q$, $\theta_{JN}$, $t_{\mathrm{c}}$, and $\Lambda_1$ for the clean (importance-sampled official result), poisoned (raw network output), and gated (importance-sampled) runs.
-Poisoning drives $\dL$ into a spike at the $10\,\mathrm{Mpc}$ prior floor; the gated reconstruction restores the clean support on every parameter.}
-\label{fig:posteriors}
-\end{figure}
+\ifstagethreeb
+\paragraph{More samples for the untrusted cells.}
+A follow-up run, also fixed in advance, redrew the 18 untrusted $\pm0.1\,\mathrm{s}$ cases with \SBSAMPLES{} proposal samples and changed nothing else.
+\SBDAMAGED{} of the 8 damaged and \SBBROKEN{} of the 10 broken cells became trusted and passed; \SBSTILL{} remained untrusted.
+With the larger proposal where needed, gated importance sampling returns a trusted, passing posterior for \SBDAMAGEDTOTAL/41 damaged and \SBBROKENTOTAL/14 broken cells at $\pm0.1\,\mathrm{s}$.
+\fi
 
-\subsection{GW170817 loud-glitch stress grid}
-\label{sec:results-gw170817}
+\subsection{GW170817 Livingston}
+\label{sec:gw170817}
 
-The stress grid is the loud regime ($\rho_w$ median $4$--$10\times10^{3}$).
-Poisoned collapse is $46.3\%$ of 240 cells (Table~\ref{tab:gw170817}).
-Of 111 collapsed cells, 90 sit at the $10\,\mathrm{Mpc}$ floor and 21 at the $100\,\mathrm{Mpc}$ ceiling; none lands in between with a broad interval.
-Retaining the analysis ASD collapses $60.0\%$; a Welch ASD on the contaminated segment collapses $32.5\%$, and still does not recover (Section~\ref{sec:results-ablation}).
-The front-end recovers $206/240=85.8\%$ ($80.9$--$89.7\%$) and $77.5\%$ of collapsed cells.
-Held-out families recover $86/90=95.6\%$ ($89.1$--$98.3\%$) against $120/150=80.0\%$ ($72.9$--$85.6\%$) for held-in families.
-By severity the rates are $90.0\%$, $86.3\%$, and $81.3\%$; by ASD policy, $84.2\%$ and $87.5\%$.
-The mean $|\Delta\mathrm{median}|$ on successes is $1.1\,\mathrm{Mpc}$, against a clean 90\% width of $26\,\mathrm{Mpc}$.
-\texttt{scattered\_light} is the weak family at $50\%$: the arches outlast the gate.
-Fig.~\ref{fig:heatmap} breaks the same rates out by family.
+GW170817's Livingston data contain a loud glitch about one second before merger, which the LVK removed with BayesWave before parameter estimation~\cite{Abbott2017gw170817,Pankow2018mitigation}.
+Replacing the cleaned frame with the unsubtracted GWOSC frame, without a gate, reduces the network's distance posterior to a spike $0.02\,\mathrm{Mpc}$ wide, and importance sampling has an efficiency of $5\times10^{-5}$ ($\neff=1.0$).
+The localiser fires on L1 only ($|z|_{\max}=147$; H1 and V1 below 6) with a $0.42\,\mathrm{s}$ gate ending about $0.8\,\mathrm{s}$ before merger.
+With that gate, gated importance sampling at $\pm0.1\,\mathrm{s}$ pad has an efficiency of 10.7\% and a $\dL$ JS divergence of $0.014\,\mathrm{nat}$ from the BayesWave-cleaned reference, whose own efficiency is 11.1\%.
+At $\pm0.4\,\mathrm{s}$ the efficiency falls to 1.1\%.
+In this case ordinary importance sampling of the gated package also works (efficiency 13.6\%; median one-dimensional JS divergence over the 15 parameters $0.007\,\mathrm{nat}$, every 90\% interval overlapping), which is consistent with \cref{fig:real}: the short, well-localised gates are the ones where the choice of likelihood matters least.
 
-\begin{table}[t]
-\centering
-\caption{GW170817 stress grid ($N=240$).
-Gated recovery is the fraction of cells whose post-front-end posterior matches the clean reference under the criteria of Section~\ref{sec:criteria}.
-Oracle recovery uses a single $\pm0.4\,\mathrm{s}$ gate centred on the true injection time (perfect localization, fixed extent).
-Held-out families ($\dagger$) were not seen by the detector in training.}
-\label{tab:gw170817}
-\small
-\begin{tabular}{@{}lcccc@{}}
-\toprule
-Family & $N$ & Poison collapse & Gated recovery & Oracle recovery \\
-\midrule
-\texttt{broadband\_burst} & 30 & 0.833 & 0.767 & 0.967 \\
-\texttt{double\_blip}$^\dagger$     & 30 & 0.367 & 0.900 & 0.967 \\
-\texttt{glitch\_train}    & 30 & 0.467 & 0.967 & 0.933 \\
-\texttt{narrowband\_tone}$^\dagger$ & 30 & 0.167 & 1.000 & 0.600 \\
-\texttt{ringing}$^\dagger$          & 30 & 0.633 & 0.967 & 0.567 \\
-\texttt{scattered\_light} & 30 & 0.467 & 0.500 & 0.233 \\
-\texttt{sine\_gaussian}   & 30 & 0.233 & 0.967 & 0.900 \\
-\texttt{whistle}          & 30 & 0.533 & 0.800 & 0.533 \\
-\midrule
-Overall                   & 240 & 0.463 & 0.858 & 0.713 \\
-Held-in                   & --- & --- & 0.800 & --- \\
-Held-out                  & --- & --- & 0.956 & --- \\
-\bottomrule
-\end{tabular}
-\end{table}
+\subsection{Cost}
+\label{sec:cost}
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=\linewidth]{figures/fig4_gw170817_heatmap.pdf}
-\caption{GW170817 stress grid by family and severity: poisoned collapse rate (left), detector-driven gated recovery (centre), and centred fixed-width oracle recovery (right).
-Each cell aggregates five seeds and two ASD policies.
-The detector-driven gate matches or exceeds the oracle on every family whose glitches outlast the oracle window (Section~\ref{sec:results-oracle}).}
-\label{fig:heatmap}
-\end{figure}
-
-The $N=1{,}000$ audit of that threshold is in Section~\ref{sec:results-cleangate}.
-With no gate, the front-end reproduces the input package bit-exactly.
-
-\subsection{Localization versus extent: the oracle comparison}
-\label{sec:results-oracle}
-
-The centred oracle knows the injection time and still recovers only $71.3\%$, against $85.8\%$ for the detector-driven gate.
-It loses on \texttt{narrowband\_tone} ($60\%$ vs.\ $100\%$), \texttt{ringing} ($57\%$ vs.\ $97\%$), and \texttt{whistle} ($53\%$ vs.\ $80\%$).
-The oracle is one window of width $0.8\,\mathrm{s}$.
-The detector gate is every positive bin dilated by $0.4\,\mathrm{s}$, so it grows with the glitch.
-Those three families last $1$--$1.5\,\mathrm{s}$, or several decay times, and Fig.~\ref{fig:oracle} puts them above the diagonal.
-The detector fired in all 34 of its failures, so none is a miss.
-The oracle rescues $38\%$ of them, mostly compact bursts whose dilated gate crossed coalescence, and only 2 of 15 \texttt{scattered\_light} failures and 1 of 6 \texttt{whistle} failures.
-Those two families are 21 of the 34.
-
-\subsection{Synthetic BNS panel}
-\label{sec:results-synth}
-
-Twenty-three synthetic BNS events were drawn in the demonstration domain; 20 passed a known-answer test and give 160 glitch cells.
-Collapse is $35.6\%$.
-The front-end recovers $147/160=91.9\%$ ($86.6$--$95.2\%$) and fires on every contaminated draw (Table~\ref{tab:synth}, Fig.~\ref{fig:synth}).
-\texttt{ringing} recovers at $100\%$ and \texttt{scattered\_light} at $72.5\%$.
-The mean $|\Delta\mathrm{median}|$ on successes is $1.4\,\mathrm{Mpc}$.
-The family order matches GW170817.
-
-\begin{table}[t]
-\centering
-\caption{Synthetic BNS stress panel ($N=160$ glitch cells across 20 KAT-qualified events). $\dagger$: held-out family.}
-\label{tab:synth}
-\begin{tabular}{@{}lccc@{}}
-\toprule
-Family & $N$ & Poison collapse & Gated recovery \\
-\midrule
-\texttt{broadband\_burst} & 40 & 0.700 & 0.950 \\
-\texttt{ringing}$^\dagger$          & 40 & 0.375 & 1.000 \\
-\texttt{scattered\_light} & 40 & 0.175 & 0.725 \\
-\texttt{sine\_gaussian}   & 40 & 0.175 & 1.000 \\
-\midrule
-Overall                   & 160 & 0.356 & 0.919 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.6\linewidth]{figures/fig5_synthetic_panel.pdf}
-\caption{Synthetic BNS panel: poisoned collapse and gated recovery by family, with the detector fire rate marked.
-The dotted line is the overall gated recovery.}
-\label{fig:synth}
-\end{figure}
-
-\subsection{Ablations}
-\label{sec:results-ablation}
-
-Table~\ref{tab:ablation} and Fig.~\ref{fig:ablation} compare nine rewrites on the same $N=16$ hardening cells (severities 6 and 10, identical seeds and gate masks, $n=512$).
-The clean reference median is $34\,\mathrm{Mpc}$.
-\texttt{adapt\_full} (gate, matched-delta, original ASD) recovers $13/16$ at a median of $34.3\,\mathrm{Mpc}$.
-\texttt{dingo\_repackage} passes the gated strain through \texttt{data\_to\_domain} with \texttt{time\_buffer}$=2$, the single official cyclic shift, and collapses $16/16$ to a median of $10.6\,\mathrm{Mpc}$.
-\texttt{dingo\_repackage\_aligned} uses the same call with \texttt{time\_buffer}$=0$, so the shift is not applied; it recovers $0/16$, with the median at $82.6\,\mathrm{Mpc}$ and only $2/16$ inside the collapse criterion.
-Linear inpainting before the same two conditionings matches those two outcomes ($16/16$ at $10.6\,\mathrm{Mpc}$ with the shift; $0/16$ at $82.5\,\mathrm{Mpc}$ without it, and none collapsed).
-\texttt{fft\_replace} collapses $16/16$ to $10.0\,\mathrm{Mpc}$.
-Welch-ASD and no-gate arms recover $6$--$12\%$.
-That $0/16$ recovery, in both \texttt{data\_to\_domain} conventions, is the fragility result: a mathematically linear rebuild still leaves the training support, because it does not preserve the archived shift.
-The shift changes which prior edge the failure approaches.
-Matched-delta is the probe that leaves the archived shift inside the original package, and it recovers $13/16$.
-The two outputs differ by $(\mathcal{I}-\mathcal{S})\mathcal{F}[x_{\mathrm{g}}-x]$ once $X=\mathcal{S}\mathcal{F}[x]$: matched-delta cancels the unshifted injection $\mathcal{F}[g]$ and leaves the archived shift in place, while \texttt{data\_to\_domain} applies that shift to the entire repaired series and then restores the same analysis ASD.
-Linear inpainting follows the two repackages rather than matched-delta, so the failure tracks the re-derived time origin rather than the samples zeroed inside the gate.
-
-\begin{table}[t]
-\centering
-\caption{Ablation on the hardening panel ($N=16$ cells, $n=512$).
-``Recovers'' is the clean-like rate.
-``Collapse'' is a $\dL$ 90\% interval with upper edge below $15\,\mathrm{Mpc}$ or lower edge above $90\,\mathrm{Mpc}$.
-The two \texttt{*\_aligned} arms set \texttt{time\_buffer}$=0$.}
-\label{tab:ablation}
-\scriptsize
-\begin{tabular}{@{}lccc@{}}
-\toprule
-Arm & Recovers & Collapse & Median $\dL$ [Mpc] \\
-\midrule
-\texttt{adapt\_full}                 & 0.812 & 0.125 & 34.3 \\
-\texttt{dingo\_repackage}            & 0.000 & 1.000 & 10.6 \\
-\texttt{dingo\_repackage\_aligned}   & 0.000 & 0.125 & 82.6 \\
-\texttt{inpaint\_repackage}          & 0.000 & 1.000 & 10.6 \\
-\texttt{inpaint\_repackage\_aligned} & 0.000 & 0.000 & 82.5 \\
-\texttt{fft\_replace}                & 0.000 & 1.000 & 10.0 \\
-\texttt{gate\_welch}                 & 0.125 & 0.625 & 10.1 \\
-\texttt{glitch\_orig\_asd}           & 0.125 & 0.812 & 28.4 \\
-\texttt{poison\_welch}               & 0.062 & 0.625 & 10.6 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=\linewidth]{figures/fig6_ablation.pdf}
-\caption{Nine rewrites of the same 16 gated cells.
-Left: clean-like recovery.
-Right: per-cell $\dL$ medians.
-Matched-delta is the only arm that lands on the clean interval.
-The official $+2\,\mathrm{s}$ repackage sits on the $10\,\mathrm{Mpc}$ floor; omitting that shift moves the same failure to $\sim83\,\mathrm{Mpc}$.}
-\label{fig:ablation}
-\end{figure}
-
-\subsection{Fifteen-parameter agreement}
-\label{sec:results-multiparam}
-
-The $\dL$ criterion does not say whether the other sampled parameters move.
-On all 17 initially collapsed real Koi-Fish cells, importance-sampled clean and \texttt{adapt\_full} posteriors ($n=10^{4}$) overlap in every 90\% interval.
-The median of the per-cell median JS divergence is $0.013\,\mathrm{nat}$ and the largest cell median is $0.016\,\mathrm{nat}$; the largest single parameter-cell value is $0.036\,\mathrm{nat}$ ($\dL$).
-Clean and gated importance-sampling efficiencies are $10.7\%$ and $10.0\%$.
-On 20 synthetic BNS cells that had collapsed (five from each of four families), 19 are importance-sampled.
-One scattered-light cell put every draw outside the prior, so its efficiency is zero and it is omitted from the divergences.
-For the other 19 the median of per-cell median JS is $0.0085\,\mathrm{nat}$ (largest cell median $0.022\,\mathrm{nat}$; largest single value $0.118\,\mathrm{nat}$, again $\dL$), and all 15 intervals overlap.
-Gated efficiency has median $15.0\%$ against a clean median of $16.5\%$.
-Table~\ref{tab:multiparam} and Fig.~\ref{fig:multiparam} give the per-parameter medians and the empirical coverage of the injected parameters.
-Empirical 90\% coverage of $\theta_{JN}$ and $\dL$ is $0.70$--$0.75$ on the $n=20$ synthetic events, already below the nominal level for the clean posterior.
-Gating does not worsen that coverage.
-The probe restores the clean neural posterior, and the shortfall is a property of the public checkpoint rather than a defect introduced by the gate.
-The comparison therefore tests whether the gated run restores that baseline, not whether either posterior is calibrated to the injected parameters.
-Tilt angles, $\phi_{12}$, $\phi_{JL}$, and $\psi$ were not archived with the synthetic events.
-Their coverage uses a redraw seeded by the event id.
-Chirp mass matches the archive to $10^{-8}$.
-Sky position was not sampled.
-
-\begin{table}[t]
-\centering
-\caption{Median one-dimensional JS divergence (nat) between clean and \texttt{adapt\_full} importance-sampled posteriors, and empirical 90\% coverage of the injected value on the synthetic panel}
-\label{tab:multiparam}
-\scriptsize
-\setlength{\tabcolsep}{3pt}
-\begin{tabular}{@{}lcccc@{}}
-\toprule
-Parameter & Real JS & Synth.\ JS & Clean cov.\ & Gated cov.\ \\
-\midrule
-$\Delta\mathcal{M}$ & 0.009 & 0.007 & 0.85 & 0.84 \\
-$q$ & 0.017 & 0.010 & 0.90 & 0.95 \\
-$a_1$ & 0.018 & 0.011 & 0.95 & 0.95 \\
-$a_2$ & 0.013 & 0.011 & 0.95 & 0.95 \\
-$\theta_1$ & 0.016 & 0.010 & 1.00 & 1.00 \\
-$\theta_2$ & 0.017 & 0.009 & 0.75 & 0.79 \\
-$\phi_{12}$ & 0.014 & 0.010 & 0.80 & 0.74 \\
-$\phi_{JL}$ & 0.013 & 0.011 & 0.85 & 0.89 \\
-$\theta_{JN}$ & 0.013 & 0.013 & 0.70 & 0.74 \\
-$\dL$ & 0.016 & 0.011 & 0.75 & 0.74 \\
-$t_{\mathrm{c}}$ & 0.006 & 0.006 & 0.95 & 0.95 \\
-$\psi$ & 0.015 & 0.013 & 0.90 & 0.74 \\
-$\Lambda_1$ & 0.004 & 0.005 & 1.00 & 1.00 \\
-$\Lambda_2$ & 0.003 & 0.003 & 1.00 & 0.95 \\
-$\mathcal{M}$ & 0.009 & 0.007 & 0.85 & 0.84 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=\linewidth]{figures/fig10_multiparam.pdf}
-\caption{Fifteen sampled parameters after \texttt{adapt\_full}.
-Left: median JS divergence on 17 real Koi-Fish cells and 19 synthetic cells.
-Right: empirical 90\% coverage of the injected synthetic parameters (dotted line is the nominal 90\%).}
-\label{fig:multiparam}
-\end{figure}
-
-\subsection{Unsubtracted GW170817 L1}
-\label{sec:results-rawl1}
-
-The injections above are added to the LVK BayesWave-cleaned package.
-The open GWOSC L1 strain around GPS $1187008882.4$ still contains the pre-merger glitch.
-High-pass filtered above $30\,\mathrm{Hz}$ it correlates with the cleaned frame at $0.992$; over the full band the correlation is $0.025$, because the two products differ below $30\,\mathrm{Hz}$.
-The detector on that raw segment scores H1 $0.53$, L1 $1.00$, and V1 $0.25$, so only L1 crosses the event threshold $0.73$ and one gate is opened.
-Importance sampling of the cleaned reference ($n=2\times10^{4}$) is ordinary: $\dL$ median $34.5\,\mathrm{Mpc}$, efficiency $10.9\%$ ($n_{\mathrm{eff}}=2179$), $\log Z=-10932$.
-The raw L1 package has efficiency $1.1\times10^{-4}$ ($n_{\mathrm{eff}}=2.2$) and $\log Z=-83325$.
-\texttt{adapt\_full} on that raw L1 has efficiency $5\times10^{-5}$ ($n_{\mathrm{eff}}=1$) and $\log Z=-154461$, and the unweighted network distance is $10.4$ / $11.4$ / $13.4\,\mathrm{Mpc}$, which does not overlap the reference.
-$\Delta\log Z\approx7.2\times10^{4}$ between the reference and the gated raw frame.
-The outcome is a boundary of this checkpoint.
-Gating removes the transient the detector saw and still does not recover the cleaned posterior, because the frames diverge below $30\,\mathrm{Hz}$.
-On this frame, time-domain gating is not a substitute for coherent wavelet subtraction~\cite{Cornish2015bayeswave,Pankow2018mitigation}.
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=\linewidth]{figures/fig7_oracle_gap.pdf}
-\caption{Localization versus extent on the GW170817 grid.
-Left: the 34 gated failures by family, and how many the centred fixed-width oracle rescues; the detector fired in all 34.
-Right: per-family recovery of the detector-driven gate against the oracle; families above the diagonal are those whose glitches outlast the oracle's $0.8\,\mathrm{s}$ window (green: held-out).}
-\label{fig:oracle}
-\end{figure}
-
-\subsection{Cost of a false gate}
-\label{sec:results-cleangate}
-
-On $N=1{,}000$ clean stationary Gaussian draws coloured by the on-source ASD, the detector fires on $46/1000=4.6\%$ of crops at the validation threshold $0.46$ (Clopper--Pearson 95\% interval $[3.39\%,6.09\%]$) and on $0/1000$ at the event threshold $0.73$ ($[0,0.37\%]$).
-The two seeds contribute $26/500$ and $20/500$ at $0.46$, and neither fires at $0.73$.
-Off-source GWOSC crops are a different population: $434/500=86.8\%$ fire at $0.73$ ($[83.5\%,89.6\%]$), because those segments are non-stationary relative to the fixed on-source ASD.
-That rate is why gating is tied to an estimated $\rho_w$ rather than to every threshold crossing (Section~\ref{sec:deploy}).
-When a gate is forced onto clean GW170817 data, $23/25$ cells still meet the recovery criterion.
-The largest $\dL$ JS divergence is $0.24\,\mathrm{nat}$, against a clean-versus-clean floor of $0.04\,\mathrm{nat}$ at $n=512$, and it occurs when the forced gate straddles coalescence.
-The mean absolute median shift is $3.8\,\mathrm{Mpc}$.
-That is a bounded cost, not a collapse.
-
-\subsection{Runtime}
-\label{sec:results-runtime}
-
-Component times on CPU, 200 iterations after warm-up, are STFT $4.71\,\mathrm{ms}$, the network and dilation $1.96\,\mathrm{ms}$, and the matched-delta rebuild $10.15\,\mathrm{ms}$.
-The front-end total has median $16.87\,\mathrm{ms}$ and 95th percentile $19.03\,\mathrm{ms}$.
-\texttt{GWSamplerGNPE} takes $0.408\,\mathrm{s}$ for 512 samples ($n=200$) and $10.72\,\mathrm{s}$ for $2\times10^{4}$ samples ($n=10$).
-The $3.16\,\mathrm{s}$ figure from the hardening driver is injection and file I/O, not the front-end.
-The front-end median of $16.9\,\mathrm{ms}$ and the $10.7\,\mathrm{s}$ required for a $2\times10^{4}$-sample importance-sampling draw~\cite{Chaudhary2024latency,Morisaki2023rapid} are component times.
-Section~\ref{sec:deploy} records why these component times are not a low-latency result for this checkpoint.
+The network draws $2\times10^{4}$ samples in about $10.7\,\mathrm{s}$.
+The gated likelihood on the uniform grid costs $96$--$97\,\mathrm{ms}$ of wall time per sample on \HARDWARE, so $10^{4}$ samples take about 16 minutes.
+DINGO's own importance sampling avoids most of this cost with multibanding and phase heterodyning~\cite{Dax2025bns}; the gate correction needs the uniform grid, because the gate acts in the time domain.
+The per-sample correction itself is one length-$N$ inverse FFT and one triangular solve.
 
 %% =====================================================================
 \section{Discussion}
 \label{sec:discussion}
 %% =====================================================================
 
-\subsection{Why the recipe works}
-\label{sec:why}
+\paragraph{What the method adds.}
+On real glitches the recovery count barely moves: 32/41 against 31/41 for the network alone.
+What changes is that each answer comes with a decision that can be made without knowing the truth.
+A trusted gated result is an importance-sampled posterior under a likelihood that ignores the gated data, and in this study it was right 66 times in 68.
+An untrusted result is a request for more samples or a slower method, and in this study the fast answer it replaced was wrong 41 times in 42.
+For a frozen network that cannot see its own failure, that separation is the useful output.
+The comparison with ordinary importance sampling also matters in practice: reweighting gated data with the ungated likelihood, which is what an off-the-shelf pipeline would do, was worse than the network alone on the damaged cells at both pads.
 
-The collapse is what a flow does when its input leaves the distribution on which it was trained.
-Luminosity distance is inferred largely from the signal amplitude relative to the whitening spectrum, so excess power moves that marginal to a prior boundary and the credible interval shrinks around the wrong value.
-Where the glitch sits in the segment does not matter (Section~\ref{sec:results-threshold}); the frequency band in which it places its power does.
-Koi-Fish glitches concentrate broadband power between $30$ and $300\,\mathrm{Hz}$, where most of the BNS signal-to-noise ratio also lies, and they therefore collapse the network at a lower $\rho_w$ than the sine-Gaussians and broadband bursts used in the sweep.
-The raw samples give no indication that this has happened.
-Importance sampling does~\cite{Dax2023is}: on the raw Livingston frame the gated sampling efficiency is $5\times10^{-5}$, and the distance remains at $11.4\,\mathrm{Mpc}$ because there is no other proposal mass to promote.
-Gating removes the offending time support, but the network accepts the result only if the package is rewritten in a way it recognises.
-A fresh \texttt{data\_to\_domain} package fails on both sides of the $+2\,\mathrm{s}$ shift (Section~\ref{sec:results-ablation}).
-Matched-delta (Eq.~\eqref{eq:matched-delta}) adds only the gate residual to the original package, so the packaging convention cancels and the original noise realization remains.
-A Welch spectrum recomputed on the gated segment encodes the gate itself and likewise leaves the training support~\cite{Wildberger2023psd,Chatziioannou2019psd}.
-For this checkpoint, the packaged input should be corrected rather than derived again.
-The experiments do not show that a different network would be limited by the same residual.
+\paragraph{Why it fails where it fails.}
+\Cref{eq:gated} is exact for Gaussian noise outside the gate, so failures come from the proposal.
+The network, trained on ungated data, sees a hole where signal should be; the closer and longer the hole is to merger, the further its proposal moves from the gated posterior.
+This is visible directly in \cref{tab:forced}: the distance is right in 9/10 cells at $\pm0.4\,\mathrm{s}$, but the weights rest on too few samples to be trusted.
+More samples help only while the proposal still covers the posterior; the network cannot be asked for mass it does not put there.
+A broader proposal (for example, a tempered network density or a mixture with the prior) would trade efficiency on easy cells for coverage on hard ones.
 
-\subsection{Failure modes}
-\label{sec:failures}
+\paragraph{Limitations.}
+The study uses one event and one checkpoint, with the sky fixed, so localisation and other networks are untested.
+The real glitches are O3 Hanford excerpts recoloured into GW170817 data, which removes the noise that accompanied them; the Extremely Loud class, which dominates the loud tail of the O3 catalogue, was not injected.
+The criteria are coarse and distance-based, and the clean reference has $10^{4}$ samples.
+The pre-registered efficiency criterion for $\pm0.4\,\mathrm{s}$ gates failed.
+Nine excerpts (five scattered-light, three tomte and one blip, all with Omicron SNR below 35) became usable only in the final version of the real-glitch panel, after a change in the glitch-only extraction; they are included.
+The method relies on the localiser; scattered-light arches, which it mostly misses, rarely damage this network, but a longer-duration glitch class would need a different gate.
+Finally, the cost of minutes per event removes the main advantage of a neural sampler; it is the price of an answer that can be checked.
 
-The residual failures come from the duration of the gate rather than from detections that were missed (Section~\ref{sec:results-oracle}).
-Scattered-light arches are long and concentrated at low frequency, so both the detector-driven gate and the centred oracle leave power in the segment; the oracle, whose window cannot grow, recovers only $23\%$ of that family.
-Widening every gate by a fixed amount would retain more of those arches and would also remove more signal from compact bursts, for which the centred window already outperforms the dilated one.
-A later version could set the gate from the measured excess, or pass the long, low-frequency events to wavelet subtraction~\cite{Cornish2015bayeswave,Hourihane2022overlap}.
-
-\subsection{Relation to likelihood-based mitigation and retraining}
-\label{sec:compare}
-
-BayesWave remains appropriate when a likelihood can be evaluated and latency is not the constraint~\cite{Davis2022subtract,Ghonge2024efficacy}, and retraining the flow is appropriate when the training pipeline is available~\cite{Sun2024ttsf,Xiong2025robust}.
-The probe leaves the checkpoint frozen, and its added cost is a few tens of milliseconds.
-A learned subtraction could replace the gate itself~\cite{Dooney2025deepextractor,Mogushi2021nnetfix}, but the repaired strain would still have to be inserted by matched-delta while retaining the original spectrum.
-Glitches that are long, coherent across detectors, or of an unfamiliar morphology are better handled by a joint signal--glitch sampler~\cite{Malz2025joint}.
-
-\subsection{Limitations}
-\label{sec:limits}
-
-The real-glitch panel recolours an O3 excerpt into the GW170817 segment, which removes the noise that originally accompanied the glitch.
-The noise-only controls check one side of that procedure and not the other.
-The loudest bin contains five Koi-Fish triggers, and the Extremely Loud class, which accounts for $89\%$ of the O3 tail above SNR 300, was not injected.
-Because the sky position is fixed, localization is untested.
-Section~\ref{sec:results-rawl1} supplies the other boundary: a time-domain gate does not repair a frame whose spectrum below $30\,\mathrm{Hz}$ disagrees with the analysis amplitude spectral density.
-Most panel cells are not importance-sampled~\cite{Dax2023is}.
-On the cells that are, the gated efficiency is comparable to the clean efficiency.
-The detector was trained on the same generator used for the held-in families, and the reported times come from the research driver rather than from a deployed pipeline.
-
-\subsection{Fundamental limitations for low-latency deployment}
-\label{sec:deploy}
-
-For this checkpoint, the samples are not safe to release on an uncleaned alert path.
-The raw Livingston frame is not recovered once the spectrum below $30\,\mathrm{Hz}$ disagrees with the analysis ASD (Section~\ref{sec:results-rawl1}), and off-source GWOSC segments fire at $86.8\%$ at threshold $0.73$ against the fixed on-source spectrum.
-Three measured conditions remain unmet.
-The analysis spectrum must describe the frame through the seismic wall.
-A counterpart search depends on sky localization, which this checkpoint does not sample~\cite{Singer2016bayestar}.
-The false-trigger rate that is consistent with zero, $0/1000$ at threshold $0.73$, was obtained from stationary Gaussian draws coloured by the on-source spectrum, not from the off-source segments an alert system would see.
-Gating is informative only for an excess whose estimated $\rho_w$ is at least a few hundred: below that loudness the network does not collapse, and a gate can only discard signal.
-At the validation threshold of $0.46$ the Gaussian false-trigger rate is already $4.6\%$.
-Recording the detector probability, the gate window, and the provenance of the spectrum alongside the samples would make a later audit possible~\cite{Davis2022subtract}.
-These limits belong to this checkpoint.
-They are not a result for every neural posterior.
+\paragraph{Outlook.}
+The cost can be reduced: the gate affects only frequencies near the glitch's band and times near the gate, so a heterodyned or multibanded form of \cref{eq:gated} should be possible.
+A network trained with random gates, for which the gated package is in distribution, would raise the efficiency, and the gated likelihood would still provide the exact correction.
 
 %% =====================================================================
 \section{Conclusion}
 \label{sec:conclusion}
 %% =====================================================================
 
-The audit of the sky-fixed GW170817 checkpoint finds that a sufficiently loud glitch drives the luminosity-distance posterior to a prior boundary.
-Raw samples do not reveal the failure.
-Importance sampling does reveal it, and does not undo it.
-No glitch tested here produces that collapse below $\rho_w\approx100$.
-The collapses that do occur are Koi-Fish excerpts at high Omicron SNR, five triggers in the loudest bin, rather than the $11\%$ O3 tail, most of which is the untested Extremely Loud class.
-On the runs that had collapsed, the probe restores $17/17$ (Wilson interval $[81.6\%,100\%]$), preserves $181/183$ cells and $60/61$ unique glitches under cluster resampling, and keeps all 15 sampled parameters within a median Jensen--Shannon divergence of $0.016\,\mathrm{nat}$ of the clean neural posterior.
-This is a restoration of that clean run, not a calibration to the injected parameters: synthetic coverage of $\theta_{JN}$ and $\dL$ is already below its nominal level before a gate is applied.
-The form of the write-back determines whether the restoration succeeds.
-Matched-delta reconstruction with the original spectrum recovers $13/16$ hardening cells, while an official \texttt{data\_to\_domain} package of the gated strain recovers none, with or without the $+2\,\mathrm{s}$ shift.
-The same gate on unsubtracted GWOSC Livingston data does not recover the BayesWave posterior, because the frames disagree below $30\,\mathrm{Hz}$.
-On the injected grids, the remaining failures are a matter of gate duration rather than of missed detections.
-While this study rigorously validates the matched-delta recovery for the fixed-sky GW170817 model, future work must evaluate whether this robustness generalizes to other DINGO checkpoints, such as full 17-parameter sky-varying BNS or BBH networks.
-A later network aimed at raw frames would have to be trained on non-stationary low-frequency noise and on the packaging convention it will actually see.
-This paper does not test that network.
-The accompanying software reproduces the reported numbers.
+A frozen neural posterior estimator cannot be told that a glitch has been removed, and ordinary importance sampling of gated data scores the gate as data.
+Reweighting the network's samples with the gated Gaussian likelihood, written in DINGO's own convention, gives an answer that is exact when the effective sample size is large and is refused when it is not.
+On the public \DINGOBNS GW170817 checkpoint, with real O3 glitches, trusted results passed in 66 of 68 analyses, the network alone passed in 1 of the 42 analyses the rule refused, and ordinary importance sampling was worse than no reweighting.
+The method reproduces the BayesWave-cleaned GW170817 posterior from the unsubtracted Livingston frame.
+Short gates near merger are handled, and long gates near merger are declined rather than answered wrongly.
+The code, tests, pre-registration documents and archived results are public.
 
+\section*{Data and code availability}
+Open strain data are from the Gravitational Wave Open Science Center~\cite{Abbott2021opendata,Abbott2023opendata}.
+The \DINGOBNS checkpoint is from the DINGO release~\cite{Dax2025bns}; we use \texttt{dingo-gw} at commit \texttt{fede5c01}.
+Gravity Spy O3 classifications are from Zenodo record 5649212~\cite{Glanzer2023gravityspy}.
+Code, unit tests, pre-registration documents (\texttt{docs/STAGE2\_CRITERIA.md}, \texttt{docs/STAGE3\_PLAN.md}, \texttt{docs/STAGE3B\_PLAN.md}) and archived results are at \url{https://github.com/Jayant-Kumar17/glitch-robust-dingo-bns} and archived on Zenodo (\url{https://doi.org/10.5281/zenodo.22844460}).
+Release v1.2.0 and earlier contain the packaging error described in \cref{sec:convention} and are superseded.
+Figures~\ref{fig:collapse}--\ref{fig:real} are produced by \texttt{paper/scripts/make\_figures.py} from the archived reports.
 
-\section*{CRediT authorship contribution statement}
-\textbf{Jayant Kumar:} Conceptualization, Methodology, Software, Validation, Formal analysis, Investigation, Data curation, Writing (original draft), Writing (review \& editing), Visualization.
-
-\section*{Declaration of competing interest}
-The author declares that he has no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper.
-
-\section*{Data availability}
-Open strain data are available from the Gravitational Wave Open Science Center~\cite{Abbott2021opendata,Abbott2023opendata}.
-The \DINGOBNS demonstration model is obtained from the upstream DINGO release~\cite{Dax2025bns}.
-Source code, the STFT detector checkpoint, and archived result summaries for this study are openly available at \url{https://github.com/Jayant-Kumar17/glitch-robust-dingo-bns}.
-The archive for every release, including v1.2.0, is the Zenodo concept DOI \url{https://doi.org/10.5281/zenodo.22844460}.
-Every number in the tables is read from the archived JSON and CSV summaries under \texttt{results/}, and Figs.~\ref{fig:pipeline}--\ref{fig:multiparam} are regenerated from them by \texttt{paper/make\_figures.py} and \texttt{examples/paper\_figures\_2\_3.py}.
-The Gravity Spy O3 classifications are from Zenodo record 5649212~\cite{Glanzer2023gravityspy}.
-
-\section*{Funding}
-This work received no external funding.
+\section*{Use of AI tools}
+AI assistants (Cursor and Anthropic's Claude) were used to write and test software and to draft and edit text.
+The author ran all analyses, checked the results against the archived outputs, and is responsible for the content.
 
 \section*{Acknowledgements}
 This research has made use of data or software obtained from the Gravitational Wave Open Science Center (\url{https://gwosc.org}), a service of the LIGO Scientific Collaboration, the Virgo Collaboration, and KAGRA.
 This material is based upon work supported by NSF's LIGO Laboratory, which is a major facility fully funded by the National Science Foundation.
-The author thanks the DINGO developers for releasing the \DINGOBNS demonstration checkpoint and the Gravity Spy project for the O3 classifications used here.
+The author thanks the DINGO developers for releasing the \DINGOBNS checkpoint and the Gravity Spy project for the O3 classifications.
+Software used: DINGO, Bilby~\cite{Ashton2019bilby}, PyCBC~\cite{Usman2016pycbc}, GWpy~\cite{Macleod2021gwpy}, NumPy~\cite{Harris2020numpy}, SciPy~\cite{Virtanen2020scipy}, PyTorch~\cite{Paszke2019pytorch}.
 
 \appendix
+\section{Discrete normalisation of the correction}
+\label{app:norm}
 
-\section{Glitch family parameter ranges}
-\label{app:glitch}
+Let $a_k=\sigma_n\mathrm{ASD}(f_k)/s$ be the whitening factor on the package grid, normalised by its in-band median $s$ (the correction is invariant to $s$), and $r_{w,k}$ the whitened residual.
+We set $c_k = 1/a_k^2$ in band and $c_k=\epsilon\,\mathrm{median}_{\mathrm{band}}(c)$ out of band, with $c_0=c_{N/2}=0$, and define with NumPy's real-FFT conventions
+\begin{equation}
+\tilde u = \mathrm{irfft}\!\left(\frac{r_{w,k}}{a_k}\, e^{+2\pi i f_k t_b}\,\mathbb{1}_{\mathrm{band}}\right),
+\qquad
+K = \mathrm{irfft}(c), \qquad (P_{GG})_{jl} = K_{|j-l|_N},
+\end{equation}
+where $|j-l|_N=\min(|j-l|,N-|j-l|)$.
+With $P_{GG}=LL\T$ and $y=L^{-1}\tilde u_G$, the correction in \cref{eq:gated} is
+\begin{equation}
+\tfrac12\, u_G\T P_{GG}^{-1}u_G = \tfrac{N}{4}\, y\T y .
+\end{equation}
+The factor $N/4=\tfrac12\cdot\tfrac N2$ converts NumPy's inverse-FFT normalisation of $\tilde u$ and $K$ into the whitened sum of \cref{eq:whittle}.
+It is verified by a unit test against a dense evaluation of $-\tfrac12 r_O\T C_{OO}^{-1} r_O$ with the same regularised spectrum.
 
-Held-in families, used for detector training and primary evaluation, are \texttt{sine\_gaussian}, \texttt{broadband\_burst}, \texttt{whistle}, \texttt{scattered\_light}, and \texttt{glitch\_train}.
-Held-out families reserved for generalization tests are \texttt{ringing}, \texttt{double\_blip}, and \texttt{narrowband\_tone}.
-Each draw samples a relative peak time within the analysis crop, an in-band severity, and family-specific shape parameters (central frequency, quality factor, chirp rate, envelope duration, or inter-blip delay) from broad uniform or log-uniform ranges implemented in \texttt{adapt.glitch\_augmentation}.
-Injections are added to a single interferometer's time-domain strain and propagated to the frequency-domain package with the configured ASD policy.
-Exact sampling ranges are versioned in the accompanying repository configuration files.
-
-\section{STFT detector architecture and training}
-\label{app:detector}
-
-The detector is a convolutional encoder over whitened spectrograms of shape $(B,C,T,F)$ with $T=32$, $F=128$, and $C$ equal to the number of interferometer channels in the stack; the spectrogram geometry (FFT length 2048, window 1024, hop 256 samples at $4096\,\mathrm{Hz}$, linear interpolation of the 1025 real-FFT bins onto 128 bins over $20$--$512\,\mathrm{Hz}$, and resampling of the time axis to 32 bins over the $\approx4\,\mathrm{s}$ crop) is stored in the checkpoint and read back at inference time.
-A stem convolution (32 base channels) is followed by two residual-style blocks that pool only along frequency, preserving time alignment; a $1\times 1$ convolution then emits per-interferometer time-bin logits.
-The final bias is initialized to $-4$ so that a randomly initialized network is silent on clean data.
-Training uses binary cross-entropy with positive-bin weight $3.0$, Adam at learning rate $10^{-3}$, batch size 16, 100 steps per epoch, and of order 20--30 epochs.
-Thresholds are calibrated on a clean-containing calibration set to a target false-positive rate of $0.01$.
-The released checkpoint reports a best validation score of $\approx 0.77$ at threshold $\approx 0.46$; event-level analyses optionally raise the threshold (e.g.\ $\approx 0.73$ on the GW170817 grid) after a per-event clean audit.
-
-\section{Reproduction commands}
+\section{Reproduction}
 \label{app:repro}
-
-With the official \DINGOBNS demonstration assets and the released detector checkpoint installed,
+With the \DINGOBNS assets installed and \texttt{PYTHONPATH=src:examples}:
 \begin{verbatim}
-conda activate adapt_env
-pip install -e .
-export PYTHONPATH=src:examples
-export KMP_DUPLICATE_LIB_OK=TRUE
-
-python -u examples/official_control.py \
-  --outdir results/dingo_official_control
-python -u examples/honest_excision.py \
-  --outdir results/excision_honest
-python -u examples/stress_gw170817.py \
-  --seed 0 --n-seeds-per-cell 5 \
-  --num-samples 512 --outdir results/stress_test_excision_v1
-python -u examples/stress_synthetic_bns.py \
-  --outdir results/stress_test_synthetic_bns_v1
-python -u examples/method_hardening.py \
-  --num-samples 512 \
-  --outdir results/journal_method_hardening_v1
-python -u examples/clean_gate_control.py \
-  --outdir results/clean_gate_control_v1
-python -u examples/collapse_threshold.py --seed 0 \
-  --num-samples 512 --n-seeds 5 \
-  --outdir results/collapse_threshold_v1
-python -u examples/collapse_threshold.py --extend-low-rho \
-  --outdir results/collapse_threshold_v1
-python -u examples/stress_real_glitches.py --seed 0 \
-  --num-samples 512 --outdir results/stress_real_glitches_v2
-python -u examples/reanalyze_cluster_stats.py
-python -u examples/latency_and_fp_audit.py \
-  --skip-pe --skip-timing --skip-offsource --n-gauss 1000
-python -u examples/method_hardening.py --profile v2 \
-  --num-samples 512 --batch-size 512 \
-  --arms dingo_repackage_aligned inpaint_repackage_aligned \
-  --outdir results/journal_method_hardening_v2
-python -u examples/gw170817_raw_l1.py --num-processes 2 \
-  --strain-hdf5 /path/to/L-L1_GWOSC_4KHZ_R1-1187006835-4096.hdf5 \
-  --outdir results/gw170817_raw_l1
-python -u examples/multi_param_validation.py --num-processes 2 \
-  --outdir results/multi_param_validation_v1
-python -u examples/loudness_audit.py \
-  --outdir results/loudness_audit_v1
+bash scripts/run_phase_b.sh      # forced gates, gate tolerance
+bash scripts/run_phase_c.sh      # localiser audit, real glitches, sweep, raw L1
+bash scripts/run_stage2.sh       # likelihood checks, forced-gate gated IS
+bash scripts/run_stage3.sh       # real-glitch gated IS (110 analyses)
+bash scripts/run_stage3b.sh      # untrusted cells with more samples
+python paper/scripts/make_figures.py
 \end{verbatim}
-Archived summaries under \texttt{results/*/} are the numerical source for Tables~\ref{tab:real}--\ref{tab:ablation}.
+Each script runs the unit tests first and writes a report under \texttt{results/} from which every number in this paper is taken.
 
-%% =====================================================================
-%% Bibliography
-%% =====================================================================
-\bibliographystyle{elsarticle-num}
+\bibliographystyle{unsrtnat}
 \bibliography{refs}
 
 \end{document}
