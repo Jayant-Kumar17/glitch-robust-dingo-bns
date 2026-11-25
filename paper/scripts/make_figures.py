@@ -114,7 +114,7 @@ def fig_collapse():
     b.set_xscale("log")
     b.set_ylim(0, 1.04)
     b.set_xlabel("injected $\\rho_w$ (synthetic sweep)")
-    b.set_title("Loudness sweep, 139 cells", loc="left", color=INK)
+    b.set_title("Loudness sweep, 138 cells", loc="left", color=INK)
     b.legend(frameon=False, loc="upper left")
     tag(b, "(b)")
     fig.savefig(OUT / "fig2_collapse.pdf")
@@ -143,7 +143,7 @@ def fig_tolerance():
     a.minorticks_off()
     a.set_ylim(0, 1.04)
     a.set_xlabel("gate half-width (s)")
-    a.set_ylabel("recovered fraction (network alone)")
+    a.set_ylabel("fraction passing (network alone)")
     a.set_title("Network alone, 20 cells per point", loc="left", color=INK)
     a.legend(frameon=False, loc="upper center", bbox_to_anchor=(0.5, -0.24), fontsize=6.5, ncol=1, handlelength=2.2)
     tag(a, "(a)")
@@ -152,8 +152,8 @@ def fig_tolerance():
     groups = ["$\\pm$0.2 s", "$\\pm$0.4 s", "$\\pm$0.8 s"]
     vals = {
         "network alone": ([8, 3, 0], GREY),
-        "naive IS": ([8, 3, 0], ORANGE),
-        "gated IS, $d_L$ recovered": ([10, 9, 5], "#9cc0ec"),
+        "ordinary IS": ([8, 3, 0], ORANGE),
+        "gated IS, $d_L$ passes": ([10, 9, 5], "#9cc0ec"),
         "gated IS, trusted ($n_{\\rm eff}\\geq100$)": ([9, 3, 0], BLUE),
     }
     nb = len(vals)
@@ -185,8 +185,8 @@ def fig_stage3():
     n = [41, 41, 14, 14]
     vals = {
         "network alone": ([31, 25, 0, 0], GREY),
-        "naive IS": ([29, 21, 0, 0], ORANGE),
-        "gated IS (trusted and recovered)": ([32, 30, 4, 0], BLUE),
+        "ordinary IS": ([29, 21, 0, 0], ORANGE),
+        "gated IS (trusted and passes)": ([32, 30, 4, 0], BLUE),
     }
     untrusted = [8, 10, 10, 14]
     fig, (a, b) = plt.subplots(1, 2, figsize=(W, 2.9), gridspec_kw={"width_ratios": [1.6, 1], "wspace": 0.3})
@@ -201,26 +201,34 @@ def fig_stage3():
     a.set_ylim(0, 1.0)
     a.set_yticks([0, 0.25, 0.5, 0.75, 1.0])
     a.tick_params(axis="x", labelsize=6.8)
-    a.set_ylabel("recovered fraction")
+    a.set_ylabel("fraction passing")
     a.set_title("110 real-glitch cells", loc="left", color=INK)
-    a.legend(frameon=False, loc="upper center", bbox_to_anchor=(0.5, -0.3), fontsize=6.5, ncol=3, handlelength=1.2, columnspacing=0.9)
+    a.legend(frameon=False, loc="upper left", bbox_to_anchor=(-0.02, -0.3), fontsize=6.3, ncol=3, handlelength=1.0, columnspacing=0.6)
     tag(a, "(a)")
 
-    # trust-flag reliability (crosstab over all 110 cells)
-    rows = [("trusted\n68 cells", 66, 2, "gated IS passes", "fails"),
-            ("untrusted\n42 cells", 1, 41, "network alone passes", "fails")]
-    for y, (lab, ok, bad, l1, l2) in zip([1, 0], rows):
-        tot = ok + bad
-        b.barh(y, ok / tot, color=BLUE if y == 1 else GREY, height=0.5, edgecolor="white", linewidth=1.0, zorder=2)
-        b.barh(y, bad / tot, left=ok / tot, color="#f3c2ad", height=0.5, edgecolor="white", linewidth=1.0, zorder=2)
-        b.text(0.02, y + 0.33, f"{l1}: {ok}/{tot}", fontsize=6.8, color=INK, va="bottom")
-    b.set_yticks([1, 0], [r[0] for r in rows], fontsize=7)
+    # each method judged by its own n_eff >= 100 flag, damaged cells (REVISION_REPORT.md section 1)
+    rows = [("gated IS\n82 analyses", 62, 2, 18), ("ordinary IS\n82 analyses", 50, 31, 1),
+            ("ungated IS\n38 cells", 0, 3, 35)]
+    ys = [2, 1, 0]
+    for y, (lab, tp, tf, ref) in zip(ys, rows):
+        tot = tp + tf + ref
+        left = 0.0
+        for val, col in ((tp, BLUE), (tf, "#e34948"), (ref, "#c9c8c3")):
+            b.barh(y, val / tot, left=left, color=col, height=0.55, edgecolor="white", linewidth=1.0, zorder=2)
+            if val / tot > 0.06:
+                b.text(left + val / tot / 2, y, str(val), ha="center", va="center", fontsize=6.8,
+                       color="white" if col != "#c9c8c3" else INK)
+            left += val / tot
+    b.set_yticks(ys, [r[0] for r in rows], fontsize=6.8)
     b.set_xlim(0, 1)
-    b.set_ylim(-0.5, 1.75)
-    b.set_xlabel("fraction of cells")
-    b.set_title("Trust flag", loc="left", color=INK)
-    b.text(0.6, 0, "fails", ha="center", va="center", fontsize=6.8, color=INK)
+    b.set_ylim(-0.6, 2.6)
+    b.set_xlabel("fraction (damaged cells)")
+    b.set_title("Own-flag outcomes", loc="left", color=INK)
     b.grid(axis="y", visible=False)
+    from matplotlib.patches import Patch
+    b.legend(handles=[Patch(color=BLUE, label="trusted, passes"), Patch(color="#e34948", label="trusted, fails"),
+                      Patch(color="#c9c8c3", label="refused")], frameon=False, fontsize=6.3,
+             loc="upper left", bbox_to_anchor=(-0.05, -0.27), ncol=1, handlelength=1.0)
     tag(b, "(b)")
     fig.savefig(OUT / "fig4_real_glitches.pdf")
     plt.close(fig)
