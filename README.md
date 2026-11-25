@@ -4,32 +4,28 @@
 [![CITATION.cff](https://img.shields.io/badge/cite-CITATION.cff-blue)](CITATION.cff)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-This repository provides the software accompanying a methods study on restoring
-[DINGO-BNS](https://github.com/dingo-gw/dingo) posterior inference in the presence
-of short-duration transient glitches, without retraining the neural posterior
-estimator.
+This repository accompanies the paper *Gate-aware importance sampling for a frozen neural binary neutron star posterior in the presence of glitches*.
 
-**Summary.** The frozen official DINGO-BNS network is robust to ordinary
-glitches: **0% collapse below Omicron SNR 100**. Collapse reaches **60% for
-Koi Fish at SNR ≥ 300**, a regime that contains **11% of confident O3 H1
-Gravity Spy triggers**. A detect–gate–rebuild front-end restores clean-like
-posteriors in **99% of 183 real-glitch cells** (including every collapsed
-one) without retraining. A synthetic loudness sweep places 50% collapse at
-**ρ_w ≈ 2.7×10³**. On a 240-cell GW170817 grid and a 160-cell synthetic BNS
-panel, gated recovery is 86% and 92%. Ablations show the reconstruction
-step is load-bearing: full FFT replacement recovers 0%. Archived result
-directories are linked in [Results at a glance](#results-at-a-glance).
+**Summary.** The public DINGO-BNS GW170817 checkpoint is left frozen. A glitch is gated out, and the network samples are reweighted with the gated Gaussian likelihood, written as a correction to DINGO's own likelihood. A draw is trusted only when its effective sample size is at least 100. The paper audits that rule on real O3 Gravity Spy glitches at their native loudness, including a 10⁵-sample redraw of the cells that were untrusted at 10⁴ samples.
 
-When the analysis segment is contaminated by a transient, official DINGO-BNS
-posteriors can collapse (most conspicuously in luminosity distance). The
-procedure implemented here is a preprocessing front-end applied to the event
-data package prior to sampling:
+arXiv: (to be added)
 
-1. detection of candidate glitch intervals;
-2. Tukey gating in the time domain;
-3. frequency-domain reconstruction via a matched-delta update;
-4. retention of the original analysis amplitude spectral densities (ASDs);
-5. sampling with the frozen official DINGO-BNS model.
+## Reproducing the paper
+
+The runs reported in the manuscript are launched by:
+
+- `scripts/run_phase_b.sh`
+- `scripts/run_phase_c.sh`
+- `scripts/run_stage2.sh`
+- `scripts/run_stage3.sh`
+- `scripts/run_stage3b.sh`
+- `scripts/run_revision.sh`
+
+Figures and the number macros are produced by `paper/scripts/make_figures.py`, `paper/scripts/make_trust_scatter.py`, and `paper/scripts/paper_numbers.py`.
+
+## Superseded releases
+
+v1.2.0 and earlier contain a packaging-convention error (a missing +2 s cyclic time shift) that made the reported gate recoveries artefacts. Use v2.0.0 or later.
 
 Scientific scope and summary metrics are given in [`paper/SCOPE.md`](paper/SCOPE.md).
 The precise relationship to stock DINGO-BNS inference is specified in
@@ -247,10 +243,9 @@ from adapt.dingo_bns_demo import discover_assets, run_baseline_sampling
 
 ## Citation
 
-Manuscript submitted to *Astronomy and Computing* (Elsevier).
+Title: *Gate-aware importance sampling for a frozen neural binary neutron star posterior in the presence of glitches*.
 
-Provisional title: *Transient-glitch resilience in neural gravitational-wave
-parameter estimation without network retraining*.
+arXiv: (to be added)
 
 Software citation metadata is in [`CITATION.cff`](CITATION.cff) (GitHub renders
 a "Cite this repository" button from it). The archived snapshot is

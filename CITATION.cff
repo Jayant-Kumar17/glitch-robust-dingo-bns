@@ -4,21 +4,21 @@ message: >-
   the accompanying article when it is published.
 type: software
 title: >-
-  Transient-glitch resilience in neural gravitational-wave parameter estimation
-  without network retraining (glitch-robust-dingo-bns)
+  Gate-aware importance sampling for a frozen neural binary neutron star
+  posterior in the presence of glitches
 abstract: >-
-  Preprocessing front-end that restores frozen DINGO-BNS posterior inference in
-  the presence of short-duration transient glitches: STFT glitch detection,
-  Tukey gating, matched-delta frequency-domain reconstruction, and retention of
-  the original analysis ASDs. Includes the trained glitch detector, experiment
-  drivers, and archived result summaries.
+  Reweights samples from a frozen DINGO-BNS checkpoint with the gated Gaussian
+  likelihood, and trusts a result only when the effective sample size is at
+  least 100. Audits that rule on the public GW170817 checkpoint with real
+  Gravity Spy glitches. Supersedes v1.2.0, whose gate recoveries were artefacts
+  of a missing +2 s cyclic time shift.
 authors:
-  - family-names: Kumar
-    given-names: Jayant
+  - family-names: Haresh
+    given-names: Jayant Kumar
     email: j.kumar16224@kgs.edu.pk
     affiliation: Karachi Grammar School, Karachi, Pakistan
-version: 1.1.2
-date-released: "2026-11-03"
+version: 2.0.0
+date-released: "2026-11-25"
 doi: 10.5281/zenodo.23912594
 identifiers:
   - type: doi
@@ -37,14 +37,13 @@ keywords:
 references:
   - type: article
     title: >-
-      Transient-glitch resilience in neural gravitational-wave parameter
-      estimation without network retraining
+      Gate-aware importance sampling for a frozen neural binary neutron star
+      posterior in the presence of glitches
     authors:
-      - family-names: Kumar
-        given-names: Jayant
-    journal: Astronomy and Computing
+      - family-names: Haresh
+        given-names: Jayant Kumar
     year: 2026
-    notes: submitted
+    notes: "arXiv: (to be added)"
   - type: article
     title: Real-time inference for binary neutron star mergers using machine learning
     authors:

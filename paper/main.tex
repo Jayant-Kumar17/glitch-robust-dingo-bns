@@ -41,7 +41,7 @@
 \newcommand{\tp}{^{\mathsf{T}}}
 
 %% =====================================================================
-%% STAGE 3b SWITCH.  Leave \stagethreebfalse until Stage 3b has finished.
+%% STAGE 3b SWITCH (Stage 3b results are included).
 %% =====================================================================
 \newif\ifstagethreeb
 \stagethreebtrue
@@ -55,7 +55,7 @@
 \newcommand{\HARDWARE}{a 10-core Apple M5 CPU}
 
 %% =====================================================================
-%% Numbers produced by paper/scripts/paper_numbers.py (Table 3, runtimes,
+%% Numbers produced by paper/scripts/paper_numbers.py (runtimes,
 %% eps check).  Placeholders below are used only until that file exists.
 %% =====================================================================
 \IfFileExists{generated/numbers.tex}{\input{generated/numbers.tex}}{}
@@ -82,19 +82,15 @@
 \affiliation{Karachi Grammar School, Plot ST-19, Khayaban-e-Saadi, Clifton Block 5, Karachi 75600, Pakistan}
 
 \begin{abstract}
-Neural posterior estimators for gravitational-wave inference are trained on stationary Gaussian noise, and a frozen checkpoint cannot be retrained when a glitch overlaps a signal.
-Gating the glitch out is the standard remedy, but the network then sees an input unlike its training data, and the usual importance-sampling correction evaluates a likelihood that treats the gated samples as real, zero-valued data.
-We reweight the frozen network's samples instead with the gated Gaussian likelihood, which marginalises over the gated samples.
-We write it as a correction to DINGO's own likelihood in DINGO's packaging convention, and let the effective sample size decide whether a result is trusted.
-We test the method on the public \DINGOBNS checkpoint for GW170817, which fixes the sky and samples 15 parameters, with real O3 Gravity Spy glitches transplanted at their native whitened loudness.
-On the 41 cells where a glitch damages the luminosity-distance posterior, trusted gated importance sampling passes the distance criterion in 32 with a $0.1\,\mathrm{s}$ gate pad (78\%; 95\% interval 63--88\%), and in 37 (90\%) when the cells untrusted at $10^{4}$ samples are redrawn with $10^{5}$; the network alone passes in 31 and ordinary importance sampling in 29.
-The gain is in reliability rather than count.
-Over both pads, 62 of 64 trusted gated results on damaged cells pass (97\%; glitch-level bootstrap interval 88--100\%), whereas ordinary importance sampling of the gated data passes its own efficiency check in 81 of 82 analyses but is right in only 50, and importance sampling of the ungated data refuses 35 of 38 cells and is wrong in the other three.
-On 140 cells that the glitch left intact, the method refuses one and is right in the other 139.
-For trusted results, the median Jensen--Shannon divergence from the clean posterior is at the sampling floor in every parameter examined, including the tidal deformability.
-Gates of $\pm0.2\,\mathrm{s}$ centred $0.2$--$2\,\mathrm{s}$ before merger are handled; at $\pm0.4\,\mathrm{s}$ only 3 of 10 cells are trusted with $10^{4}$ samples, and at $\pm0.8\,\mathrm{s}$ none.
-On the unsubtracted GW170817 Livingston data the method reproduces the BayesWave-cleaned posterior with a sample efficiency of 10.7\%.
-A complete analysis with $10^{4}$ samples took a median of 2.7 minutes on a 10-core CPU, against $9\,\mathrm{s}$ to draw the same number of samples from the network alone.
+Neural posterior estimators for gravitational waves are trained on stationary Gaussian noise, and a frozen checkpoint cannot be retrained when a glitch overlaps a signal.
+Gating the glitch out leaves the network an unfamiliar input, and the usual importance-sampling correction scores the gated, zero-valued samples as data.
+We instead reweight the frozen network's samples with the gated Gaussian likelihood, written as a correction to DINGO's own likelihood, and trust a result only if its effective sample size is at least 100.
+We test this on the public \DINGOBNS GW170817 checkpoint with real O3 Gravity Spy glitches at their native whitened loudness.
+On 41 cells where a glitch damages the distance posterior, trusted gated importance sampling passes in 32 with a $0.1\,\mathrm{s}$ gate pad, and in 37 when the cells untrusted at $10^{4}$ samples are redrawn with $10^{5}$ under the same rule; the network alone passes in 31.
+The gain is in reliability: over both pads, 62 of 64 trusted gated results on damaged cells pass, whereas ordinary importance sampling of the gated data passes its own efficiency check in 81 of 82 analyses but is right in only 50.
+On 140 unaffected cells the method refuses one and is right in 139, and trusted results match the clean posterior in every parameter examined, including the tidal deformability.
+The method also reproduces the BayesWave-cleaned GW170817 posterior from the unsubtracted Livingston data.
+An analysis takes minutes, against seconds for the network alone.
 \end{abstract}
 
 \begin{keywords}
@@ -152,7 +148,7 @@ DINGO conditions a flow on whitened frequency-domain strain and the noise spectr
 On signal-free data containing a blip glitch, DINGO-IS reports a sample efficiency of order $10^{-5}$, which shows that the efficiency flags glitch-contaminated inputs~\cite{Dax2023is}.
 Networks have been trained to be robust to glitches~\cite{Sun2024ttsf,Xiong2025robust}.
 The closest work is Dingo-T1~\cite{Kofler2025transformer}, a transformer that tokenises the frequency-domain data and can drop tokens at inference time, which handles changes of detector set, frequency range and localised frequency cuts as missing data.
-A time-domain gate is not of that form: removing a fraction of a second of strain changes every frequency bin, through convolution with the gate's spectrum, so it cannot be expressed by omitting tokens.
+A time-domain gate is not of that form: removing a fraction of a second of strain changes every frequency bin, through convolution with the gate's spectrum, so it cannot be expressed exactly by omitting tokens.
 Both approaches also require training a new network, whereas the question here is what can be done with a checkpoint that has already been released.
 Inpainting short gaps with a network has also been studied~\cite{Kumar2026inpaint}, but an inpainted input is still not the data the likelihood should score.
 Here the network is the public checkpoint, unchanged, and only the likelihood used for reweighting is new.
@@ -306,7 +302,7 @@ All runs use the public \DINGOBNS GW170817 checkpoint~\cite{Dax2025bns}, unmodif
 Its sky position is fixed at the optical counterpart~\cite{Coulter2017sss17a,Abbott2017mma}, so the network samples 15 parameters and sky localisation is not tested.
 The luminosity-distance prior is uniform on $[10,100]\,\mathrm{Mpc}$; both this prior and the fixed sky are part of the released checkpoint's settings, not choices made here.
 In the checkpoint metadata the distance prior is \texttt{Uniform(10, 100)}; the demonstration's inference settings fix $\alpha=3.44616$, $\delta=-0.408084\,\mathrm{rad}$ and the chirp-mass proxy at $1.19786\,M_\odot$.
-The uniform-in-distance prior is why the clean median, $34\,\mathrm{Mpc}$, sits below the LVK value of about $40\,\mathrm{Mpc}$~\cite{Abbott2017gw170817}, which used a prior uniform in volume.
+The uniform-in-distance prior is largely why the clean median, $34\,\mathrm{Mpc}$, sits below the LVK value of about $40\,\mathrm{Mpc}$~\cite{Abbott2017gw170817}, which used a prior uniform in volume and a different treatment of the sky and frequency band.
 The archived Livingston data are the LVK's BayesWave-cleaned frame~\cite{Pankow2018mitigation}; glitches are injected into Hanford (H1).
 
 \paragraph{Loudness.}
@@ -317,7 +313,7 @@ $\rho_w^2 = 4\Delta f \sum_k |\tilde g_k|^2/S_n(f_k)$ over the analysis band, wi
 A posterior is \emph{collapsed} if the 90\% interval of $\dL$ lies below $15\,\mathrm{Mpc}$ or above $90\,\mathrm{Mpc}$.
 A posterior \emph{passes} if its $\dL$ median lies within $10\,\mathrm{Mpc}$ of the clean median and its 90\% interval overlaps the clean one. (The code also requires the median to lie in $[20,50]\,\mathrm{Mpc}$; with a clean median of $34.2\,\mathrm{Mpc}$ that clause is implied and never decides a case.)
 The clean reference for pass/fail is the pre-registered DINGO-IS draw on the clean package with $10^{4}$ samples: median $34.2\,\mathrm{Mpc}$, 90\% interval $[18.9, 45.9]\,\mathrm{Mpc}$.
-Independent DINGO-IS draws on the clean package give sample efficiencies of 10.0--11.6\% with $10^{4}$--$2\times10^{4}$ samples; a $10^{5}$-sample draw with a fixed seed gives 11.2\%, median $34.4\,\mathrm{Mpc}$ and 90\% interval $[19.4, 45.8]\,\mathrm{Mpc}$, and is the reference for all JS divergences.
+Independent DINGO-IS draws on the clean package give sample efficiencies of 10.0--11.6\% with $10^{4}$--$2\times10^{4}$ samples; a $10^{5}$-sample draw with a fixed seed gives 11.2\%, median $34.4\,\mathrm{Mpc}$ and 90\% interval $[19.4, 45.8]\,\mathrm{Mpc}$, and is the reference for all JS divergences except in Section~\ref{sec:gw170817}, which compares with the cleaned-data reference drawn for that test.
 Judging every analysis against that larger reference instead changes no gated-IS decision and two ordinary-IS decisions.
 These are coarse, distance-only criteria; Jensen--Shannon (JS) divergences~\cite{Lin1991jsd} are reported alongside.
 Intervals on proportions are Wilson 95\% intervals~\cite{Wilson1927}.
@@ -404,7 +400,7 @@ With an empty gate, our uniform-grid weights also reproduce DINGO's own importan
 Unit tests compare Equation~\eqref{eq:gated} with a dense brute-force evaluation of $r_O\tp C_{OO}^{-1} r_O$ on short segments, check invariance to the gated data, and check that likelihood differences are insensitive to $\epsilon$.
 As a consistency test, on the three $\pm0.4\,\mathrm{s}$ forced-gate cells where both routes are trusted, reweighting a clean-data proposal and a gated-data proposal with the same gated likelihood gives $\dL$ JS divergences of at most $0.05\,\mathrm{nat}$ between the two.
 Changing $\epsilon$ from $10^{-2}$ to $10^{-4}$ moves the $\dL$ median by at most $0.017\,\mathrm{Mpc}$.
-Because $\neff$ decides trust, we also compare it across the three values of $\epsilon$: over the \EPScells{} forced-gate cells, $\neff$ changes by a median of \EPSmedRelPct\% and at most \EPSmaxRelPct\% relative to $\epsilon=10^{-3}$, and the trust decision changes in \EPSflips{} cases.
+Because $\neff$ decides trust, we also compare it across the three values of $\epsilon$: over the \EPScells{} cells of the forced-gate and raw-Livingston tests, $\neff$ changes by a median of \EPSmedRelPct\% and at most \EPSmaxRelPct\% relative to $\epsilon=10^{-3}$, and no trust decision changes.
 
 %% =====================================================================
 \section{Gate-aware importance sampling}
@@ -461,7 +457,7 @@ Exact McNemar tests on the same cells give $p=1$ and $p=0.06$ for trusted gated 
 Trusted gated IS passes 9 cells that ordinary IS fails at $\pm0.2\,\mathrm{s}$, and the reverse never happens ($p=0.004$).
 Choosing, per cell, the pad with the larger $\neff$ (a rule fixed in advance that does not use the clean answer) gives 33/41 (80\%; 66--90\%).
 By morphology, the trusted passes at $\pm0.1\,\mathrm{s}$ are 15/15 blip, 17/24 koi-fish and 0/2 whistle cells.
-The trusted cells have a median $\dL$ JS divergence from the clean posterior of $0.018\,\mathrm{nat}$.
+The 32 trusted damaged cells at $\pm0.1\,\mathrm{s}$ have a median $\dL$ JS divergence of $0.018\,\mathrm{nat}$ from the pre-registered $10^{4}$-sample clean reference; Table~\ref{tab:multi} gives the pooled values against the larger reference.
 
 On the 14 cells that the localiser gate broke, neither the network alone nor ordinary importance sampling passes any at either pad.
 Gated importance sampling returns a trusted pass for 4/14 at $\pm0.1\,\mathrm{s}$; the other ten are untrusted, as are all 14 at $\pm0.2\,\mathrm{s}$.
@@ -551,7 +547,7 @@ The two trusted failures are the same cell, a koi-fish glitch at $\rho_w=352$, a
 Three independent proposals for that cell (below) agree on the low distance, so the error lies in the target rather than in the sampling: the gated posterior itself is shifted, most likely because part of the glitch lies outside the localiser's gate, and widening the pad from 0.1 to $0.2\,\mathrm{s}$ moves the median from 15 to $22\,\mathrm{Mpc}$.
 This is the failure mode named in Section~\ref{sec:gatedlik}.
 As an independent diagnostic, the Pareto $\hat k$ of Pareto-smoothed importance sampling~\cite{Vehtari2024psis} agrees with the $\neff$ rule: every one of the 43 untrusted gated analyses has $\hat k>0.7$, and 196 of the 207 trusted ones (including unaffected cells) have $\hat k\le0.7$, of which 195 pass.
-The two trusted failures have $\hat k=0.70$ and $0.75$, so a combined rule would have caught one of them.
+The two trusted failures have $\hat k=0.697$ and $0.751$, so a combined rule would have caught one of them.
 The $\neff$ rule is also noisy near its threshold.
 Redrawing five trusted analyses (the two failures and the three passing ones with the lowest $\neff$) moved two of them below 100 (to 25 and 47), one being the trusted failure at $\pm0.1\,\mathrm{s}$.
 Raising the threshold to 200 would have kept 59 of the 68 trusted analyses, all of which pass; this was not pre-registered and is reported as a guide only.
@@ -602,12 +598,15 @@ Floor & --- & .009 & .010 & .010 & .010 & .007 & .008 & .009 & .009 & --- \\
 
 \ifstagethreeb
 \paragraph{More samples for the untrusted cells.}
-A follow-up run, also fixed in advance, redrew the 18 untrusted $\pm0.1\,\mathrm{s}$ cases with \SBSAMPLES{} proposal samples and changed nothing else.
-\SBDAMAGED{} of the 8 damaged and \SBBROKEN{} of the 10 broken cells became trusted and passed; \SBSTILL{} remained untrusted.
+A follow-up run, also fixed in advance, redrew the 18 untrusted $\pm0.1\,\mathrm{s}$ cases with \SBSAMPLES{} proposal samples and changed nothing else; the trust rule stays $\neff\ge100$, which at this sample size is an efficiency of 0.1\% rather than 1\%.
+Of the 8 damaged and 10 broken cells, \SBDAMAGED{} and \SBBROKEN{} became trusted and passed; \SBSTILL{} remained untrusted.
 With the larger proposal where needed, gated importance sampling returns a trusted, passing posterior for \SBDAMAGEDTOTAL/41 damaged and \SBBROKENTOTAL/14 broken cells at $\pm0.1\,\mathrm{s}$; no newly trusted analysis fails.
 All three damaged cells that stay untrusted have a gated $\dL$ that passes, and three of the eight broken ones that stay untrusted fail.
 How $\neff$ grows with the number of samples says why a cell stays untrusted.
-If the proposal covers the target, ten times as many samples give about ten times the $\neff$, and the seven newly trusted analyses grew by factors of 1.9 to 56.
+If the proposal covers the target, ten times as many samples give about ten times the $\neff$; growth well beyond tenfold, up to 56 here, is possible because a small $\neff$ estimated from $10^{4}$ samples is itself noisy and easily depressed by a single large weight.
+Six of the seven newly trusted analyses grew by factors of 3.3 to 56.
+The seventh, a damaged cell at $\pm0.1\,\mathrm{s}$, grew only 1.9-fold, to $\neff=103$, just above the threshold; by the same logic its trust is marginal.
+Its answer is nevertheless right: the clean-data proposal of the independent-proposal check below reaches $\neff=994$ on that cell and gives a $\dL$ median of $35.1\,\mathrm{Mpc}$, against $37.1\,\mathrm{Mpc}$ from the redraw.
 For nine of the eleven still untrusted, $\neff$ grew by less than a factor of three: the proposal misses part of the target, and more samples will not fix that.
 Each of these analyses took 24--30 minutes.
 \fi
@@ -633,10 +632,11 @@ In this case ordinary importance sampling of the gated package also works ($2\ti
 \label{sec:cost}
 
 On \HARDWARE{}, drawing $10^{4}$ samples from the network takes $9.0\,\mathrm{s}$, DINGO's own importance sampling of them $10.2\,\mathrm{s}$, and the gated likelihood for a typical $0.42\,\mathrm{s}$ gate $141\,\mathrm{s}$ with eight processes (medians of repeated runs).
-Over the 110 real-glitch analyses, each with $10^{4}$ proposal samples, the end-to-end time per analysis had a median of \RTmedianMin{} minutes, a 90th percentile of \RTpninetyMin{} minutes and a 95th percentile of \RTpninetyfiveMin{} minutes; \RTnOverHour{} analyses took more than an hour.
+Over the 110 real-glitch analyses, each with $10^{4}$ proposal samples, the end-to-end time per analysis had a median of \RTmedianMin{} minutes, a 90th percentile of \RTpninetyMin{} minutes and a 95th percentile of \RTpninetyfiveMin{} minutes.
 That time includes rebuilding the injection, drawing from the network, ordinary importance sampling for comparison, and gated importance sampling.
-The slowest analysis (\texttt{\RTslowId}) took \RTmaxH{}\,h.
-Its gate spanned \RTslowGate{}\,s, or $M\approx\RTslowM$ samples, rank \RTslowGateRank{} of 110 by gate length (longest \RTlongestGate{}\,s, median \RTmedianGate{}\,s); the Spearman rank correlation between runtime and gate length over all analyses is \RTspearman.
+Run time rises with gate length: the Spearman rank correlation between the two over all analyses is \RTspearman, and gates range up to \RTlongestGate{}\,s (median \RTmedianGate{}\,s).
+One analysis (\texttt{\RTslowId}) recorded \RTmaxH{}\,h of wall-clock time, but the system power log shows that the computer hibernated on a flat battery for $13760\,\mathrm{s}$ (3.8\,h) during its likelihood evaluation; awake, it took about 5 minutes, unremarkable for its \RTslowGate{}\,s gate.
+No other analysis took longer than an hour.
 The gated likelihood is evaluated on the uniform frequency grid, without the multibanding and phase heterodyning that make DINGO's own importance sampling fast~\cite{Dax2025bns}, because the gate acts in the time domain.
 Per sample, the correction adds one length-$N$ inverse FFT and one triangular solve whose cost grows as $M^2$, after a Cholesky factorisation that costs $\mathcal{O}(M^3)$ once per gate, so the gated part of the cost rises steeply with gate length.
 
@@ -671,7 +671,7 @@ The pass criterion is distance-based; other parameters are checked through JS di
 There is no stochastic-sampler reference for the gated posterior; the independent-proposal check stands in for it.
 Check B used a compact in-band burst; a glitch with substantial power above $1535\,\mathrm{Hz}$ would leak more through the regulariser.
 The pre-registered efficiency criterion for $\pm0.4\,\mathrm{s}$ gates failed.
-The panel's 65 glitches include four scattered-light excerpts that were not usable in an earlier version of the panel; the catalogue change that admitted them predates every run reported here.
+A catalogue change made before any run reported here admitted nine excerpts that an earlier version of the panel could not use; five of them are the zero-power excerpts above, and the other four, all scattered light, are among the 65 glitches.
 At $8\sigma$ the localiser is silent on GW170817, but a much louder signal could itself exceed the threshold near merger and be gated; a production version would need to exclude the signal's own track.
 The method relies on the localiser; scattered-light arches, which it mostly misses, rarely damage this network, but a longer-duration glitch class would need a different gate.
 The trust decision depends on the number of samples and is noisy near its threshold.
