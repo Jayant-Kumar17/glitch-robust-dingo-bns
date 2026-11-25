@@ -144,7 +144,7 @@ All of these evaluate a likelihood on a stochastic sampler and take minutes to h
 
 \paragraph{Neural posterior estimation and glitches.}
 DINGO conditions a flow on whitened frequency-domain strain and the noise spectrum~\cite{Dax2021dingo,Dax2022gnpe,Wildberger2023psd}, and DINGO-IS corrects it with importance sampling~\cite{Dax2023is}.
-On signal-free data with a blip glitch, DINGO-IS reports a sample efficiency $\epsilon\approx 0.001\%$ ($10^{-5}$), which shows that the efficiency flags glitch-contaminated inputs~\cite{Dax2023is}.
+On signal-free data containing a blip glitch, DINGO-IS reports a sample efficiency of order $10^{-5}$, which shows that the efficiency flags glitch-contaminated inputs~\cite{Dax2023is}.
 Networks have been trained to be robust to glitches~\cite{Sun2024ttsf,Xiong2025robust}.
 The closest work is Dingo-T1~\cite{Kofler2025transformer}, a transformer that tokenises the frequency-domain data and can drop tokens at inference time, which handles changes of detector set, frequency range and localised frequency cuts as missing data.
 A time-domain gate is not of that form: removing a fraction of a second of strain changes every frequency bin, through convolution with the gate's spectrum, so it cannot be expressed exactly by omitting tokens.
@@ -456,7 +456,7 @@ Exact McNemar tests on the same cells give $p=1$ and $p=0.06$ for trusted gated 
 Trusted gated IS passes 9 cells that ordinary IS fails at $\pm0.2\,\mathrm{s}$, and the reverse never happens (exact McNemar $p=0.004$). Because the 41 damaged cells come from 18 glitches, we also swapped the two methods' outcomes glitch by glitch rather than cell by cell ($10^{5}$ permutations); this clustered test gives $p=0.008$ at $\pm0.2\,\mathrm{s}$, and $p=0.25$ at $\pm0.1\,\mathrm{s}$, where gated IS passes three cells that ordinary IS fails and never the reverse.
 Choosing, per cell, the pad with the larger $\neff$ (a rule fixed in advance that does not use the clean answer) gives 33/41 (80\%; 66--90\%).
 By morphology, the trusted passes at $\pm0.1\,\mathrm{s}$ are 15/15 blip, 17/24 koi-fish and 0/2 whistle cells.
-The 33 trusted damaged cells at $\pm0.1\,\mathrm{s}$ have a median $\dL$ JS divergence of $0.018\,\mathrm{nat}$ from the pre-registered $10^{4}$-sample clean reference; Table~\ref{tab:multi} gives the per-class values against the larger reference.
+The 33 trusted damaged cells at $\pm0.1\,\mathrm{s}$ have a median $\dL$ JS divergence of $0.018\,\mathrm{nat}$ from the pre-registered $10^{4}$-sample clean reference; Table~\ref{tab:multi} gives the pooled values against the larger reference.
 
 On the 14 cells that the localiser gate broke, neither the network alone nor ordinary importance sampling passes any at either pad.
 Gated importance sampling returns a trusted pass for 4/14 at $\pm0.1\,\mathrm{s}$; the other ten are untrusted, as are all 14 at $\pm0.2\,\mathrm{s}$.
@@ -551,7 +551,7 @@ The $\neff$ rule is also noisy near its threshold.
 Redrawing five trusted analyses (the two failures and the three passing ones with the lowest $\neff$) moved two of them below 100 (to 25 and 47), one being the trusted failure at $\pm0.1\,\mathrm{s}$.
 Raising the threshold to 200 would have kept 59 of the 68 trusted analyses, all of which pass; this was not pre-registered and is reported as a guide only.
 
-\IfFileExists{figures/fig5_trust_scatter.pdf}{Figure~\ref{fig:scatter} shows $\neff$ against the $\dL$ JS divergence for every real-glitch analysis.}{}
+\IfFileExists{figures/fig5_trust_scatter.pdf}{Figure~\ref{fig:scatter} shows $\neff$ against the $\dL$ JS divergence for every cell.}{}
 
 \IfFileExists{figures/fig5_trust_scatter.pdf}{%
 \begin{figure}[t]
@@ -652,7 +652,7 @@ On \HARDWARE{}, drawing $10^{4}$ samples from the network takes $9.0\,\mathrm{s}
 Over the 110 real-glitch analyses, each with $10^{4}$ proposal samples, the end-to-end time per analysis had a median of \RTmedianMin{} minutes, a 90th percentile of \RTpninetyMin{} minutes and a 95th percentile of \RTpninetyfiveMin{} minutes.
 That time includes rebuilding the injection, drawing from the network, ordinary importance sampling for comparison, and gated importance sampling.
 Run time rises with gate length: the Spearman rank correlation between the two over all analyses is \RTspearman, and gates range up to \RTlongestGate{}\,s (median \RTmedianGate{}\,s).
-One analysis (\texttt{\RTslowId}) recorded \RTmaxH{}\,h of wall-clock time, but the system power log shows that the computer hibernated on a flat battery for $13760\,\mathrm{s}$ (3.8\,h) during its likelihood evaluation; awake, it took about 5 minutes, unremarkable for its \RTslowGate{}\,s gate.
+One analysis recorded \RTmaxH{}\,h of wall-clock time because the computer was suspended for 3.8\,h during its likelihood evaluation; its running time was about 5 minutes, typical for its \RTslowGate{}\,s gate.
 No other analysis took longer than an hour.
 The gated likelihood is evaluated on the uniform frequency grid, without the multibanding and phase heterodyning that make DINGO's own importance sampling fast~\cite{Dax2025bns}, because the gate acts in the time domain.
 Per sample, the correction adds one length-$N$ inverse FFT and one triangular solve whose cost grows as $M^2$, after a Cholesky factorisation that costs $\mathcal{O}(M^3)$ once per gate, so the gated part of the cost rises steeply with gate length.
@@ -683,7 +683,7 @@ The study uses one event and one checkpoint, with the sky fixed, so localisation
 GW170817 is close to a best case.
 It is loud (network signal-to-noise ratio about 32~\cite{Abbott2017gw170817}), it was observed by three detectors, and the fixed sky removes the sky-position part of the degeneracy between position, distance and inclination.
 For a quieter event, a two-detector network, or a network that also samples the sky, a gate in one detector removes a larger share of the information, and the proposal is likely to drift further from the gated posterior; we would expect lower $\neff$ and more untrusted results. The SNR-16 synthetic event showed no such drop at $\pm0.2\,\mathrm{s}$, but longer gates, two detectors and a free sky were not tested.
-The real glitches are O3 Hanford excerpts recoloured into GW170817 data, which removes the noise that accompanied them; the Extremely Loud class, which dominates the loud tail of the O3 catalogue, was not injected.
+The real glitches are O3 Hanford excerpts recoloured into GW170817 data, which removes the noise that accompanied them. The glitch-only estimate keeps only time--frequency pixels above eight times the median background power, so it drops low-level glitch tails; since glitch power outside the gate is the method's main failure mode, the trusted-failure rate here may be optimistic. the Extremely Loud class, which dominates the loud tail of the O3 catalogue, was not injected.
 The pass criterion is distance-based; other parameters are checked through JS divergences (Table~\ref{tab:multi}), not a pass rule.
 There is no stochastic-sampler reference for the gated posterior; reweighting the clean-data proposal (route B) on all damaged analyses stands in for it.
 Check B used a compact in-band burst, and the leakage test covered only the trusted-failure koi fish; a glitch with substantial power above $1535\,\mathrm{Hz}$ would leak more through the regulariser.
@@ -700,7 +700,7 @@ Two earlier choices were not pre-registered.
 The distance criterion dates from the first public version of the code (August 2026), before the packaging error was found; its definition does not depend on that error.
 The $8\sigma$ localiser threshold was committed in code two hours before the run that audited it, not in a planning document.
 The Stage 3b run drew its own $10^{4}$-sample clean reference (median $34.6\,\mathrm{Mpc}$) rather than reusing that of Stage 3 ($34.2\,\mathrm{Mpc}$); we checked that no Stage 3b pass/fail decision changes between the two.
-The trust-threshold, $\hat k$ and repeat-draw analyses above were not pre-registered and are reported as diagnostics. So are the analyses added in review: the split of Table~\ref{tab:multi} by cell class, the glitch-clustered permutation test, route B on all 82 damaged analyses, the leakage test on the trusted-failure cell and the zero-weight check.
+The trust-threshold, $\hat k$ and repeat-draw analyses above were not pre-registered and are reported as diagnostics. So are the analyses added after the pre-registered runs: the split of Table~\ref{tab:multi} by cell class, the glitch-clustered permutation test, route B on all 82 damaged analyses, the leakage test on the trusted-failure cell and the zero-weight check.
 
 \paragraph{Outlook.}
 The cost can be reduced: the gate affects only frequencies near the glitch's band and times near the gate, so a heterodyned or multibanded form of Equation~\eqref{eq:gated} should be possible.
@@ -722,12 +722,9 @@ The code, tests, pre-registration documents and archived results are public.
 Open strain data are from the Gravitational Wave Open Science Center~\cite{Abbott2021opendata,Abbott2023opendata}.
 The \DINGOBNS checkpoint is from the DINGO release~\cite{Dax2025bns}; we use \texttt{dingo-gw} at commit \texttt{fede5c01}.
 Gravity Spy O3 classifications are from Zenodo record 5649212~\cite{Glanzer2023gravityspy}.
-Code, unit tests, pre-registration documents (\texttt{docs/STAGE2\_CRITERIA.md}, \texttt{docs/STAGE3\_PLAN.md}, \texttt{docs/STAGE3B\_PLAN.md}, \texttt{docs/REVISION\_PLAN.md}) and archived results are at\\
-\mbox{\url{https://github.com/Jayant-Kumar17/glitch-robust-dingo-bns}}\\
-and archived on Zenodo (\mbox{\url{https://doi.org/10.5281/zenodo.22844460}}).
+Code, unit tests, pre-registration documents (\texttt{docs/STAGE2\_CRITERIA.md}, \texttt{docs/STAGE3\_PLAN.md}, \texttt{docs/STAGE3B\_PLAN.md}, \texttt{docs/REVISION\_PLAN.md}) and archived results are at \url{https://github.com/Jayant-Kumar17/glitch-robust-dingo-bns} and archived on Zenodo (\url{https://doi.org/10.5281/zenodo.22844460}).
 The revision plan (\texttt{docs/REVISION\_PLAN.md}, commit \texttt{0410955}) was committed before the revision runs, whose results are in commit \texttt{3242c0c}.
 Release v1.2.0 and earlier contain the packaging error described in Section~\ref{sec:convention} and are superseded.
-
 Figures~\ref{fig:collapse}--\ref{fig:real} are produced by \texttt{paper/scripts/make\_figures.py} from the archived reports\IfFileExists{figures/fig5_trust_scatter.pdf}{, and Figure~\ref{fig:scatter} by \texttt{paper/scripts/make\_trust\_scatter.py} from the per-cell results}{}.
 Table~\ref{tab:flags}, the pooled rows of Table~\ref{tab:multi}, the McNemar tests and the $\hat k$ values come from \texttt{examples/revision\_analysis.py} (\texttt{results/revision/REVISION\_REPORT.md}); the per-class rows of Table~\ref{tab:multi}, the clustered permutation test, route B on all damaged analyses, the leakage test and the zero-weight check come from \texttt{results/revision2/REPORT.md}; the runtime and $\epsilon$ figures of Sections~\ref{sec:checks} and~\ref{sec:cost} come from \texttt{paper/scripts/paper\_numbers.py}.
 
