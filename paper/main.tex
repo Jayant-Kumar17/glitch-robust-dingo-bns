@@ -566,7 +566,7 @@ Filled markers pass the distance criterion; the dotted line is the trust thresho
 The distance criterion is coarse, and a gate near merger could bias other parameters without moving $\dL$ far enough to fail it.
 Table~\ref{tab:multi} gives the one-dimensional JS divergence from the $10^{5}$-sample clean reference for seven sampled parameters, the derived tidal deformability $\tilde\Lambda$, and the largest divergence over all 15 compared parameters, for damaged, broken and unaffected cells separately.
 JS values come from 64-bin weighted histograms and are nonzero even for identical distributions; the floor row estimates that value by comparing two independent resamples of each trusted posterior with itself, at the effective sample sizes of the comparison.
-On unaffected cells, the median divergence of trusted gated results is below this floor for every parameter shown, including $\tilde\Lambda$, and the 90th percentile of each is at most $0.015\,\mathrm{nat}$. On damaged cells the medians are 0.003--0.013\,nat: below the floor for $\Lambda_1$, $\Lambda_2$, $\tilde\Lambda$ and $t_c$, and up to 1.4 times it for $\mathcal{M}_c$, $q$, $\theta_{JN}$ and $\dL$, with 90th percentiles of at most $0.043\,\mathrm{nat}$. The floor is computed mostly at the larger effective sample sizes of unaffected cells, so it understates the resampling noise of damaged ones.
+On unaffected cells, the median divergence of trusted gated results is below this floor for every parameter shown, including $\tilde\Lambda$, and the 90th percentile of each is at most $0.015\,\mathrm{nat}$. On damaged cells the medians are 0.003--0.013\,nat: below the floor for $\Lambda_1$, $\Lambda_2$, $\tilde\Lambda$ and $t_c$, and above it for $\mathcal{M}_c$, $q$, $\theta_{JN}$ and $\dL$, by at most a factor of 1.36 (for $\theta_{JN}$), with 90th percentiles of at most $0.043\,\mathrm{nat}$. The floor is computed mostly at the larger effective sample sizes of unaffected cells, so it understates the resampling noise of damaged ones; and since trusted unaffected results fall well below it in places ($\Lambda_1$: 0.002 against 0.007), it is a scale for resampling noise rather than a threshold. The four trusted broken analyses have medians of 0.023--0.033\,nat in the first four parameters, two to three times the floor; they have low $\neff$ and $n=4$.
 Untrusted gated results are an order of magnitude further away, which is what the flag is for.
 Trusted ordinary-IS results on damaged cells have a median of $0.08\,\mathrm{nat}$ and a 90th percentile of $0.54\,\mathrm{nat}$ in $\theta_{JN}$, and on broken cells a median of $0.60\,\mathrm{nat}$: these are its confident, wrong answers.
 The network alone differs from the importance-sampled clean posterior in $\tilde\Lambda$ and $t_c$ in the median analysis (0.21 and $0.23\,\mathrm{nat}$), which is why reweighting is needed at all.
@@ -629,11 +629,11 @@ Where route A is trusted, its $\dL$ posterior agrees with route B to a JS diverg
 For the trusted-failure cell all three routes put the median between 15 and $17\,\mathrm{Mpc}$ at $\pm0.1\,\mathrm{s}$ and between 23 and $25\,\mathrm{Mpc}$ at $\pm0.2\,\mathrm{s}$, which is the basis for attributing that failure to the target.
 
 Route B was then run on all 82 damaged analyses, reweighting the first $10^{4}$ clean-data samples to each analysis's gated likelihood.
-It is trusted in 80 and passes in 80; its two failures are the trusted-failure cell at both pads, one of them trusted ($\neff=297$).
+It is trusted in 80, of which 79 pass, and 80 pass overall; its two failures are the trusted-failure cell at both pads, one of them trusted ($\neff=297$).
 So for 80 of the 82 analyses the gated posterior itself meets the distance criterion, and the two exceptions are where gate-aware importance sampling also failed.
 Of the 64 analyses that gate-aware importance sampling trusts, route B also trusts 62, and the two methods agree on pass or fail in all 62; route B refuses the other two (the $\pm0.1\,\mathrm{s}$ trusted failure, and one pass).
 Route B trusts 18 analyses that gate-aware importance sampling refuses: these are cases where the network's proposal misses the gated posterior, and the flag refuses rather than answers.
-The $\dL$ medians of the two routes differ by $0.59\,\mathrm{Mpc}$ in the median analysis; the two differences above $5\,\mathrm{Mpc}$ are in analyses with $\neff<4$.
+The $\dL$ medians of the two routes differ by $0.59\,\mathrm{Mpc}$ in the median analysis; the two differences above $5\,\mathrm{Mpc}$ are in analyses where gate-aware importance sampling has $\neff<4$ and is untrusted.
 
 \subsection{GW170817 Livingston}
 \label{sec:gw170817}
@@ -700,7 +700,7 @@ Two earlier choices were not pre-registered.
 The distance criterion dates from the first public version of the code (August 2026), before the packaging error was found; its definition does not depend on that error.
 The $8\sigma$ localiser threshold was committed in code two hours before the run that audited it, not in a planning document.
 The Stage 3b run drew its own $10^{4}$-sample clean reference (median $34.6\,\mathrm{Mpc}$) rather than reusing that of Stage 3 ($34.2\,\mathrm{Mpc}$); we checked that no Stage 3b pass/fail decision changes between the two.
-The trust-threshold, $\hat k$ and repeat-draw analyses above were not pre-registered and are reported as diagnostics.
+The trust-threshold, $\hat k$ and repeat-draw analyses above were not pre-registered and are reported as diagnostics. So are the analyses added in review: the split of Table~\ref{tab:multi} by cell class, the glitch-clustered permutation test, route B on all 82 damaged analyses, the leakage test on the trusted-failure cell and the zero-weight check.
 
 \paragraph{Outlook.}
 The cost can be reduced: the gate affects only frequencies near the glitch's band and times near the gate, so a heterodyned or multibanded form of Equation~\eqref{eq:gated} should be possible.
@@ -726,7 +726,7 @@ Code, unit tests, pre-registration documents (\texttt{docs/STAGE2\_CRITERIA.md},
 The revision plan (\texttt{docs/REVISION\_PLAN.md}, commit \texttt{0410955}) was committed before the revision runs, whose results are in commit \texttt{3242c0c}.
 Release v1.2.0 and earlier contain the packaging error described in Section~\ref{sec:convention} and are superseded.
 Figures~\ref{fig:collapse}--\ref{fig:real} are produced by \texttt{paper/scripts/make\_figures.py} from the archived reports\IfFileExists{figures/fig5_trust_scatter.pdf}{, and Figure~\ref{fig:scatter} by \texttt{paper/scripts/make\_trust\_scatter.py} from the per-cell results}{}.
-Tables~\ref{tab:flags} and~\ref{tab:multi}, the McNemar tests and the $\hat k$ values come from \texttt{examples/revision\_analysis.py} (\texttt{results/revision/REVISION\_REPORT.md}); the runtime and $\epsilon$ figures of Sections~\ref{sec:checks} and~\ref{sec:cost} come from \texttt{paper/scripts/paper\_numbers.py}.
+Table~\ref{tab:flags}, the pooled rows of Table~\ref{tab:multi}, the McNemar tests and the $\hat k$ values come from \texttt{examples/revision\_analysis.py} (\texttt{results/revision/REVISION\_REPORT.md}); the per-class rows of Table~\ref{tab:multi}, the clustered permutation test, route B on all damaged analyses, the leakage test and the zero-weight check come from \texttt{results/revision2/REPORT.md}; the runtime and $\epsilon$ figures of Sections~\ref{sec:checks} and~\ref{sec:cost} come from \texttt{paper/scripts/paper\_numbers.py}.
 
 
 \section*{Acknowledgements}
