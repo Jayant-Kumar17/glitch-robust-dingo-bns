@@ -2,8 +2,8 @@
 %% Format: The Open Journal of Astrophysics (openjournal.cls).
 %%
 %% To compile in the OJA format: open the "Template OJA" project on Overleaf
-%% (it contains openjournal.cls), then upload main.tex, refs.bib, figures/ and
-%% generated/ into it and set main.tex as the main document.
+%% (it contains openjournal.cls), then upload main.tex, refs.bib and figures/
+%% into it and set main.tex as the main document.
 %% Without openjournal.cls this file falls back to REVTeX 4-1, on which that
 %% class is built, so it still compiles anywhere (Overleaf, TeX Live, tectonic).
 \newif\ifoja
@@ -55,23 +55,22 @@
 \newcommand{\HARDWARE}{a 10-core Apple M5 CPU}
 
 %% =====================================================================
-%% Numbers produced by paper/scripts/paper_numbers.py (runtimes,
-%% eps check).  Placeholders below are used only until that file exists.
+%% Run-time and epsilon numbers, copied from the output of
+%% paper/scripts/paper_numbers.py on the archived Stage 2 and Stage 3 results
+%% (they used to be read from generated/numbers.tex; now fixed in the source).
 %% =====================================================================
-\IfFileExists{generated/numbers.tex}{\input{generated/numbers.tex}}{}
-\newcommand{\GEN}{\textbf{??}}
-\providecommand{\MProws}{\multicolumn{8}{c}{\textbf{run paper/scripts/paper\_numbers.py}} \\}
-\providecommand{\MPnparams}{\GEN}\providecommand{\MPnClean}{\GEN}
-\providecommand{\MPtrustedMaxMedian}{\GEN}\providecommand{\MPtrustedMaxMedianParam}{\GEN}
-\providecommand{\MPtrustedMaxPninety}{\GEN}\providecommand{\MPtrustedMaxPninetyParam}{\GEN}
-\providecommand{\MPtrustedAnyOverTenth}{\GEN}\providecommand{\MPtrustedN}{\GEN}\providecommand{\MPuntrustedN}{\GEN}
-\providecommand{\MPfloorMax}{\GEN}\providecommand{\MPfloorCells}{\GEN}
-\providecommand{\MPtrustedCellMaxMedian}{\GEN}\providecommand{\MPuntrustedCellMaxMedian}{\GEN}
-\providecommand{\RTmedianMin}{\GEN}\providecommand{\RTpninetyMin}{\GEN}\providecommand{\RTpninetyfiveMin}{\GEN}
-\providecommand{\RTmaxH}{\GEN}\providecommand{\RTslowId}{\GEN}\providecommand{\RTslowGate}{\GEN}
-\providecommand{\RTslowM}{\GEN}\providecommand{\RTslowGateRank}{\GEN}\providecommand{\RTlongestGate}{\GEN}
-\providecommand{\RTmedianGate}{\GEN}\providecommand{\RTspearman}{\GEN}\providecommand{\RTnOverHour}{\GEN}
-\providecommand{\EPScells}{\GEN}\providecommand{\EPSmedRelPct}{\GEN}\providecommand{\EPSmaxRelPct}{\GEN}\providecommand{\EPSflips}{\GEN}
+\newcommand{\RTmedianMin}{2.7}
+\newcommand{\RTpninetyMin}{3.3}
+\newcommand{\RTpninetyfiveMin}{3.9}
+\newcommand{\RTmaxH}{3.9}
+\newcommand{\RTslowId}{damaged\_039\_h0.2}
+\newcommand{\RTslowGate}{0.44}
+\newcommand{\RTlongestGate}{1.84}
+\newcommand{\RTmedianGate}{0.42}
+\newcommand{\RTspearman}{0.80}
+\newcommand{\EPScells}{32}
+\newcommand{\EPSmedRelPct}{0.19}
+\newcommand{\EPSmaxRelPct}{1.4}
 
 \begin{document}
 
@@ -711,9 +710,6 @@ Release v1.2.0 and earlier contain the packaging error described in Section~\ref
 Figures~\ref{fig:collapse}--\ref{fig:real} are produced by \texttt{paper/scripts/make\_figures.py} from the archived reports\IfFileExists{figures/fig5_trust_scatter.pdf}{, and Figure~\ref{fig:scatter} by \texttt{paper/scripts/make\_trust\_scatter.py} from the per-cell results}{}.
 Tables~\ref{tab:flags} and~\ref{tab:multi}, the McNemar tests and the $\hat k$ values come from \texttt{examples/revision\_analysis.py} (\texttt{results/revision/REVISION\_REPORT.md}); the runtime and $\epsilon$ figures of Sections~\ref{sec:checks} and~\ref{sec:cost} come from \texttt{paper/scripts/paper\_numbers.py}.
 
-\section*{Use of AI tools}
-AI assistants (Cursor and Anthropic's Claude) were used to write and test software and to draft and edit text.
-The author ran all analyses, checked the results against the archived outputs, and is responsible for the content.
 
 \section*{Acknowledgements}
 This research has made use of data or software obtained from the Gravitational Wave Open Science Center (\url{https://gwosc.org}), a service of the LIGO Scientific Collaboration, the Virgo Collaboration, and KAGRA.
