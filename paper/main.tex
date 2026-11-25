@@ -144,7 +144,7 @@ All of these evaluate a likelihood on a stochastic sampler and take minutes to h
 
 \paragraph{Neural posterior estimation and glitches.}
 DINGO conditions a flow on whitened frequency-domain strain and the noise spectrum~\cite{Dax2021dingo,Dax2022gnpe,Wildberger2023psd}, and DINGO-IS corrects it with importance sampling~\cite{Dax2023is}.
-On signal-free data containing a blip glitch, DINGO-IS reports a sample efficiency of order $10^{-5}$, which shows that the efficiency flags glitch-contaminated inputs~\cite{Dax2023is}.
+On signal-free data with a blip glitch, DINGO-IS reports a sample efficiency $\epsilon\approx 0.001\%$ ($10^{-5}$), which shows that the efficiency flags glitch-contaminated inputs~\cite{Dax2023is}.
 Networks have been trained to be robust to glitches~\cite{Sun2024ttsf,Xiong2025robust}.
 The closest work is Dingo-T1~\cite{Kofler2025transformer}, a transformer that tokenises the frequency-domain data and can drop tokens at inference time, which handles changes of detector set, frequency range and localised frequency cuts as missing data.
 A time-domain gate is not of that form: removing a fraction of a second of strain changes every frequency bin, through convolution with the gate's spectrum, so it cannot be expressed exactly by omitting tokens.
@@ -456,7 +456,7 @@ Exact McNemar tests on the same cells give $p=1$ and $p=0.06$ for trusted gated 
 Trusted gated IS passes 9 cells that ordinary IS fails at $\pm0.2\,\mathrm{s}$, and the reverse never happens (exact McNemar $p=0.004$). Because the 41 damaged cells come from 18 glitches, we also swapped the two methods' outcomes glitch by glitch rather than cell by cell ($10^{5}$ permutations); this clustered test gives $p=0.008$ at $\pm0.2\,\mathrm{s}$, and $p=0.25$ at $\pm0.1\,\mathrm{s}$, where gated IS passes three cells that ordinary IS fails and never the reverse.
 Choosing, per cell, the pad with the larger $\neff$ (a rule fixed in advance that does not use the clean answer) gives 33/41 (80\%; 66--90\%).
 By morphology, the trusted passes at $\pm0.1\,\mathrm{s}$ are 15/15 blip, 17/24 koi-fish and 0/2 whistle cells.
-The 33 trusted damaged cells at $\pm0.1\,\mathrm{s}$ have a median $\dL$ JS divergence of $0.018\,\mathrm{nat}$ from the pre-registered $10^{4}$-sample clean reference; Table~\ref{tab:multi} gives the pooled values against the larger reference.
+The 33 trusted damaged cells at $\pm0.1\,\mathrm{s}$ have a median $\dL$ JS divergence of $0.018\,\mathrm{nat}$ from the pre-registered $10^{4}$-sample clean reference; Table~\ref{tab:multi} gives the per-class values against the larger reference.
 
 On the 14 cells that the localiser gate broke, neither the network alone nor ordinary importance sampling passes any at either pad.
 Gated importance sampling returns a trusted pass for 4/14 at $\pm0.1\,\mathrm{s}$; the other ten are untrusted, as are all 14 at $\pm0.2\,\mathrm{s}$.
@@ -551,7 +551,7 @@ The $\neff$ rule is also noisy near its threshold.
 Redrawing five trusted analyses (the two failures and the three passing ones with the lowest $\neff$) moved two of them below 100 (to 25 and 47), one being the trusted failure at $\pm0.1\,\mathrm{s}$.
 Raising the threshold to 200 would have kept 59 of the 68 trusted analyses, all of which pass; this was not pre-registered and is reported as a guide only.
 
-\IfFileExists{figures/fig5_trust_scatter.pdf}{Figure~\ref{fig:scatter} shows $\neff$ against the $\dL$ JS divergence for every cell.}{}
+\IfFileExists{figures/fig5_trust_scatter.pdf}{Figure~\ref{fig:scatter} shows $\neff$ against the $\dL$ JS divergence for every real-glitch analysis.}{}
 
 \IfFileExists{figures/fig5_trust_scatter.pdf}{%
 \begin{figure}[t]
@@ -722,9 +722,12 @@ The code, tests, pre-registration documents and archived results are public.
 Open strain data are from the Gravitational Wave Open Science Center~\cite{Abbott2021opendata,Abbott2023opendata}.
 The \DINGOBNS checkpoint is from the DINGO release~\cite{Dax2025bns}; we use \texttt{dingo-gw} at commit \texttt{fede5c01}.
 Gravity Spy O3 classifications are from Zenodo record 5649212~\cite{Glanzer2023gravityspy}.
-Code, unit tests, pre-registration documents (\texttt{docs/STAGE2\_CRITERIA.md}, \texttt{docs/STAGE3\_PLAN.md}, \texttt{docs/STAGE3B\_PLAN.md}, \texttt{docs/REVISION\_PLAN.md}) and archived results are at \url{https://github.com/Jayant-Kumar17/glitch-robust-dingo-bns} and archived on Zenodo (\url{https://doi.org/10.5281/zenodo.22844460}).
+Code, unit tests, pre-registration documents (\texttt{docs/STAGE2\_CRITERIA.md}, \texttt{docs/STAGE3\_PLAN.md}, \texttt{docs/STAGE3B\_PLAN.md}, \texttt{docs/REVISION\_PLAN.md}) and archived results are at\\
+\mbox{\url{https://github.com/Jayant-Kumar17/glitch-robust-dingo-bns}}\\
+and archived on Zenodo (\mbox{\url{https://doi.org/10.5281/zenodo.22844460}}).
 The revision plan (\texttt{docs/REVISION\_PLAN.md}, commit \texttt{0410955}) was committed before the revision runs, whose results are in commit \texttt{3242c0c}.
 Release v1.2.0 and earlier contain the packaging error described in Section~\ref{sec:convention} and are superseded.
+
 Figures~\ref{fig:collapse}--\ref{fig:real} are produced by \texttt{paper/scripts/make\_figures.py} from the archived reports\IfFileExists{figures/fig5_trust_scatter.pdf}{, and Figure~\ref{fig:scatter} by \texttt{paper/scripts/make\_trust\_scatter.py} from the per-cell results}{}.
 Table~\ref{tab:flags}, the pooled rows of Table~\ref{tab:multi}, the McNemar tests and the $\hat k$ values come from \texttt{examples/revision\_analysis.py} (\texttt{results/revision/REVISION\_REPORT.md}); the per-class rows of Table~\ref{tab:multi}, the clustered permutation test, route B on all damaged analyses, the leakage test and the zero-weight check come from \texttt{results/revision2/REPORT.md}; the runtime and $\epsilon$ figures of Sections~\ref{sec:checks} and~\ref{sec:cost} come from \texttt{paper/scripts/paper\_numbers.py}.
 
