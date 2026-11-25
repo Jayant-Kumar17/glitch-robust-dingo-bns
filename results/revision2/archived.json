@@ -1,0 +1,620 @@
+{
+  "median_0018": {
+    "source": "examples/gated_is_stage3.py report(): damaged, half==0.1, gated_is.trusted, js_gated_vs_clean['luminosity_distance'] against the pre-registered 10^4 clean reference. Printed with np.median(...):.3f.",
+    "n_cells": 41,
+    "n_trusted": 33,
+    "n_trusted_and_pass": 32,
+    "trusted_failures": [
+      {
+        "id": "damaged_092_h0.1",
+        "trusted": true,
+        "passes": false,
+        "js": 0.4736439122640627,
+        "n_eff": 143.66297562685315
+      }
+    ],
+    "median_trusted": 0.017580765252053713,
+    "median_trusted_printed": "0.018",
+    "max_trusted": 0.4736439122640627,
+    "median_passes_only": 0.01754641773029638,
+    "median_passes_only_printed": "0.018",
+    "subset_used": "all trusted (33), not the 32 passes"
+  },
+  "table_iv": {
+    "floor_pooled_trusted_gated": {
+      "chirp_mass": 0.009102512170769472,
+      "mass_ratio": 0.009836732226845975,
+      "theta_jn": 0.009773089686477443,
+      "luminosity_distance": 0.009715582185345187,
+      "lambda_1": 0.007162948527925001,
+      "lambda_2": 0.007577518309331215,
+      "lambda_tilde": 0.008658818637312039,
+      "geocent_time": 0.00880247642373675
+    },
+    "rows": [
+      {
+        "group": "damaged",
+        "kind": "gated trusted",
+        "n": 64,
+        "chirp_mass": {
+          "median": 0.009932315636801525,
+          "p90": 0.03029269666402576
+        },
+        "mass_ratio": {
+          "median": 0.011529980730521585,
+          "p90": 0.031047124922129587
+        },
+        "theta_jn": {
+          "median": 0.013240521622343586,
+          "p90": 0.042668260530694176
+        },
+        "luminosity_distance": {
+          "median": 0.011740666281782974,
+          "p90": 0.03216753509954658
+        },
+        "lambda_1": {
+          "median": 0.002965973838109567,
+          "p90": 0.010962932186338906
+        },
+        "lambda_2": {
+          "median": 0.0032513901778510866,
+          "p90": 0.011375473529198746
+        },
+        "lambda_tilde": {
+          "median": 0.00581382682115183,
+          "p90": 0.019888220880827378
+        },
+        "geocent_time": {
+          "median": 0.004794684187534818,
+          "p90": 0.0194981704828933
+        },
+        "max_over_parameters": {
+          "median": 0.01716088355918255,
+          "p90": 0.04907532886051099
+        }
+      },
+      {
+        "group": "damaged",
+        "kind": "ordinary trusted",
+        "n": 81,
+        "chirp_mass": {
+          "median": 0.008257457379597538,
+          "p90": 0.02774534235032557
+        },
+        "mass_ratio": {
+          "median": 0.009235446560374434,
+          "p90": 0.015031390506731728
+        },
+        "theta_jn": {
+          "median": 0.08122706918207936,
+          "p90": 0.5410703332153708
+        },
+        "luminosity_distance": {
+          "median": 0.05984530972240838,
+          "p90": 0.43808871284306083
+        },
+        "lambda_1": {
+          "median": 0.0026947407505206,
+          "p90": 0.009083683645966189
+        },
+        "lambda_2": {
+          "median": 0.0032055960852476794,
+          "p90": 0.008545428811876149
+        },
+        "lambda_tilde": {
+          "median": 0.006373047108334874,
+          "p90": 0.023271126479847953
+        },
+        "geocent_time": {
+          "median": 0.00608323397948656,
+          "p90": 0.02492159066490935
+        },
+        "max_over_parameters": {
+          "median": 0.08122706918207936,
+          "p90": 0.5410703332153708
+        }
+      },
+      {
+        "group": "damaged",
+        "kind": "network",
+        "n": 82,
+        "chirp_mass": {
+          "median": 0.02263741700162148,
+          "p90": 0.054271486614753464
+        },
+        "mass_ratio": {
+          "median": 0.0032661724710795204,
+          "p90": 0.005799416662326067
+        },
+        "theta_jn": {
+          "median": 0.044287529096031876,
+          "p90": 0.46212755351565915
+        },
+        "luminosity_distance": {
+          "median": 0.032979575423160205,
+          "p90": 0.3956419333076831
+        },
+        "lambda_1": {
+          "median": 0.0740542869052908,
+          "p90": 0.09338630250418642
+        },
+        "lambda_2": {
+          "median": 0.07972892105720047,
+          "p90": 0.09659370380904822
+        },
+        "lambda_tilde": {
+          "median": 0.21076883321872586,
+          "p90": 0.25712735175675255
+        },
+        "geocent_time": {
+          "median": 0.23416128749344012,
+          "p90": 0.2705701174596227
+        },
+        "max_over_parameters": {
+          "median": 0.25037012306901457,
+          "p90": 0.46212755351565915
+        }
+      },
+      {
+        "group": "broken",
+        "kind": "gated trusted",
+        "n": 4,
+        "chirp_mass": {
+          "median": 0.023232706337228425,
+          "p90": 0.03451492535646864
+        },
+        "mass_ratio": {
+          "median": 0.03121327382986814,
+          "p90": 0.049051284307675656
+        },
+        "theta_jn": {
+          "median": 0.033195789993351564,
+          "p90": 0.04125513020938296
+        },
+        "luminosity_distance": {
+          "median": 0.03277555029877517,
+          "p90": 0.038581859783624634
+        },
+        "lambda_1": {
+          "median": 0.008149226021094993,
+          "p90": 0.019350866998607587
+        },
+        "lambda_2": {
+          "median": 0.013120864401824719,
+          "p90": 0.017696894945512767
+        },
+        "lambda_tilde": {
+          "median": 0.010645263982290628,
+          "p90": 0.04544331606184058
+        },
+        "geocent_time": {
+          "median": 0.013732046227602712,
+          "p90": 0.04732813174650179
+        },
+        "max_over_parameters": {
+          "median": 0.04980457165327763,
+          "p90": 0.06405904192336408
+        }
+      },
+      {
+        "group": "broken",
+        "kind": "ordinary trusted",
+        "n": 28,
+        "chirp_mass": {
+          "median": 0.008673248019535975,
+          "p90": 0.018578426724995455
+        },
+        "mass_ratio": {
+          "median": 0.010040945178272665,
+          "p90": 0.017378227013017118
+        },
+        "theta_jn": {
+          "median": 0.6026385373010452,
+          "p90": 0.6840318320731564
+        },
+        "luminosity_distance": {
+          "median": 0.5148800215817545,
+          "p90": 0.6330058782123466
+        },
+        "lambda_1": {
+          "median": 0.005842499049509198,
+          "p90": 0.02597219125899919
+        },
+        "lambda_2": {
+          "median": 0.006948053338349079,
+          "p90": 0.0278896954838295
+        },
+        "lambda_tilde": {
+          "median": 0.021211696297898645,
+          "p90": 0.07592699385786035
+        },
+        "geocent_time": {
+          "median": 0.022604265941941135,
+          "p90": 0.09187453749707819
+        },
+        "max_over_parameters": {
+          "median": 0.6026385373010452,
+          "p90": 0.6840318320731564
+        }
+      },
+      {
+        "group": "broken",
+        "kind": "network",
+        "n": 28,
+        "chirp_mass": {
+          "median": 0.029701045878663422,
+          "p90": 0.043820387537523736
+        },
+        "mass_ratio": {
+          "median": 0.0028789525656371037,
+          "p90": 0.004640584497849548
+        },
+        "theta_jn": {
+          "median": 0.5807018972853457,
+          "p90": 0.6826527495332049
+        },
+        "luminosity_distance": {
+          "median": 0.5133571910094845,
+          "p90": 0.6397038164662036
+        },
+        "lambda_1": {
+          "median": 0.07568693861281847,
+          "p90": 0.1092920607458475
+        },
+        "lambda_2": {
+          "median": 0.08036155206993126,
+          "p90": 0.10229394282426127
+        },
+        "lambda_tilde": {
+          "median": 0.21534928466016778,
+          "p90": 0.2626131713825342
+        },
+        "geocent_time": {
+          "median": 0.24070267258972977,
+          "p90": 0.28754835345105634
+        },
+        "max_over_parameters": {
+          "median": 0.5807018972853457,
+          "p90": 0.6826527495332049
+        }
+      },
+      {
+        "group": "unaffected",
+        "kind": "gated trusted",
+        "n": 139,
+        "chirp_mass": {
+          "median": 0.006582414472741088,
+          "p90": 0.01168343449934684
+        },
+        "mass_ratio": {
+          "median": 0.00889706496493203,
+          "p90": 0.013894783273445632
+        },
+        "theta_jn": {
+          "median": 0.009146005342624365,
+          "p90": 0.014746591533519584
+        },
+        "luminosity_distance": {
+          "median": 0.008372918519251114,
+          "p90": 0.014425284904328692
+        },
+        "lambda_1": {
+          "median": 0.0021592935324550753,
+          "p90": 0.0052815727334185325
+        },
+        "lambda_2": {
+          "median": 0.0024891616476097143,
+          "p90": 0.006090100010615495
+        },
+        "lambda_tilde": {
+          "median": 0.003971338162295149,
+          "p90": 0.012163512908339467
+        },
+        "geocent_time": {
+          "median": 0.0036940571372937876,
+          "p90": 0.011627807579111011
+        },
+        "max_over_parameters": {
+          "median": 0.011861403843948421,
+          "p90": 0.023529166611962086
+        }
+      },
+      {
+        "group": "unaffected",
+        "kind": "ordinary trusted",
+        "n": 139,
+        "chirp_mass": {
+          "median": 0.0061207279076112495,
+          "p90": 0.009881312622874913
+        },
+        "mass_ratio": {
+          "median": 0.008362380313321418,
+          "p90": 0.011548126785574164
+        },
+        "theta_jn": {
+          "median": 0.015121584188477814,
+          "p90": 0.06796522450355809
+        },
+        "luminosity_distance": {
+          "median": 0.013399285800447682,
+          "p90": 0.04978163937696377
+        },
+        "lambda_1": {
+          "median": 0.0019803519591599338,
+          "p90": 0.004922285123171572
+        },
+        "lambda_2": {
+          "median": 0.002326959338394507,
+          "p90": 0.004852763056061148
+        },
+        "lambda_tilde": {
+          "median": 0.00422365771484731,
+          "p90": 0.012577749356376554
+        },
+        "geocent_time": {
+          "median": 0.0040791903127622925,
+          "p90": 0.012539961104950172
+        },
+        "max_over_parameters": {
+          "median": 0.018552607514770204,
+          "p90": 0.06857868374649706
+        }
+      },
+      {
+        "group": "unaffected",
+        "kind": "network",
+        "n": 140,
+        "chirp_mass": {
+          "median": 0.02479589357215734,
+          "p90": 0.03849708380091998
+        },
+        "mass_ratio": {
+          "median": 0.003655558373609696,
+          "p90": 0.00473215407346275
+        },
+        "theta_jn": {
+          "median": 0.007024895330525461,
+          "p90": 0.0434227687051707
+        },
+        "luminosity_distance": {
+          "median": 0.006677840272004009,
+          "p90": 0.03132102533709359
+        },
+        "lambda_1": {
+          "median": 0.07405083654707706,
+          "p90": 0.08724821140891494
+        },
+        "lambda_2": {
+          "median": 0.07767435466986287,
+          "p90": 0.09062663923772592
+        },
+        "lambda_tilde": {
+          "median": 0.20884167167865983,
+          "p90": 0.24076258662631406
+        },
+        "geocent_time": {
+          "median": 0.22990236987949098,
+          "p90": 0.25823414738240197
+        },
+        "max_over_parameters": {
+          "median": 0.22990236987949098,
+          "p90": 0.25823414738240197
+        }
+      }
+    ],
+    "damaged_gated_trusted_vs_floor": {
+      "chirp_mass": {
+        "median": 0.009932315636801525,
+        "floor": 0.009102512170769472,
+        "at_or_below_floor": false
+      },
+      "mass_ratio": {
+        "median": 0.011529980730521585,
+        "floor": 0.009836732226845975,
+        "at_or_below_floor": false
+      },
+      "theta_jn": {
+        "median": 0.013240521622343586,
+        "floor": 0.009773089686477443,
+        "at_or_below_floor": false
+      },
+      "luminosity_distance": {
+        "median": 0.011740666281782974,
+        "floor": 0.009715582185345187,
+        "at_or_below_floor": false
+      },
+      "lambda_1": {
+        "median": 0.002965973838109567,
+        "floor": 0.007162948527925001,
+        "at_or_below_floor": true
+      },
+      "lambda_2": {
+        "median": 0.0032513901778510866,
+        "floor": 0.007577518309331215,
+        "at_or_below_floor": true
+      },
+      "lambda_tilde": {
+        "median": 0.00581382682115183,
+        "floor": 0.008658818637312039,
+        "at_or_below_floor": true
+      },
+      "geocent_time": {
+        "median": 0.004794684187534818,
+        "floor": 0.00880247642373675,
+        "at_or_below_floor": true
+      }
+    },
+    "all_shown_parameters_at_or_below_floor": false
+  },
+  "permutation": {
+    "seed": 20261125,
+    "pads": [
+      {
+        "group": "damaged",
+        "pad": 0.1,
+        "n_cells": 41,
+        "n_glitches": 18,
+        "cluster_column": "gs_event_time",
+        "gis_only": 3,
+        "ois_only": 0,
+        "gis_total": 32,
+        "ois_total": 29,
+        "statistic": 3,
+        "n_perm": 100000,
+        "n_ge": 25028,
+        "p": 0.25028749712502874,
+        "mcnemar_exact": 0.25,
+        "definition": "GIS outcome is trusted and passes; OIS outcome is passes (trust not required), matching examples/revision_analysis.py mcnemar_rows."
+      },
+      {
+        "group": "damaged",
+        "pad": 0.2,
+        "n_cells": 41,
+        "n_glitches": 18,
+        "cluster_column": "gs_event_time",
+        "gis_only": 9,
+        "ois_only": 0,
+        "gis_total": 30,
+        "ois_total": 21,
+        "statistic": 9,
+        "n_perm": 100000,
+        "n_ge": 778,
+        "p": 0.007789922100778992,
+        "mcnemar_exact": 0.00390625,
+        "definition": "GIS outcome is trusted and passes; OIS outcome is passes (trust not required), matching examples/revision_analysis.py mcnemar_rows."
+      }
+    ]
+  },
+  "weights": {
+    "stored_weights": {
+      "GIS": {
+        "n": 2130000,
+        "nonfinite": 0,
+        "exact_zero": 3180,
+        "files": 213
+      },
+      "OIS": {
+        "n": 2130000,
+        "nonfinite": 0,
+        "exact_zero": 3180,
+        "files": 213
+      },
+      "UIS": {
+        "n": 1920000,
+        "nonfinite": 0,
+        "exact_zero": 40528,
+        "files": 192
+      }
+    },
+    "note": "GIS, OIS and UIS sample files store the normalised weights, not the log weights. reweight() maps a non-finite log weight to weight 0. An exact zero can also be underflow of a finite log weight (exp(log_w - max) == 0). Non-finite entries in the stored weight column are counted separately.",
+    "clean_ref_v2_log_weights": {
+      "n": 100000,
+      "nonfinite_log_weight": 139,
+      "nonfinite_log_likelihood": 139,
+      "nonfinite_log_prior": 139,
+      "nonfinite_log_prob": 139,
+      "nonfinite_stored_weight": 0,
+      "exact_zero_stored_weight": 139
+    }
+  },
+  "seeds": {
+    "n_stage3_gis_neff_below_300": 56,
+    "second_draw": "R4 route A is one new network draw of the same gated package (draw() sets no seed). No other multi-seed archive of these cells exists.",
+    "routeA_cells": [
+      {
+        "id": "damaged_037_h0.2",
+        "n_eff_stage3": 137.10700517567687,
+        "trusted_stage3": true,
+        "n_eff_routeA": 127.53620161915141,
+        "trusted_routeA": true,
+        "flipped": false,
+        "below_300": true
+      },
+      {
+        "id": "damaged_087_h0.2",
+        "n_eff_stage3": 132.98636778631678,
+        "trusted_stage3": true,
+        "n_eff_routeA": 46.59275760134494,
+        "trusted_routeA": false,
+        "flipped": true,
+        "below_300": true
+      },
+      {
+        "id": "damaged_092_h0.1",
+        "n_eff_stage3": 143.66297562685315,
+        "trusted_stage3": true,
+        "n_eff_routeA": 25.319891203917226,
+        "trusted_routeA": false,
+        "flipped": true,
+        "below_300": true
+      },
+      {
+        "id": "damaged_092_h0.2",
+        "n_eff_stage3": 154.36871558920262,
+        "trusted_stage3": true,
+        "n_eff_routeA": 217.99174537383692,
+        "trusted_routeA": true,
+        "flipped": false,
+        "below_300": true
+      },
+      {
+        "id": "damaged_093_h0.1",
+        "n_eff_stage3": 54.21286661589276,
+        "trusted_stage3": false,
+        "n_eff_routeA": 18.158816442898793,
+        "trusted_routeA": false,
+        "flipped": false,
+        "below_300": true
+      },
+      {
+        "id": "damaged_106_h0.1",
+        "n_eff_stage3": 153.28354709538303,
+        "trusted_stage3": true,
+        "n_eff_routeA": 134.7684614975775,
+        "trusted_routeA": true,
+        "flipped": false,
+        "below_300": true
+      },
+      {
+        "id": "damaged_169_h0.1",
+        "n_eff_stage3": 88.61107564195599,
+        "trusted_stage3": false,
+        "n_eff_routeA": 40.73234684797486,
+        "trusted_routeA": false,
+        "flipped": false,
+        "below_300": true
+      },
+      {
+        "id": "damaged_170_h0.1",
+        "n_eff_stage3": 65.61181661515124,
+        "trusted_stage3": false,
+        "n_eff_routeA": 72.9076525376009,
+        "trusted_routeA": false,
+        "flipped": false,
+        "below_300": true
+      }
+    ],
+    "routeA_below_300": 8,
+    "routeA_below_300_flips": 2,
+    "flips": [
+      {
+        "id": "damaged_087_h0.2",
+        "n_eff_stage3": 132.98636778631678,
+        "trusted_stage3": true,
+        "n_eff_routeA": 46.59275760134494,
+        "trusted_routeA": false,
+        "flipped": true,
+        "below_300": true
+      },
+      {
+        "id": "damaged_092_h0.1",
+        "n_eff_stage3": 143.66297562685315,
+        "trusted_stage3": true,
+        "n_eff_routeA": 25.319891203917226,
+        "trusted_routeA": false,
+        "flipped": true,
+        "below_300": true
+      }
+    ]
+  }
+}

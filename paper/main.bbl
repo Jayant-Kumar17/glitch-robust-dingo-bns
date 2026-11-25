@@ -254,9 +254,9 @@
   {author} {\bibfnamefont {S.}~\bibnamefont {Kastha}}, \bibinfo {author}
   {\bibfnamefont {B.}~\bibnamefont {Krishnan}},  \emph {et~al.},\ }\href
   {\doibase 10.1103/3gqn-297f} {\bibfield  {journal} {\bibinfo  {journal}
-  {Physical Review D}\ }\textbf {\bibinfo {volume} {112}} (\bibinfo {year}
-  {2025}),\ 10.1103/3gqn-297f},\ \Eprint {http://arxiv.org/abs/2310.19645}
-  {arXiv:2310.19645} \BibitemShut {NoStop}%
+  {Physical Review D}\ }\textbf {\bibinfo {volume} {112}},\ \bibinfo {pages}
+  {083023} (\bibinfo {year} {2025})},\ \Eprint
+  {http://arxiv.org/abs/2310.19645} {arXiv:2310.19645} \BibitemShut {NoStop}%
 \bibitem [{\citenamefont {Usman}\ \emph {et~al.}(2016)\citenamefont {Usman}
   \emph {et~al.}}]{Usman2016pycbc}%
   \BibitemOpen
@@ -378,8 +378,8 @@
   {\bibfnamefont {Y.}~\bibnamefont {Hezaveh}}, \ and\ \bibinfo {author}
   {\bibfnamefont {L.}~\bibnamefont {Perreault-Levasseur}},\ }\href {\doibase
   10.3847/2041-8213/add681} {\bibfield  {journal} {\bibinfo  {journal} {The
-  Astrophysical Journal Letters}\ } (\bibinfo {year} {2025}),\
-  10.3847/2041-8213/add681}\BibitemShut {NoStop}%
+  Astrophysical Journal Letters}\ }\textbf {\bibinfo {volume} {985}},\ \bibinfo
+  {pages} {L46} (\bibinfo {year} {2025})}\BibitemShut {NoStop}%
 \bibitem [{\citenamefont {Kwok}\ \emph {et~al.}(2022)\citenamefont {Kwok},
   \citenamefont {Lo}, \citenamefont {Weinstein},\ and\ \citenamefont
   {Li}}]{Kwok2022glitchgr}%
@@ -457,8 +457,9 @@
   \bibfield  {author} {\bibinfo {author} {\bibfnamefont {L.}~\bibnamefont
   {Kumar}}\ and\ \bibinfo {author} {\bibfnamefont {S.~K.}\ \bibnamefont
   {Sahay}},\ }\href {\doibase 10.1016/j.ascom.2026.101174} {\bibfield
-  {journal} {\bibinfo  {journal} {Astronomy and Computing}\ ,\ \bibinfo {pages}
-  {101174}} (\bibinfo {year} {2026})}\BibitemShut {NoStop}%
+  {journal} {\bibinfo  {journal} {Astronomy and Computing}\ }\textbf {\bibinfo
+  {volume} {57}},\ \bibinfo {pages} {101174} (\bibinfo {year}
+  {2026})}\BibitemShut {NoStop}%
 \bibitem [{\citenamefont {Harris}(1978)}]{Harris1978windows}%
   \BibitemOpen
   \bibfield  {author} {\bibinfo {author} {\bibfnamefont {F.~J.}\ \bibnamefont

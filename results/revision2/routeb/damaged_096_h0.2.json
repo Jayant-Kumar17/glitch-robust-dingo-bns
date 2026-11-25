@@ -1,0 +1,23 @@
+{
+  "id": "damaged_096_h0.2",
+  "group": "damaged",
+  "cell_id": 96,
+  "half": 0.2,
+  "n_proposal": 10000,
+  "n_eff": 1533.4727399320561,
+  "efficiency": 0.1533472739932056,
+  "trusted": true,
+  "passes": true,
+  "d_L": {
+    "lo": 18.277305586241255,
+    "med": 33.57888677718495,
+    "hi": 45.45164820958622
+  },
+  "stage3_trusted": true,
+  "stage3_n_eff": 787.5971198098956,
+  "stage3_d_L_med": 33.711409449210166,
+  "trust_agrees": true,
+  "d_L_median_shift_Mpc": -0.1325226720252175,
+  "js_dL_16bin": 0.003615039631030832,
+  "nonfinite_log_likelihood": 6
+}
