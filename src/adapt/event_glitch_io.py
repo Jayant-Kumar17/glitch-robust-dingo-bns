@@ -14,6 +14,8 @@ from typing import Any, Dict, Tuple
 import numpy as np
 from scipy import signal as sp_signal
 
+from adapt.packaging import DEFAULT_TIME_BUFFER_S, package_fd
+
 logger = logging.getLogger("event_glitch_io")
 
 
@@ -100,18 +102,12 @@ def td_to_fd_strain(
     *,
     roll_off: float = 0.4,
     f_max: float,
+    time_buffer: float = DEFAULT_TIME_BUFFER_S,
 ) -> np.ndarray:
-    """Tukey-windowed FFT matching demo conditioning."""
-    x = np.asarray(td, dtype=np.float64).ravel()
-    alpha = 2.0 * float(roll_off) * float(sample_rate) / max(len(x), 1)
-    alpha = float(np.clip(alpha, 0.0, 1.0))
-    window = sp_signal.windows.tukey(len(x), alpha=alpha)
-    xw = x * window
-    fd = np.fft.rfft(xw) / float(sample_rate)
-    freqs = np.fft.rfftfreq(len(x), d=1.0 / float(sample_rate))
-    n_keep = int(np.floor(float(f_max) / (freqs[1] if len(freqs) > 1 else 1.0))) + 1
-    n_keep = min(n_keep, len(fd))
-    return np.asarray(fd[:n_keep], dtype=np.complex128)
+    """Tukey-windowed rFFT + cyclic time shift, matching DINGO ``data_to_domain``."""
+    return package_fd(
+        td, sample_rate, roll_off=roll_off, f_max=f_max, time_buffer=time_buffer
+    )
 
 
 def welch_asd(

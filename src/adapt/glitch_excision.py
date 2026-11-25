@@ -18,6 +18,15 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 import numpy as np
 from scipy import signal as sp_signal
 
+import os
+
+from adapt.packaging import (
+    DEFAULT_TIME_BUFFER_S,
+    band_limit_td,
+    coloured_noise_td,
+    package_fd,
+)
+
 # Keep this module free of heavy STFT-builder imports.
 SPECTROGRAM_ANALYSIS_SECONDS = 4.0
 
@@ -204,22 +213,17 @@ def td_to_fd_strain(
     roll_off: float = 0.4,
     f_max: float,
     n_freq: Optional[int] = None,
+    time_buffer: float = DEFAULT_TIME_BUFFER_S,
 ) -> np.ndarray:
-    """Tukey-windowed rFFT matching the GW170817 packaging convention."""
-    x = np.asarray(td, dtype=np.float64).ravel()
-    alpha = 2.0 * float(roll_off) * float(sample_rate) / max(len(x), 1)
-    alpha = float(np.clip(alpha, 0.0, 1.0))
-    window = sp_signal.windows.tukey(len(x), alpha=alpha)
-    fd = np.fft.rfft(x * window) / float(sample_rate)
-    freqs = np.fft.rfftfreq(len(x), d=1.0 / float(sample_rate))
-    if n_freq is None:
-        n_keep = int(np.floor(float(f_max) / (freqs[1] if len(freqs) > 1 else 1.0))) + 1
-        n_keep = min(n_keep, len(fd))
-    else:
-        n_keep = int(n_freq)
-    if len(fd) < n_keep:
-        fd = np.pad(fd, (0, n_keep - len(fd)))
-    return np.asarray(fd[:n_keep], dtype=np.complex128)
+    """Tukey-windowed rFFT + cyclic time shift, matching DINGO ``data_to_domain``."""
+    return package_fd(
+        td,
+        sample_rate,
+        roll_off=roll_off,
+        f_max=f_max,
+        n_freq=n_freq,
+        time_buffer=time_buffer,
+    )
 
 
 def gate_delta_fd(
@@ -265,8 +269,22 @@ def rebuild_event_from_gated_td(
     alpha: float = DEFAULT_TUKEY_ALPHA,
     replace_ungated: bool = False,
     mode: str = "matched_delta",
+    fill: Optional[str] = None,
+    fill_seed: int = 0,
+    gate_band: Optional[Tuple[float, float]] = None,
 ) -> ExcisionResult:
     """Honest excision on the **glitchy** DINGO package.
+
+    ``fill``: ``"zero"`` leaves the gated samples at zero (plain Tukey gate);
+    ``"noise"`` replaces them with stationary Gaussian noise drawn from the
+    analysis ASD (``original_asds`` if given, else the package ASD), cross-faded
+    with ``sqrt(1 - w**2)`` so the variance stays flat through the taper.
+    ``None`` reads the environment variable ``ADAPT_GATE_FILL`` (default ``"zero"``).
+
+    ``gate_band``: ``(f_lo, f_hi)`` in Hz. When set, the gate (and the fill) act on
+    the band-limited strain (zero below ``f_lo``, unity above ``f_hi``) instead of
+    the raw strain, so the seismic wall is not multiplied by the gate taper.
+    ``None`` reads ``ADAPT_GATE_BAND_HZ`` (e.g. ``"20,23"``); unset means raw strain.
 
     ``mode``:
       - ``"matched_delta"`` (default, recovers ``d_L``): for each gated IFO apply
@@ -292,6 +310,18 @@ def rebuild_event_from_gated_td(
         mode_l = "replace"
     else:
         mode_l = "matched_delta"
+    fill_l = str(fill if fill is not None else os.environ.get("ADAPT_GATE_FILL", "zero")).lower().strip()
+    if fill_l not in ("zero", "noise"):
+        raise ValueError(f"fill must be 'zero' or 'noise', got {fill_l!r}")
+    if gate_band is None:
+        env_band = os.environ.get("ADAPT_GATE_BAND_HZ", "").strip()
+        if env_band:
+            lo_s, hi_s = env_band.split(",")
+            gate_band = (float(lo_s), float(hi_s))
+    if gate_band is not None:
+        gate_band = (float(gate_band[0]), float(gate_band[1]))
+        if not 0.0 <= gate_band[0] < gate_band[1]:
+            raise ValueError(f"gate_band must satisfy 0 <= f_lo < f_hi, got {gate_band}")
 
     if not gates_list and not replace_ungated:
         if original_asds is not None:
@@ -308,6 +338,8 @@ def rebuild_event_from_gated_td(
                 "asd_policy": "original" if original_asds is not None else "unchanged",
                 "packaged_base": "rebuild_from_gated_td",
                 "rebuild_mode": mode_l,
+            "fill": fill_l,
+            "gate_band_hz": list(gate_band) if gate_band is not None else None,
             },
         )
 
@@ -328,15 +360,38 @@ def rebuild_event_from_gated_td(
             continue
         td = np.asarray(td_by_det[det], dtype=np.float64).ravel()
         det_gates = by_det.get(det, [])
-        if det_gates:
-            td_use = apply_gates_td(td, sample_rate, det_gates, t0=t0, alpha=alpha)
+        if gate_band is not None:
+            # Already segment-windowed and band-limited: transform without a second window.
+            td_base = band_limit_td(td, sample_rate, gate_band[0], gate_band[1], roll_off=roll_off)
+            fd_roll_off = 0.0
         else:
-            td_use = td
+            td_base = td
+            fd_roll_off = roll_off
+        if det_gates:
+            w_gate = tukey_gate_weights(td.size, sample_rate, det_gates, t0=t0, alpha=alpha)
+            td_use = td_base * w_gate
+            if fill_l == "noise":
+                asd_fill = None
+                if original_asds is not None and det in original_asds:
+                    asd_fill = original_asds[det]
+                elif det in data.get("asds", {}):
+                    asd_fill = data["asds"][det]
+                if asd_fill is None:
+                    raise ValueError(f"fill='noise' needs an ASD for {det}")
+                noise = coloured_noise_td(
+                    asd_fill,
+                    td.size,
+                    sample_rate,
+                    seed=int(fill_seed) + 1000 * sorted(dets_to_rebuild).index(det),
+                )
+                td_use = td_use + np.sqrt(np.clip(1.0 - w_gate**2, 0.0, 1.0)) * noise
+        else:
+            td_use = td_base
         fd_gated = td_to_fd_strain(
-            td_use, sample_rate, roll_off=roll_off, f_max=f_max, n_freq=n_freq
+            td_use, sample_rate, roll_off=fd_roll_off, f_max=f_max, n_freq=n_freq
         )
         fd_ungated = td_to_fd_strain(
-            td, sample_rate, roll_off=roll_off, f_max=f_max, n_freq=n_freq
+            td_base, sample_rate, roll_off=fd_roll_off, f_max=f_max, n_freq=n_freq
         )
         packaged = np.asarray(data["waveform"][det], dtype=np.complex128)
         if mode_l == "replace":
@@ -369,6 +424,8 @@ def rebuild_event_from_gated_td(
             "asd_policy": "original" if original_asds is not None else "unchanged",
             "packaged_base": "rebuild_from_gated_td",
             "rebuild_mode": mode_l,
+            "fill": fill_l,
+            "gate_band_hz": list(gate_band) if gate_band is not None else None,
             "residual_power_frac": residual_power,
             "replace_ungated": bool(replace_ungated),
         },

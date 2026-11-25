@@ -1,0 +1,13 @@
+{
+  "cell_id": 99,
+  "group": "damaged",
+  "glitch": 1238754229.00879,
+  "label": "Koi_Fish",
+  "snr_bin": "[300,inf)",
+  "rho_w_archived": 572.3151464694998,
+  "rho_w_rebuilt": 572.3151464694998,
+  "injection_match": true,
+  "error": "IndexError: too many indices for array: array is 1-dimensional, but 2 were indexed",
+  "traceback": "Traceback (most recent call last):\n  File \"/Users/jayantkumar/Desktop/ADAPT-Project/examples/ungated_is_baseline.py\", line 83, in main\n    res, raw = S2.draw(c, poison, int(args.num_samples))\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/jayantkumar/Desktop/ADAPT-Project/examples/gated_is_stage2.py\", line 220, in draw\n    run_importance_sampling(res, num_processes=int(c.args.num_processes))\n  File \"/Users/jayantkumar/Desktop/ADAPT-Project/examples/official_control.py\", line 551, in run_importance_sampling\n    result.sample_synthetic_phase(synthetic_phase_kwargs, likelihood_kwargs)\n  File \"/Users/jayantkumar/Desktop/ADAPT-Project/DINGO-BNS/dingo/dingo/gw/result.py\", line 478, in sample_synthetic_phase\n    d_inner_h_complex, rho2opt = self.likelihood.d_inner_h_complex_multi(\n                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/jayantkumar/Desktop/ADAPT-Project/DINGO-BNS/dingo/dingo/gw/likelihood.py\", line 732, in d_inner_h_complex_multi\n    kappa2_complex = d_inner_h_complex[:, 0]\n                     ~~~~~~~~~~~~~~~~~^^^^^^\nIndexError: too many indices for array: array is 1-dimensional, but 2 were indexed\n",
+  "elapsed_s": 9.285161972045898
+}

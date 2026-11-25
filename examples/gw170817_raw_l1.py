@@ -148,6 +148,8 @@ def main(argv=None) -> None:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--outdir", type=resolve_under_repo, default="results/gw170817_raw_l1")
+    parser.add_argument("--force-gate-half-s", type=float, default=None,
+                        help="gate half-width in s; overrides the value stored in the detector checkpoint")
     parser.add_argument("--num-samples", type=int, default=N_SAMPLES)
     parser.add_argument("--batch-size", type=int, default=BATCH)
     parser.add_argument("--num-processes", type=int, default=4)
@@ -248,15 +250,31 @@ def main(argv=None) -> None:
             .numpy()[0]
         )
     thr_event = 0.7283049106597901
-    gates, _ = _detector_gates(
-        model,
-        spec,
-        detectors=list(detectors),
-        crop_start=crop0,
-        sample_rate=SAMPLE_RATE,
-        threshold=thr_event,
-        gate_half_s=float(det_raw.get("gate_half_s", 0.4)),
-        device=device_cpu,
+    gate_half_s = (
+        float(args.force_gate_half_s)
+        if args.force_gate_half_s is not None
+        else float(det_raw.get("gate_half_s", 0.4))
+    )
+    from adapt.event_glitch_io import load_full_event_td as _lfe
+    from adapt.localize import select_gates
+
+    _td_loc = {"L1": fetched}
+    for _d in detectors:
+        if _d != "L1":
+            _td_loc[_d], _, _ = _lfe(assets, settings, _d)
+    gates, loc_info = select_gates(
+        lambda: _detector_gates(
+            model,
+            spec,
+            detectors=list(detectors),
+            crop_start=crop0,
+            sample_rate=SAMPLE_RATE,
+            threshold=thr_event,
+            gate_half_s=gate_half_s,
+            device=device_cpu,
+        ),
+        td_by_det=_td_loc, asds=asds, sample_rate=SAMPLE_RATE,
+        f_max=1535.3046875, pad_s=gate_half_s, detectors=list(detectors),
     )
     detector_log = {
         "threshold_event": thr_event,
@@ -265,6 +283,8 @@ def main(argv=None) -> None:
         "fires_0.46": {det: bool(np.any(probs[i] > 0.46)) for i, det in enumerate(detectors)},
         "fires_0.73": {det: bool(np.any(probs[i] > thr_event)) for i, det in enumerate(detectors)},
         "n_gates": len(gates),
+        "gate_half_s": gate_half_s,
+        "localizer": loc_info,
         "gates": [
             {"detector": g.detector, "t_start": g.t_start, "t_end": g.t_end, "score": g.score}
             for g in gates

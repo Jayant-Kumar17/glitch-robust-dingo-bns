@@ -106,6 +106,9 @@ def run(args: argparse.Namespace) -> None:
     model, det_raw = _load_detector(det_path, device)
     threshold = float(det_raw.get("threshold", 0.5))
     gate_half_s = float(det_raw.get("gate_half_s", args.gate_half_s))
+    if getattr(args, "force_gate_half_s", None) is not None:
+        # The checkpoint stores its own gate_half_s and would otherwise win over the CLI.
+        gate_half_s = float(args.force_gate_half_s)
     norm_stats = det_raw.get("norm_stats"); stft_kwargs = dict(det_raw.get("stft_kwargs") or {})
 
     clean_ci = _sample_dl(assets, event.data, settings, fixed, device=device, n=n_samples, bs=args.batch_size)
@@ -203,8 +206,14 @@ def run(args: argparse.Namespace) -> None:
                         "poison_collapsed": _poison_collapsed(poison_ci)})
             spec_g, _ = _build_spec_stack(td_stft, asds_clean=asds_clean, detectors=detectors, sample_rate=sample_rate,
                                           delta_f=delta_f, noise_std=noise_std, norm_stats=norm_stats, stft_kwargs=stft_kwargs)
-            gates, _ = _detector_gates(model, spec_g, detectors=detectors, crop_start=crop_start, sample_rate=sample_rate,
-                                       threshold=thr_event, gate_half_s=gate_half_s, device=device, ifo_whitelist=["H1"])
+            from adapt.localize import select_gates
+
+            gates, _loc = select_gates(
+                lambda: _detector_gates(model, spec_g, detectors=detectors, crop_start=crop_start, sample_rate=sample_rate,
+                                        threshold=thr_event, gate_half_s=gate_half_s, device=device, ifo_whitelist=["H1"]),
+                td_by_det={"H1": td_full["H1"]}, asds={"H1": asds_clean["H1"]},
+                sample_rate=sample_rate, f_max=f_max, pad_s=gate_half_s, detectors=["H1"],
+            )
             row["detector_n_gates"] = len(gates); row["detector_fired"] = bool(gates)
             row["gates_json"] = json.dumps([[round(gg.t_start - t_trig, 3), round(gg.t_end - t_trig, 3)] for gg in gates])
             gated = rebuild_event_from_gated_td(poison, td_by_det=td_full, gates=gates, sample_rate=sample_rate,
@@ -426,6 +435,8 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     p.add_argument("--num-samples", type=int, default=512)
     p.add_argument("--batch-size", type=int, default=256)
     p.add_argument("--gate-half-s", type=float, default=0.4)
+    p.add_argument("--force-gate-half-s", type=float, default=None,
+                   help="gate half-width in s; overrides the value stored in the detector checkpoint")
     p.add_argument("--threshold-event", type=float, default=None)
     p.add_argument("--max-cells", type=int, default=None)
     p.add_argument("--extend-low-rho", action="store_true",

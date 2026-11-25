@@ -1,0 +1,28 @@
+{
+  "cell_id": 167,
+  "group": "fine",
+  "glitch": 1258760654.49414,
+  "label": "Whistle",
+  "snr_bin": "[30,100)",
+  "rho_w_archived": 201.5852139829681,
+  "rho_w_rebuilt": 201.5852139829681,
+  "injection_match": true,
+  "n": 10000,
+  "efficiency": 0.09917198602191529,
+  "n_eff": 991.7198602191529,
+  "d_L": {
+    "lo": 19.439867331268232,
+    "med": 34.498813263591856,
+    "hi": 46.00963719109061
+  },
+  "recovers": true,
+  "collapsed": false,
+  "network_only": {
+    "lo": 18.94860668182373,
+    "med": 34.11102867126465,
+    "hi": 45.39215679168701,
+    "recovers": true,
+    "collapsed": false
+  },
+  "elapsed_s": 19.65284824371338
+}

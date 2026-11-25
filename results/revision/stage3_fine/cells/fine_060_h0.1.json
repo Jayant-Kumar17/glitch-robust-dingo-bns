@@ -1,0 +1,19 @@
+{
+  "id": "fine_060_h0.1",
+  "group": "fine",
+  "cell_id": 60,
+  "half": 0.1,
+  "label": "Koi_Fish",
+  "snr_bin": "[8,30)",
+  "rho_w_archived": 39.70652333738075,
+  "t_rel": -1.014537792214166,
+  "phaseC_localiser_recovers": true,
+  "phaseC_collapsed": false,
+  "rho_w_rebuilt": 39.70652333738075,
+  "injection_match": true,
+  "zmax": 6.742178948995417,
+  "gates": [],
+  "gate_total_s": 0.0,
+  "no_gate": true,
+  "elapsed_s": 0.050997018814086914
+}

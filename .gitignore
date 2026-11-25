@@ -108,5 +108,6 @@ checkpoints/glitch_detector_v1/last.pt
 # Gravity Spy raw tables (downloaded on demand; ~190 MB)
 data/gravity_spy/raw/
 data/gravity_spy/raw_p/
+data/gravity_spy/excerpts/
 !data/gravity_spy/selected_h1_o3.csv
 !data/gravity_spy/selected_h1_o3_wide.csv

@@ -1,0 +1,16 @@
+{
+  "outdir": "/Users/jayantkumar/Desktop/ADAPT-Project/results/gated_is_stage3",
+  "real_dir": "/Users/jayantkumar/Desktop/ADAPT-Project/results/stress_real_glitches_v3_final",
+  "pads": [
+    0.1,
+    0.2
+  ],
+  "num_samples": 10000,
+  "batch_size": 5000,
+  "num_processes": 8,
+  "eps": 0.001,
+  "max_hours": 11.0,
+  "max_cells": null,
+  "smoke": false,
+  "eps_sensitivity": []
+}

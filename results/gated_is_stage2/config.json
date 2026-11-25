@@ -1,0 +1,26 @@
+{
+  "outdir": "/Users/jayantkumar/Desktop/ADAPT-Project/results/gated_is_stage2",
+  "widths": [
+    0.4,
+    0.2,
+    0.8
+  ],
+  "n_cells": 10,
+  "seed": 0,
+  "num_samples": 10000,
+  "batch_size": 5000,
+  "num_processes": 8,
+  "eps": 0.001,
+  "eps_sensitivity": [
+    0.01,
+    0.0001
+  ],
+  "raw_l1_hdf5": "/Users/jayantkumar/Desktop/ADAPT-Project/data/gwosc/L-L1_GWOSC_4KHZ_R1-1187006835-4096.hdf5",
+  "raw_l1_halfwidths": [
+    0.1,
+    0.4
+  ],
+  "max_hours": 10.0,
+  "checks_only": false,
+  "smoke": false
+}

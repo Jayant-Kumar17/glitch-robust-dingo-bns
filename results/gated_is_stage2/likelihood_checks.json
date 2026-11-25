@@ -1,0 +1,16 @@
+{
+  "n_theta": 12,
+  "A_max_rel_diff_vs_dingo_ufd": 1.9487657061011784e-16,
+  "A_decimated_vs_ufd_spread": 1.5381001608293445,
+  "B": {
+    "gate": {
+      "max_delta_gated": 3.4924596548080444e-10,
+      "min_delta_ungated": 498698.81244072504
+    },
+    "misplaced": {
+      "max_delta_gated": 498718.01535654184,
+      "min_delta_ungated": 498698.81244072504
+    }
+  },
+  "B_pass": true
+}

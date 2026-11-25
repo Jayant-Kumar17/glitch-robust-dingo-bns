@@ -1,0 +1,28 @@
+{
+  "cell_id": 17,
+  "group": "damaged",
+  "glitch": 1238210670.78223,
+  "label": "Blip",
+  "snr_bin": "[30,100)",
+  "rho_w_archived": 121.76387286627931,
+  "rho_w_rebuilt": 121.76387286627933,
+  "injection_match": true,
+  "n": 10000,
+  "efficiency": 0.003171123300241583,
+  "n_eff": 31.71123300241583,
+  "d_L": {
+    "lo": 12.638031995450003,
+    "med": 18.030571256757185,
+    "hi": 24.11003152727039
+  },
+  "recovers": false,
+  "collapsed": false,
+  "network_only": {
+    "lo": 12.500347709655761,
+    "med": 19.376035690307617,
+    "hi": 41.77450675964354,
+    "recovers": false,
+    "collapsed": false
+  },
+  "elapsed_s": 19.506165742874146
+}
