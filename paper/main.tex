@@ -87,7 +87,7 @@ We instead reweight the frozen network's samples with the gated Gaussian likelih
 We test this on the public \DINGOBNS GW170817 checkpoint with real O3 Gravity Spy glitches at their native whitened loudness.
 On 41 cells where a glitch damages the distance posterior, trusted gated importance sampling passes in 32 with a $0.1\,\mathrm{s}$ gate pad, and in 37 when the cells untrusted at $10^{4}$ samples are redrawn with $10^{5}$ under the same $\neff\ge100$ rule (an efficiency of 0.1\% rather than 1\%); the network alone passes in 31.
 The gain is in reliability: over both pads, 62 of 64 trusted gated results on damaged cells pass, whereas ordinary importance sampling of the gated data passes its own efficiency check in 81 of 82 analyses but is right in only 50.
-On 140 unaffected cells the method refuses one and is right in 139, and trusted results match the clean posterior in every parameter examined, including the tidal deformability.
+On 140 unaffected cells the method refuses one and is right in 139, and its trusted results there match the clean posterior in every parameter examined, including the tidal deformability.
 The method also reproduces the BayesWave-cleaned GW170817 posterior from the unsubtracted Livingston data, a short-gate case in which ordinary importance sampling also succeeds.
 An analysis takes minutes, against seconds for the network alone.
 \end{abstract}
@@ -202,7 +202,7 @@ DINGO's conditioner computes the package as
 \label{eq:package}
 \end{equation}
 where $\mathcal{F}$ is the windowed real FFT divided by $f_s$, and $\mathcal{S}$ is a cyclic time shift.
-On the clean GW170817 strain, Equation~\eqref{eq:package} reproduces the archived package to a whitened residual signal-to-noise ratio of $0.26$.
+On the clean GW170817 strain, Equation~\eqref{eq:package} agrees with DINGO's own data conditioning to a whitened residual of $2\times10^{-9}$. Against the archived package the whitened residual signal-to-noise ratio is $0.26$, a relative mismatch of $5\times10^{-4}$ with 85\% of its power above $800\,\mathrm{Hz}$; it comes from small differences between the strain samples read here and those used when the package was written, not from the transform.
 
 The shift is easy to miss.
 A gate defined in segment time but applied to data in the unshifted frame lands on the wrong samples.
@@ -281,7 +281,7 @@ For this checkpoint the proposal density is tractable.
 The chirp-mass proxy is fixed at $1.19786\,M_\odot$ and used for prior conditioning with a single GNPE iteration~\cite{Dax2022gnpe,Dax2025bns}, so DINGO stores the flow's own log density conditioned on that proxy.
 The phase is not sampled by the flow; DINGO reconstructs it afterwards from a likelihood grid and adds the log density of that step to the stored value. That grid uses DINGO's ordinary likelihood on the zero-filled package, so the phase proposal carries the same mismatch that the gated likelihood removes; importance sampling remains valid because the density is included, but this can lower $\neff$ for long gates.
 The GNPE kernel term that DINGO adds to the target when proxies are iterated is identically zero on this path.
-Non-finite log weights receive zero weight.
+Non-finite log weights receive zero weight. In the real-glitch runs gated and ordinary importance sampling have the same number of zero weights (0.15\%), and in the 20 analyses checked row by row they fall on the same samples, so the correction adds no failures of its own.
 The sample efficiency is $\neff/n$ and $\neff$ is Kish's effective sample size~\cite{Kish1965}.
 The gated likelihood is evaluated on the uniform frequency grid without phase heterodyning or multibanding, because the time-domain correction needs the full grid.
 
@@ -322,7 +322,7 @@ Intervals on proportions are Wilson 95\% intervals~\cite{Wilson1927}.
 \item[Forced gates on clean data] Gates of half-width $0.05$--$0.8\,\mathrm{s}$ centred near merger ($t-t_c$ uniform in $[-2,-0.2]\,\mathrm{s}$) or far from it ($[-60,-5]\,\mathrm{s}$) on glitch-free GW170817 data, 20 placements per setting.
 The gated-IS tests use the first ten near-merger placements at each of $\pm0.2$, $\pm0.4$ and $\pm0.8\,\mathrm{s}$.
 \item[Real glitches] H1 O3 Gravity Spy triggers~\cite{Zevin2017gravityspy,Glanzer2023gravityspy} with confidence $\ge0.95$ and duration $\le3\,\mathrm{s}$, in four Omicron SNR bins~\cite{Robinet2020omicron} and five morphologies (blip, koi fish, scattered light, tomte, whistle).
-Each usable 8\,s excerpt is whitened, reduced to a glitch-only estimate, recoloured with the GW170817 H1 ASD, and added at its native \emph{whitened} loudness (the whitened energy it had in O3, not its strain amplitude, since O3 and O2 noise differ) at three times between $1.5$ and $0.3\,\mathrm{s}$ before merger: 195 cells from 65 glitches.
+Each usable 8\,s excerpt is whitened, reduced to a glitch-only estimate, recoloured with the GW170817 H1 ASD, and added at its native \emph{whitened} loudness (the whitened energy it had in O3, not its strain amplitude, since O3 and O2 noise differ) at three times between $1.5$ and $0.3\,\mathrm{s}$ before merger: 195 cells from 65 glitches. The glitch-only estimate is a time--frequency mask: the excerpt is whitened against its own off-source background and short-time Fourier transformed (512-sample segments, hop 128), and only pixels with more than eight times the median off-source power at their frequency, within the trigger duration plus $0.15\,\mathrm{s}$, are kept and inverted. The result is recoloured with a smoothed GW170817 H1 ASD and scaled so that its whitened energy equals the excerpt's whitened excess energy in O3, its whitened energy minus the expected background contribution.
 Five further excerpts (one blip, one scattered-light and three tomte) have a negative estimated excess energy, so their native-loudness scale factor is zero; their 15 placements inject nothing and are excluded.
 \item[Loudness sweep] Sine-Gaussians and broadband bursts at $\rho_w$ from $10$ to $10^{4}$: 138 completed cells (one of 139, a sine-Gaussian at $\rho_w=10^{4}$, failed).
 \item[Real-glitch reweighting] From the real-glitch panel, the 41 \emph{damaged} cells (the ungated network fails the criterion) and the 14 \emph{broken} cells (the ungated network passes but the localiser gate made it fail), each at pads of $0.1$ and $0.2\,\mathrm{s}$: 110 analyses. Damaged and broken are defined, as in the audit, against a 512-sample network-only clean reference (median $34.0\,\mathrm{Mpc}$, 90\% interval $[18.5, 45.6]\,\mathrm{Mpc}$); every later judgement uses the importance-sampled reference.
@@ -453,10 +453,10 @@ With a $0.2\,\mathrm{s}$ pad the network alone drops to 25/41 and ordinary impor
 Ordinary importance sampling passes fewer cells than the network alone at both pads, as expected when its likelihood scores the zeroed gate as data.
 None of these differences in pass counts is significant on its own.
 Exact McNemar tests on the same cells give $p=1$ and $p=0.06$ for trusted gated IS against the network alone at the two pads, and $p=0.5$ and $p=0.13$ for ordinary IS against the network alone.
-Trusted gated IS passes 9 cells that ordinary IS fails at $\pm0.2\,\mathrm{s}$, and the reverse never happens ($p=0.004$). These exact tests treat cells as independent, although the 41 damaged cells come from 18 glitches.
+Trusted gated IS passes 9 cells that ordinary IS fails at $\pm0.2\,\mathrm{s}$, and the reverse never happens (exact McNemar $p=0.004$). Because the 41 damaged cells come from 18 glitches, we also swapped the two methods' outcomes glitch by glitch rather than cell by cell ($10^{5}$ permutations); this clustered test gives $p=0.008$ at $\pm0.2\,\mathrm{s}$, and $p=0.25$ at $\pm0.1\,\mathrm{s}$, where gated IS passes three cells that ordinary IS fails and never the reverse.
 Choosing, per cell, the pad with the larger $\neff$ (a rule fixed in advance that does not use the clean answer) gives 33/41 (80\%; 66--90\%).
 By morphology, the trusted passes at $\pm0.1\,\mathrm{s}$ are 15/15 blip, 17/24 koi-fish and 0/2 whistle cells.
-The 32 trusted passes among damaged cells at $\pm0.1\,\mathrm{s}$ have a median $\dL$ JS divergence of $0.018\,\mathrm{nat}$ from the pre-registered $10^{4}$-sample clean reference; Table~\ref{tab:multi} gives the pooled values against the larger reference.
+The 33 trusted damaged cells at $\pm0.1\,\mathrm{s}$ have a median $\dL$ JS divergence of $0.018\,\mathrm{nat}$ from the pre-registered $10^{4}$-sample clean reference; Table~\ref{tab:multi} gives the pooled values against the larger reference.
 
 On the 14 cells that the localiser gate broke, neither the network alone nor ordinary importance sampling passes any at either pad.
 Gated importance sampling returns a trusted pass for 4/14 at $\pm0.1\,\mathrm{s}$; the other ten are untrusted, as are all 14 at $\pm0.2\,\mathrm{s}$.
@@ -543,7 +543,7 @@ unaffected & gated IS & 139 & 0 & 1 & 100\% (97--100) & 0.7\% (0--2) \\
 
 \paragraph{How reliable the flag is.}
 The two trusted failures are the same cell, a koi-fish glitch at $\rho_w=352$, at both pads, with $\dL$ medians of 15.4 and $22.3\,\mathrm{Mpc}$.
-Three independent proposals for that cell (below) agree on the low distance, so the error lies in the target rather than in the sampling: the gated posterior itself is shifted, most likely because part of the glitch lies outside the localiser's gate, and widening the pad from 0.1 to $0.2\,\mathrm{s}$ moves the median from 15 to $22\,\mathrm{Mpc}$.
+Three independent proposals for that cell (below) agree on the low distance, so the error lies in the target rather than in the sampling: the gated posterior itself is shifted, and widening the pad from 0.1 to $0.2\,\mathrm{s}$ moves the median from 15 to $22\,\mathrm{Mpc}$. Leakage through the regulariser is not the cause: removing the injected glitch from inside the gate changes the gated log-likelihood of $10^{4}$ samples by a near-constant $0.020\,\mathrm{nat}$ at $\pm0.1\,\mathrm{s}$ and $0.007\,\mathrm{nat}$ at $\pm0.2\,\mathrm{s}$, with standard deviations below $4\times10^{-5}\,\mathrm{nat}$, which cancels in the normalised weights. That leaves the glitch power outside the gate, 2.3\% and 1.0\% of its energy at the two pads, as the likely cause.
 This is the failure mode named in Section~\ref{sec:gatedlik}.
 As an independent diagnostic, the Pareto $\hat k$ of Pareto-smoothed importance sampling~\cite{Vehtari2024psis} agrees with the $\neff$ rule: every one of the 43 untrusted gated analyses has $\hat k>0.7$, and 196 of the 207 trusted ones (including unaffected cells) have $\hat k\le0.7$, of which 195 pass.
 The two trusted failures have $\hat k=0.697$ and $0.751$, so a combined rule would have caught one of them.
@@ -564,18 +564,19 @@ Filled markers pass the distance criterion; the dotted line is the trust thresho
 
 \paragraph{Beyond distance.}
 The distance criterion is coarse, and a gate near merger could bias other parameters without moving $\dL$ far enough to fail it.
-Table~\ref{tab:multi} gives the one-dimensional JS divergence from the $10^{5}$-sample clean reference for seven sampled parameters, the derived tidal deformability $\tilde\Lambda$, and the largest divergence over all 15 compared parameters, pooled over the real-glitch and unaffected analyses.
+Table~\ref{tab:multi} gives the one-dimensional JS divergence from the $10^{5}$-sample clean reference for seven sampled parameters, the derived tidal deformability $\tilde\Lambda$, and the largest divergence over all 15 compared parameters, for damaged, broken and unaffected cells separately.
 JS values come from 64-bin weighted histograms and are nonzero even for identical distributions; the floor row estimates that value by comparing two independent resamples of each trusted posterior with itself, at the effective sample sizes of the comparison.
-For trusted gated results, the median divergence of every parameter shown, including $\tilde\Lambda$, is at or below this floor, and the 90th percentile of each is at most $0.024\,\mathrm{nat}$.
+On unaffected cells, the median divergence of trusted gated results is below this floor for every parameter shown, including $\tilde\Lambda$, and the 90th percentile of each is at most $0.015\,\mathrm{nat}$. On damaged cells the medians are 0.003--0.013\,nat: below the floor for $\Lambda_1$, $\Lambda_2$, $\tilde\Lambda$ and $t_c$, and up to 1.4 times it for $\mathcal{M}_c$, $q$, $\theta_{JN}$ and $\dL$, with 90th percentiles of at most $0.043\,\mathrm{nat}$. The floor is computed mostly at the larger effective sample sizes of unaffected cells, so it understates the resampling noise of damaged ones.
 Untrusted gated results are an order of magnitude further away, which is what the flag is for.
-Trusted ordinary-IS results have small medians but a 90th percentile of $0.53\,\mathrm{nat}$ in $\theta_{JN}$ and $0.43\,\mathrm{nat}$ in $\dL$: these are its confident, wrong answers.
+Trusted ordinary-IS results on damaged cells have a median of $0.08\,\mathrm{nat}$ and a 90th percentile of $0.54\,\mathrm{nat}$ in $\theta_{JN}$, and on broken cells a median of $0.60\,\mathrm{nat}$: these are its confident, wrong answers.
 The network alone differs from the importance-sampled clean posterior in $\tilde\Lambda$ and $t_c$ in the median analysis (0.21 and $0.23\,\mathrm{nat}$), which is why reweighting is needed at all.
 
 \begin{table}[t]
 \centering
-\caption{One-dimensional JS divergence (nat) from the $10^{5}$-sample clean reference, as median\,/\,90th percentile over analyses, pooled over the 110 real-glitch and 140 unaffected analyses (ungated IS: once per cell, 192 cells).
+\caption{One-dimensional JS divergence (nat) from the $10^{5}$-sample clean reference, as median\,/\,90th percentile over analyses, for each cell class over both pads.
+The last block is pooled over all 110 real-glitch and 140 unaffected analyses (ungated IS: once per cell, 192 cells).
 ``Max'' is, per analysis, the largest divergence over all 15 compared parameters.
-The floor is the median, over trusted gated analyses, of the divergence between two resamples of the same posterior at the comparison's effective sample sizes.}
+The floor is the median, over all 207 trusted gated analyses, of the divergence between two resamples of the same posterior at the comparison's effective sample sizes.}
 \label{tab:multi}
 \scriptsize
 \setlength{\tabcolsep}{2.5pt}
@@ -583,10 +584,20 @@ The floor is the median, over trusted gated analyses, of the divergence between 
 \toprule
  & $n$ & $\mathcal{M}_c$ & $q$ & $\theta_{JN}$ & $\dL$ & $\Lambda_1$ & $\Lambda_2$ & $\tilde\Lambda$ & $t_c$ & max \\
 \midrule
-Gated IS, trusted & 207 & .007/.020 & .010/.018 & .010/.023 & .009/.024 & .002/.008 & .003/.009 & .005/.016 & .004/.015 & .013/.034 \\
+\multicolumn{11}{@{}l}{\emph{Damaged cells}}\\
+Gated IS, trusted & 64 & .010/.030 & .012/.031 & .013/.043 & .012/.032 & .003/.011 & .003/.011 & .006/.020 & .005/.019 & .017/.049 \\
+Ordinary IS, trusted & 81 & .008/.028 & .009/.015 & .081/.541 & .060/.438 & .003/.009 & .003/.009 & .006/.023 & .006/.025 & .081/.541 \\
+Network alone & 82 & .023/.054 & .003/.006 & .044/.462 & .033/.396 & .074/.093 & .080/.097 & .211/.257 & .234/.271 & .250/.462 \\
+\multicolumn{11}{@{}l}{\emph{Broken cells}}\\
+Gated IS, trusted & 4 & .023/.035 & .031/.049 & .033/.041 & .033/.039 & .008/.019 & .013/.018 & .011/.045 & .014/.047 & .050/.064 \\
+Ordinary IS, trusted & 28 & .009/.019 & .010/.017 & .603/.684 & .515/.633 & .006/.026 & .007/.028 & .021/.076 & .023/.092 & .603/.684 \\
+Network alone & 28 & .030/.044 & .003/.005 & .581/.683 & .513/.640 & .076/.109 & .080/.102 & .215/.263 & .241/.288 & .581/.683 \\
+\multicolumn{11}{@{}l}{\emph{Unaffected cells}}\\
+Gated IS, trusted & 139 & .007/.012 & .009/.014 & .009/.015 & .008/.014 & .002/.005 & .002/.006 & .004/.012 & .004/.012 & .012/.024 \\
+Ordinary IS, trusted & 139 & .006/.010 & .008/.012 & .015/.068 & .013/.050 & .002/.005 & .002/.005 & .004/.013 & .004/.013 & .019/.069 \\
+Network alone & 140 & .025/.038 & .004/.005 & .007/.043 & .007/.031 & .074/.087 & .078/.091 & .209/.241 & .230/.258 & .230/.258 \\
+\multicolumn{11}{@{}l}{\emph{All analyses, pooled}}\\
 Gated IS, untrusted & 43 & .111/.420 & .168/.444 & .214/.572 & .190/.565 & .092/.314 & .072/.359 & .120/.369 & .102/.375 & .225/.586 \\
-Ordinary IS, trusted & 248 & .007/.015 & .009/.013 & .029/.525 & .022/.428 & .002/.009 & .003/.009 & .005/.024 & .005/.029 & .031/.525 \\
-Network alone & 250 & .025/.044 & .004/.005 & .017/.466 & .012/.400 & .074/.090 & .079/.095 & .210/.250 & .231/.266 & .239/.466 \\
 Ungated IS, trusted & 152 & .008/.041 & .009/.016 & .011/.048 & .011/.047 & .002/.012 & .003/.010 & .006/.031 & .005/.029 & .015/.065 \\
 Ungated IS, untrusted & 40 & .464/.653 & .444/.639 & .659/.693 & .677/.693 & .304/.570 & .349/.576 & .382/.604 & .377/.620 & .689/.693 \\
 \midrule
@@ -616,6 +627,13 @@ As a substitute, eight damaged analyses (the two trusted failures, the three tru
 Route B reaches $\neff$ of about 1000--2100 on six of the eight cells, so it is a near-independent estimate of the gated posterior, although it is not available in practice.
 Where route A is trusted, its $\dL$ posterior agrees with route B to a JS divergence of 0.03--0.06\,nat; where it is not, the divergence reaches 0.18\,nat.
 For the trusted-failure cell all three routes put the median between 15 and $17\,\mathrm{Mpc}$ at $\pm0.1\,\mathrm{s}$ and between 23 and $25\,\mathrm{Mpc}$ at $\pm0.2\,\mathrm{s}$, which is the basis for attributing that failure to the target.
+
+Route B was then run on all 82 damaged analyses, reweighting the first $10^{4}$ clean-data samples to each analysis's gated likelihood.
+It is trusted in 80 and passes in 80; its two failures are the trusted-failure cell at both pads, one of them trusted ($\neff=297$).
+So for 80 of the 82 analyses the gated posterior itself meets the distance criterion, and the two exceptions are where gate-aware importance sampling also failed.
+Of the 64 analyses that gate-aware importance sampling trusts, route B also trusts 62, and the two methods agree on pass or fail in all 62; route B refuses the other two (the $\pm0.1\,\mathrm{s}$ trusted failure, and one pass).
+Route B trusts 18 analyses that gate-aware importance sampling refuses: these are cases where the network's proposal misses the gated posterior, and the flag refuses rather than answers.
+The $\dL$ medians of the two routes differ by $0.59\,\mathrm{Mpc}$ in the median analysis; the two differences above $5\,\mathrm{Mpc}$ are in analyses with $\neff<4$.
 
 \subsection{GW170817 Livingston}
 \label{sec:gw170817}
@@ -667,8 +685,8 @@ It is loud (network signal-to-noise ratio about 32~\cite{Abbott2017gw170817}), i
 For a quieter event, a two-detector network, or a network that also samples the sky, a gate in one detector removes a larger share of the information, and the proposal is likely to drift further from the gated posterior; we would expect lower $\neff$ and more untrusted results. The SNR-16 synthetic event showed no such drop at $\pm0.2\,\mathrm{s}$, but longer gates, two detectors and a free sky were not tested.
 The real glitches are O3 Hanford excerpts recoloured into GW170817 data, which removes the noise that accompanied them; the Extremely Loud class, which dominates the loud tail of the O3 catalogue, was not injected.
 The pass criterion is distance-based; other parameters are checked through JS divergences (Table~\ref{tab:multi}), not a pass rule.
-There is no stochastic-sampler reference for the gated posterior; the independent-proposal check stands in for it.
-Check B used a compact in-band burst; a glitch with substantial power above $1535\,\mathrm{Hz}$ would leak more through the regulariser.
+There is no stochastic-sampler reference for the gated posterior; reweighting the clean-data proposal (route B) on all damaged analyses stands in for it.
+Check B used a compact in-band burst, and the leakage test covered only the trusted-failure koi fish; a glitch with substantial power above $1535\,\mathrm{Hz}$ would leak more through the regulariser.
 The pre-registered efficiency criterion for $\pm0.4\,\mathrm{s}$ gates failed.
 A catalogue change made before any run reported here admitted nine excerpts that an earlier version of the panel could not use; five of them are the zero-power excerpts above, and the other four, all scattered light, are among the 65 glitches.
 At $8\sigma$ the localiser is silent on GW170817, but a much louder signal could itself exceed the threshold near merger and be gated; a production version would need to exclude the signal's own track.
