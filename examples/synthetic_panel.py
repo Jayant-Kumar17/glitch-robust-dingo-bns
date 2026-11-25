@@ -152,6 +152,7 @@ def _one_snr(c, base, theta, target: float, seed: int, outdir: Path) -> None:
     except RuntimeError as exc:
         _block(f"SNR target {target:g}, seed {seed}: {exc}")
         raise SystemExit(2)
+    outdir.mkdir(parents=True, exist_ok=True)
     (outdir / "clean_reference.json").write_text(json.dumps(clean, indent=2))
     cells = outdir / "cells"
     cells.mkdir(parents=True, exist_ok=True)
