@@ -1,0 +1,28 @@
+{
+  "cell_id": 190,
+  "group": "fine",
+  "glitch": 1258706093.80859,
+  "label": "Tomte",
+  "snr_bin": "[8,30)",
+  "rho_w_archived": 32.9478618410213,
+  "rho_w_rebuilt": 32.9478618410213,
+  "injection_match": true,
+  "n": 10000,
+  "efficiency": 0.11064204419214395,
+  "n_eff": 1106.4204419214395,
+  "d_L": {
+    "lo": 19.20237331321036,
+    "med": 34.15590880587849,
+    "hi": 45.90036414314539
+  },
+  "recovers": true,
+  "collapsed": false,
+  "network_only": {
+    "lo": 18.678914642333986,
+    "med": 34.061973571777344,
+    "hi": 45.35141048431395,
+    "recovers": true,
+    "collapsed": false
+  },
+  "elapsed_s": 19.62973117828369
+}

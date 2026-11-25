@@ -1,0 +1,19 @@
+{
+  "id": "fine_129_h0.1",
+  "group": "fine",
+  "cell_id": 129,
+  "half": 0.1,
+  "label": "Scattered_Light",
+  "snr_bin": "[30,100)",
+  "rho_w_archived": 65.58706093452061,
+  "t_rel": -1.154003091590907,
+  "phaseC_localiser_recovers": true,
+  "phaseC_collapsed": false,
+  "rho_w_rebuilt": 65.58706093452061,
+  "injection_match": true,
+  "zmax": 6.1862430470310255,
+  "gates": [],
+  "gate_total_s": 0.0,
+  "no_gate": true,
+  "elapsed_s": 0.049404144287109375
+}

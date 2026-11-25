@@ -1,0 +1,28 @@
+{
+  "cell_id": 114,
+  "group": "fine",
+  "glitch": 1238552901.375,
+  "label": "Scattered_Light",
+  "snr_bin": "[8,30)",
+  "rho_w_archived": 34.39383342957147,
+  "rho_w_rebuilt": 34.39383342957147,
+  "injection_match": true,
+  "n": 10000,
+  "efficiency": 0.11263009290515294,
+  "n_eff": 1126.3009290515295,
+  "d_L": {
+    "lo": 19.902424585677817,
+    "med": 35.2705700163339,
+    "hi": 45.7569632462925
+  },
+  "recovers": true,
+  "collapsed": false,
+  "network_only": {
+    "lo": 19.040641021728515,
+    "med": 34.46939468383789,
+    "hi": 45.11931686401367,
+    "recovers": true,
+    "collapsed": false
+  },
+  "elapsed_s": 19.664098978042603
+}

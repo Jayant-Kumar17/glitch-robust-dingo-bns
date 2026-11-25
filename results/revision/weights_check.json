@@ -1,0 +1,11 @@
+{
+  "n": 10000,
+  "max_abs_empty_gate_correction": 0.0,
+  "n_eff_uniform_grid": 1210.8094981645618,
+  "n_eff_dingo": 1154.7528392282181,
+  "pearson_log_weight": 0.9998695514441085,
+  "std_log_weight_difference": 0.38679304636950207,
+  "js_d_L": 0.0006124779031039564,
+  "js_max": 0.0010919682637150533,
+  "verdict": "uniform-grid empty-gate log-weights vs DINGO: Pearson 0.999870, std of the mean-removed difference 0.3868, d_L JS 0.0006125, max JS 0.001092"
+}

@@ -1,0 +1,28 @@
+{
+  "cell_id": 69,
+  "group": "fine",
+  "glitch": 1238208337.97461,
+  "label": "Koi_Fish",
+  "snr_bin": "[30,100)",
+  "rho_w_archived": 114.48069002253304,
+  "rho_w_rebuilt": 114.48069002253305,
+  "injection_match": true,
+  "n": 10000,
+  "efficiency": 0.09899777590090776,
+  "n_eff": 989.9777590090777,
+  "d_L": {
+    "lo": 15.009970560793803,
+    "med": 29.556827203891224,
+    "hi": 44.47212065789531
+  },
+  "recovers": true,
+  "collapsed": false,
+  "network_only": {
+    "lo": 14.360780715942383,
+    "med": 27.37508487701416,
+    "hi": 43.407892799377436,
+    "recovers": true,
+    "collapsed": false
+  },
+  "elapsed_s": 19.664119005203247
+}

@@ -1,0 +1,19 @@
+{
+  "id": "fine_178_h0.1",
+  "group": "fine",
+  "cell_id": 178,
+  "half": 0.1,
+  "label": "Whistle",
+  "snr_bin": "[30,100)",
+  "rho_w_archived": 45.82678239611148,
+  "t_rel": -0.3891425073426975,
+  "phaseC_localiser_recovers": true,
+  "phaseC_collapsed": false,
+  "rho_w_rebuilt": 45.82678239611148,
+  "injection_match": true,
+  "zmax": 5.5227721801522875,
+  "gates": [],
+  "gate_total_s": 0.0,
+  "no_gate": true,
+  "elapsed_s": 0.05234193801879883
+}
